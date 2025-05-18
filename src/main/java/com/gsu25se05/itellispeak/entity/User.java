@@ -1,15 +1,19 @@
 package com.gsu25se05.itellispeak.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "users")
@@ -17,7 +21,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "user_id")
@@ -60,6 +64,79 @@ public class User {
 
     @Column(name = "is_deleted")
     private Boolean isDeleted;
+
+    public User(String firstName, String lastName, String email, Role role) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.role = role;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        Set<SimpleGrantedAuthority> authorities = new HashSet<>();
+        authorities.add(new SimpleGrantedAuthority(this.role.name()));
+        return authorities;
+    }
+
+    @JsonIgnore
+    @Transient
+    @Override
+    public String getUsername() {
+        return this.email;
+    }
+
+    @JsonIgnore
+    @Transient
+    @Override
+    public boolean isAccountNonExpired() {
+        return UserDetails.super.isAccountNonExpired();
+    }
+
+    @JsonIgnore
+    @Transient
+    @Override
+    public boolean isAccountNonLocked() {
+        return UserDetails.super.isAccountNonLocked();
+    }
+
+    @JsonIgnore
+    @Transient
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return UserDetails.super.isCredentialsNonExpired();
+    }
+
+    @JsonIgnore
+    @Transient
+    @Override
+    public boolean isEnabled() {
+        return UserDetails.super.isEnabled();
+    }
+
+    @Transient
+    private String tokens;
+
+    @Transient
+    private String refreshToken;
+
+//    public User(UUID userId, String firstName, String lastName, String email, String password, Role role, String paymentPlan, LocalDate birthday, String avatar, String status, LocalDateTime createAt, LocalDateTime updateAt, Boolean isDeleted, String tokens, String refreshToken) {
+//        this.userId = userId;
+//        this.firstName = firstName;
+//        this.lastName = lastName;
+//        this.email = email;
+//        this.password = password;
+//        this.role = role;
+//        this.paymentPlan = paymentPlan;
+//        this.birthday = birthday;
+//        this.avatar = avatar;
+//        this.status = status;
+//        this.createAt = createAt;
+//        this.updateAt = updateAt;
+//        this.isDeleted = isDeleted;
+//        this.tokens = tokens;
+//        this.refreshToken = refreshToken;
+//    }
 
     public enum Role {
         USER, HR, ADMIN
