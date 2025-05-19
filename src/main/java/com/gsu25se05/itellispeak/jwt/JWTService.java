@@ -10,6 +10,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import jakarta.servlet.http.Cookie;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.spec.SecretKeySpec;
@@ -24,10 +25,30 @@ import java.util.function.Function;
 @Component
 public class JWTService {
     private static final String SECRET = "CRAZY@IWASCRAZYONCE@THEYPUTMEINARUBBERROOM@ARUBBERROOMWITHRATS@ANDRATSMAKEMECRAZY!@$";
+    private final long EXPIRATION_TIME = 864_000_000; // 10 days in milliseconds
+    private final long REFRESH_TOKEN_EXPIRATION_TIME = 604_800_000; // 7 days in milliseconds
 
     private Key getSigningKey() {
         byte[] keyBytes = Base64.getEncoder().encode(SECRET.getBytes());
         return new SecretKeySpec(keyBytes, SignatureAlgorithm.HS512.getJcaName());
+    }
+
+    public Cookie createTokenCookie(String token) {
+        Cookie cookie = new Cookie("JWT_TOKEN", token);
+        cookie.setHttpOnly(true); // Prevents client-side JavaScript access
+        cookie.setSecure(true);   // Use only over HTTPS in production
+        cookie.setPath("/");      // Accessible across the application
+        cookie.setMaxAge((int) EXPIRATION_TIME / 1000); // Cookie expiration time
+        return cookie;
+    }
+
+    public Cookie createRefreshTokenCookie(String refreshToken) {
+        Cookie cookie = new Cookie("REFRESH_TOKEN", refreshToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge((int) REFRESH_TOKEN_EXPIRATION_TIME / 1000); // Match refresh token expiration
+        return cookie;
     }
 
     public String generateToken(String email) {

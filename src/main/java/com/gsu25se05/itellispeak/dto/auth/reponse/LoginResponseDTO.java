@@ -15,20 +15,12 @@ public class LoginResponseDTO {
 
     private String error;
 
-    private User.Role role;
 
-    private String accessToken;
-
-    private String refreshToken;
-
-    public LoginResponseDTO(int code, String message, String error, User.Role role, String accessToken, String refreshToken) {
+    public LoginResponseDTO(int code, String message, String error) {
         super();
         this.code = code;
         this.message = message;
         this.error = error;
-        this.role = role;
-        this.accessToken = accessToken;
-        this.refreshToken = refreshToken;
     }
 }
 

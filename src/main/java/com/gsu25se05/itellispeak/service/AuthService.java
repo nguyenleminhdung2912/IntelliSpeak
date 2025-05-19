@@ -12,6 +12,8 @@ import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
 import com.gsu25se05.itellispeak.jwt.JWTService;
 import com.gsu25se05.itellispeak.repository.UserRepository;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -20,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -68,17 +71,18 @@ public class AuthService implements UserDetailsService {
         return account;
     }
 
-    public ResponseEntity<LoginResponseDTO> checkLogin(LoginRequestDTO loginRequestDTO) {
+    public ResponseEntity<LoginResponseDTO> checkLogin(LoginRequestDTO loginRequestDTO, HttpServletResponse response) {
         try {
-            // GET EMAIL BY REQUEST DTO AND VALIDATION EMAIL
+            // Validate email
             User account = findUserByEmail(loginRequestDTO.getEmail());
-
             if (account == null) {
                 throw new AuthAppException(ErrorCode.EMAIL_NOT_FOUND);
             }
             if (account.getIsDeleted().equals(true)) {
                 throw new AuthAppException(ErrorCode.ACCOUNT_IS_DELETED);
             }
+
+            // Authenticate user
             Authentication authentication;
             try {
                 authentication = authenticationManager.authenticate(
@@ -91,22 +95,26 @@ public class AuthService implements UserDetailsService {
                 throw new AuthAppException(ErrorCode.USERNAME_PASSWORD_NOT_CORRECT);
             }
 
-            User returnAccount = (User) authentication.getPrincipal();
-            // CALL FUNC || GENERATE TOKEN (1DAY) AND REFRESH TOKEN (7DAYS)
-            account.setTokens(jwtService.generateToken(account.getEmail()));
-            account.setRefreshToken(jwtService.generateRefreshToken(account.getEmail()));
+            // Set authentication in SecurityContext
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
+            // Generate token and set it in a cookie
+            String token = jwtService.generateToken(loginRequestDTO.getEmail());
+            Cookie cookie = jwtService.createTokenCookie(token);
+            response.addCookie(cookie);
+
+            String refreshToken = jwtService.generateRefreshToken(loginRequestDTO.getEmail());
+            Cookie refreshTokenCookie = jwtService.createRefreshTokenCookie(refreshToken);
+            response.addCookie(refreshTokenCookie);
+
+            // Build response
             String responseString = "Login successful";
             LoginResponseDTO loginResponseDTO = new LoginResponseDTO(
                     200,
                     responseString,
-                    null,
-                    account.getRole(),
-                    returnAccount.getTokens(),
-                    returnAccount.getRefreshToken()
+                    null
             );
             return new ResponseEntity<>(loginResponseDTO, HttpStatus.OK);
-
 
         } catch (AuthAppException e) {
             ErrorCode errorCode = e.getErrorCode();
@@ -114,10 +122,7 @@ public class AuthService implements UserDetailsService {
             LoginResponseDTO loginResponseDTO = new LoginResponseDTO(
                     400,
                     e.getMessage(),
-                    errorResponse,
-                    null,
-                    null,
-                    null
+                    errorResponse
             );
             return new ResponseEntity<>(loginResponseDTO, errorCode.getHttpStatus());
         }
@@ -132,6 +137,7 @@ public class AuthService implements UserDetailsService {
 
             }
             User account = convertToUser(registerRequestDTO);
+            account.setIsDeleted(false);
             userRepository.save(account);
 
             String responseMessage = "Successful registration, please check your email for verification";

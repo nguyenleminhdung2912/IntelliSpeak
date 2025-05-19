@@ -1,17 +1,25 @@
 package com.gsu25se05.itellispeak.controller;
 
+import com.gsu25se05.itellispeak.dto.auth.reponse.LoginResponseDTO;
 import com.gsu25se05.itellispeak.dto.auth.reponse.RegisterResponseDTO;
+import com.gsu25se05.itellispeak.dto.auth.request.LoginRequestDTO;
 import com.gsu25se05.itellispeak.dto.auth.request.RegisterRequestDTO;
 import com.gsu25se05.itellispeak.jwt.JWTService;
 import com.gsu25se05.itellispeak.repository.UserRepository;
 import com.gsu25se05.itellispeak.service.AuthService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -34,7 +42,26 @@ public class AuthController {
 
 
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponseDTO> registerAccount(@Valid @RequestBody RegisterRequestDTO registerRequestDTO) {
+    public ResponseEntity<RegisterResponseDTO> registerAccount(@Valid @RequestBody RegisterRequestDTO registerRequestDTO, HttpServletResponse response) {
         return authService.registerAccount(registerRequestDTO);
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO loginRequestDTO, HttpServletResponse response) {
+        return authService.checkLogin(loginRequestDTO, response);
+    }
+
+//    @GetMapping("/cookies")
+//    public ResponseEntity<Map<String, String>> getCookies(HttpServletRequest request) {
+//        Map<String, String> cookieMap = new HashMap<>();
+//        Cookie[] cookies = request.getCookies();
+//        if (cookies != null) {
+//            for (Cookie cookie : cookies) {
+//                cookieMap.put(cookie.getName(), cookie.getValue());
+//            }
+//        } else {
+//            cookieMap.put("message", "No cookies found");
+//        }
+//        return ResponseEntity.ok(cookieMap);
+//    }
 }
