@@ -17,44 +17,70 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
+
     @Autowired
     private JWTService jwtService;
+
     @Autowired
     private AuthService authService;
 
+    private static final List<String> EXCLUDED_PATHS = List.of(
+            "/auth/login",
+            "/auth/register",
+            "/auth/forgot-password",
+            "/auth/login/google",
+            "/auth/login/google/mobile",
+            "/swagger-ui.html",
+            "/swagger-ui/index.html",
+            "/swagger-ui/",
+            "/swagger-ui/**",
+            "/v3/api-docs",
+            "/v3/api-docs/**",
+            "/v2/api-docs",
+            "/v2/api-docs/**",
+            "/swagger-resources",
+            "/swagger-resources/**",
+            "/webjars/**"
+    );
+
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return EXCLUDED_PATHS.stream().anyMatch(path::startsWith);
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
-        String token= null;
+        String token = null;
         String userName = null;
-        String uri = request.getRequestURI();
+
         try {
-            if (uri.contains("/auth/login") || uri.contains("/auth/register") || uri.contains("/auth/forgot-password") || uri.contains("/auth/login/google") || uri.contains("/auth/login/google/mobile")) {
-                filterChain.doFilter(request, response);
-                return;
-            }
-            if (authHeader != null && authHeader.startsWith("Bearer")) {
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 token = authHeader.substring(7);
                 userName = jwtService.extractEmail(token);
             }
+
             if (userName != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                User accountEntity = authService.findUserByEmail(userName);
-                if (jwtService.validateToken(token, accountEntity)) {
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(accountEntity, null, accountEntity.getAuthorities());
+                User user = authService.findUserByEmail(userName);
+                if (jwtService.validateToken(token, user)) {
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
+
             filterChain.doFilter(request, response);
         } catch (ExpiredJwtException ex) {
-            // Token hết hạn
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.getWriter().write("Token has expired!");
         } catch (JwtException | IllegalArgumentException ex) {
-            // Token không hợp lệ
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.getWriter().write("Invalid token!");
         }
