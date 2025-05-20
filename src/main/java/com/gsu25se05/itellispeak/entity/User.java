@@ -120,6 +120,12 @@ public class User implements UserDetails {
     @Transient
     private String refreshToken;
 
+    @OneToMany(mappedBy = "user")
+    private List<MemberCV> cvs;
+
+    @OneToMany(mappedBy = "user")
+    private List<JD> jobDescriptions;
+
 //    public User(UUID userId, String firstName, String lastName, String email, String password, Role role, String paymentPlan, LocalDate birthday, String avatar, String status, LocalDateTime createAt, LocalDateTime updateAt, Boolean isDeleted, String tokens, String refreshToken) {
 //        this.userId = userId;
 //        this.firstName = firstName;
