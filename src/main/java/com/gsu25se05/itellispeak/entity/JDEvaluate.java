@@ -1,0 +1,42 @@
+package com.gsu25se05.itellispeak.entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "jd_evaluate")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class JDEvaluate {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "jd_question_id")
+    private Long jdQuestionId;
+
+    @ManyToOne
+    @JoinColumn(name = "jd_id", nullable = false)
+    private JD jd;
+
+    @Column(name = "question")
+    private String question;
+
+    @Column(name = "suitable_answer_1")
+    private String suitableAnswer1;
+
+    @Column(name = "suitable_answer_2")
+    private String suitableAnswer2;
+
+    @Column(name = "skill_needed")
+    private String skillNeeded;
+
+    @Column(name = "create_at")
+    private LocalDateTime createAt;
+
+    @Column(name = "update_at")
+    private LocalDateTime updateAt;
+}
