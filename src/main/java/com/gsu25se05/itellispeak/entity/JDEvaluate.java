@@ -22,17 +22,23 @@ public class JDEvaluate {
     @JoinColumn(name = "jd_id", nullable = false)
     private JD jd;
 
-    @Column(name = "question")
+    @Column(name = "question", columnDefinition = "TEXT")
     private String question;
 
-    @Column(name = "suitable_answer_1")
+    @Column(name = "suitable_answer_1", columnDefinition = "TEXT")
     private String suitableAnswer1;
 
-    @Column(name = "suitable_answer_2")
+    @Column(name = "suitable_answer_2", columnDefinition = "TEXT")
     private String suitableAnswer2;
 
     @Column(name = "skill_needed")
     private String skillNeeded;
+
+    @Column(name = "difficulty_level") // dễ / trung bình / khó
+    private String difficultyLevel;
+
+    @Column(name = "question_type") // technical / behavior / logic...
+    private String questionType;
 
     @Column(name = "create_at")
     private LocalDateTime createAt;
