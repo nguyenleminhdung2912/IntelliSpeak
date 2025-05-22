@@ -7,6 +7,7 @@ import com.gsu25se05.itellispeak.dto.jd.JDInputDTO;
 import com.gsu25se05.itellispeak.entity.JD;
 import com.gsu25se05.itellispeak.entity.User;
 import com.gsu25se05.itellispeak.repository.JDRepository;
+import com.gsu25se05.itellispeak.repository.UserRepository;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -15,8 +16,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.UUID;
 
 @Service
 public class JDService {
@@ -26,24 +26,26 @@ public class JDService {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
     private final AccountUtils accountUtils;
+    private final UserRepository userRepository;
 
-    public JDService(JDRepository jdRepository, @Value("${genai.api.key}") String apiKey, AccountUtils accountUtils) {
+    public JDService(JDRepository jdRepository, @Value("${genai.api.key}") String apiKey, AccountUtils accountUtils, UserRepository userRepository) {
         this.jdRepository = jdRepository;
         this.webClient = WebClient.builder()
                 .baseUrl(API_URL + "?key=" + apiKey)
                 .defaultHeader("Content-Type", "application/json")
                 .build();
         this.accountUtils = accountUtils;
+        this.userRepository = userRepository;
     }
 
     public JD analyzeAndSaveJD(JDInputDTO input) throws Exception {
-        User user = accountUtils.getCurrentAccount();
+//        User user = accountUtils.getCurrentAccount();
 
         String prompt;
 
         if (input.getLinkToJd() != null && !input.getLinkToJd().isEmpty()) {
             prompt = String.format("""
-                    Bạn hãy truy cập vào link sau và phân tích mô tả công việc, tóm tắt các thông tin quan trọng dưới dạng JSON:
+                    Bạn hãy truy cập vào link sau và phân tích mô tả công việc, tóm tắt các thông tin quan trọng dưới dạng **JSON hợp lệ** (chỉ JSON, không Markdown, không giải thích):
                     {
                       "jobTitle": "",
                       "summary": "",
@@ -56,7 +58,8 @@ public class JDService {
                     """, input.getLinkToJd());
         } else if (input.getJdRawContent() != null && !input.getJdRawContent().isEmpty()) {
             prompt = String.format("""
-                    Dưới đây là nội dung mô tả công việc, hãy phân tích và tóm tắt các thông tin quan trọng dưới dạng JSON:
+                    Hãy phân tích nội dung mô tả công việc dưới đây và trả kết quả dưới dạng **JSON hợp lệ** (chỉ JSON, không Markdown, không giải thích):
+                    
                     {
                       "jobTitle": "",
                       "summary": "",
@@ -76,11 +79,18 @@ public class JDService {
         // Giả định AI trả về JSON dạng string
         JsonNode jsonNode;
         try {
-            jsonNode = objectMapper.readTree(responseText);
+            // ✅ Làm sạch kết quả có thể có ```json hoặc ``` bao quanh
+            String cleanedJson = responseText
+                    .replaceAll("(?i)```json", "")
+                    .replaceAll("(?i)```", "")
+                    .trim();
+
+            jsonNode = objectMapper.readTree(cleanedJson);
         } catch (JsonProcessingException e) {
-            throw new IllegalArgumentException("AI trả về kết quả không hợp lệ JSON: " + responseText);
+            throw new IllegalArgumentException("AI trả về kết quả không hợp lệ JSON:\n" + responseText);
         }
 
+        User user = userRepository.findByUserId(UUID.fromString("820f5d67-1008-41ad-8903-f63555896abc")).orElse(null);
         JD jd = new JD();
         jd.setUser(user);
         jd.setLinkToJd(input.getLinkToJd());
