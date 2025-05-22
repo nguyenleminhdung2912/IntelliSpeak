@@ -1,9 +1,13 @@
 package com.gsu25se05.itellispeak.controller;
 
+import com.gsu25se05.itellispeak.dto.auth.reponse.ForgotPasswordResponse;
 import com.gsu25se05.itellispeak.dto.auth.reponse.LoginResponseDTO;
 import com.gsu25se05.itellispeak.dto.auth.reponse.RegisterResponseDTO;
+import com.gsu25se05.itellispeak.dto.auth.reponse.ResetPasswordResponse;
+import com.gsu25se05.itellispeak.dto.auth.request.ForgotPasswordRequest;
 import com.gsu25se05.itellispeak.dto.auth.request.LoginRequestDTO;
 import com.gsu25se05.itellispeak.dto.auth.request.RegisterRequestDTO;
+import com.gsu25se05.itellispeak.dto.auth.request.ResetPasswordRequest;
 import com.gsu25se05.itellispeak.jwt.JWTService;
 import com.gsu25se05.itellispeak.repository.UserRepository;
 import com.gsu25se05.itellispeak.service.AuthService;
@@ -14,10 +18,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,6 +56,25 @@ public class AuthController {
     public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO loginRequestDTO, HttpServletResponse response) {
         return authService.checkLogin(loginRequestDTO, response);
     }
+
+    @GetMapping("/verify/{token}")
+    public ResponseEntity<Void> activateAccount(@PathVariable String token) throws Exception {
+        if (authService.verifyAccount(token)) {
+            return ResponseEntity.status(HttpStatus.FOUND).location(URI.create("http://localhost:5173/login")).build();
+        }
+        return null;
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ForgotPasswordResponse> forgotPassword(@RequestBody ForgotPasswordRequest forgotPasswordRequest) {
+        return authService.forgotPassword(forgotPasswordRequest);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ResetPasswordResponse> resetPassword(@RequestParam("token") String token, @RequestBody ResetPasswordRequest resetPasswordRequest) {
+        return authService.resetPassword(resetPasswordRequest, token);
+    }
+
 
 //    @GetMapping("/cookies")
 //    public ResponseEntity<Map<String, String>> getCookies(HttpServletRequest request) {
