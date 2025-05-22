@@ -10,9 +10,10 @@
     </parent>
     <groupId>com.GSU25SE05</groupId>
     <artifactId>ItelliSpeak</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>ItelliSpeak</name>
-    <description>ItelliSpeak</description>
+    <version>0.1</version>
+    <packaging>jar</packaging>
+    <name>IntelliSpeak</name>
+    <description>IntelliSpeak</description>
     <url/>
     <licenses>
         <license/>
@@ -124,23 +125,33 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
-    </dependencies>
+        <!-- WebClient -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
 
+        <!-- JSON xử lý response -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>2.0.29</version> <!-- hoặc version mới hơn -->
+        </dependency>
+
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>itext7-core</artifactId>
+            <version>8.0.3</version>
+            <type>pom</type>
+        </dependency>
+    </dependencies>
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>1.18.38</version>
-                        </path>
-                    </annotationProcessorPaths>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
