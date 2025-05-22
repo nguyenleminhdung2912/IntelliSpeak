@@ -11,8 +11,9 @@
     <groupId>com.GSU25SE05</groupId>
     <artifactId>ItelliSpeak</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>ItelliSpeak</name>
-    <description>ItelliSpeak</description>
+    <packaging>jar</packaging>
+    <name>IntelliSpeak</name>
+    <description>IntelliSpeak</description>
     <url/>
     <licenses>
         <license/>
