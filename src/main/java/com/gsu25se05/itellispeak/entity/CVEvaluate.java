@@ -1,5 +1,6 @@
 package com.gsu25se05.itellispeak.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,6 +19,7 @@ public class CVEvaluate {
     @Column(name = "cv_evaluate_id")
     private Long cvEvaluateId;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "member_cv_id", nullable = false)
     private MemberCV memberCV;

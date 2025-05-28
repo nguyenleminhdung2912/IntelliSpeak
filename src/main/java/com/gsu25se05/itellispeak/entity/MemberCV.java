@@ -1,5 +1,6 @@
 package com.gsu25se05.itellispeak.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,8 +19,10 @@ public class MemberCV {
     @Column(name = "member_cv_id")
     private Long memberCvId;
 
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     @Column(name = "link_to_cv")
