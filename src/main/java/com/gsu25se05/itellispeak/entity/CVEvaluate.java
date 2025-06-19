@@ -45,7 +45,7 @@ public class CVEvaluate {
     private String grammarFeedback;
 
     // Phân tích sự phù hợp với JD (nếu có JD upload kèm)
-    @Column(name = "relevance_score") // eg. 85/100
+    @Column(name = "relevance_score", nullable = true) // eg. 85/100
     private Integer relevanceScore;
 
     // Các kỹ năng còn thiếu (dưới dạng chuỗi phân cách hoặc bảng riêng nếu cần normalize)
