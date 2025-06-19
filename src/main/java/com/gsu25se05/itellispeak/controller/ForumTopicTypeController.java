@@ -1,5 +1,10 @@
 package com.gsu25se05.itellispeak.controller;
 
+import com.gsu25se05.itellispeak.dto.Response;
+import com.gsu25se05.itellispeak.dto.topic.TopicRequest;
+import com.gsu25se05.itellispeak.dto.topic.TopicResponse;
+import com.gsu25se05.itellispeak.dto.topic.UpdateTopicRequest;
+import com.gsu25se05.itellispeak.dto.topic.UpdateTopicResponse;
 import com.gsu25se05.itellispeak.entity.ForumTopicType;
 import com.gsu25se05.itellispeak.service.ForumTopicTypeService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -21,12 +26,12 @@ public class ForumTopicTypeController {
     }
 
     @PostMapping
-    public ForumTopicType createTopicType(@RequestBody ForumTopicType topicType) {
+    public Response<TopicResponse> createTopicType(@RequestBody TopicRequest topicType) {
         return topicTypeService.createTopicType(topicType);
     }
 
     @PutMapping("/{id}")
-    public ForumTopicType updateTopicType(@PathVariable Long id, @RequestBody ForumTopicType topicType) {
+    public Response<UpdateTopicResponse> updateTopicType(@PathVariable Long id, @RequestBody UpdateTopicRequest topicType) {
         return topicTypeService.updateTopicType(id, topicType);
     }
 
