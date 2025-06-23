@@ -1,10 +1,10 @@
 package com.gsu25se05.itellispeak.controller;
 
 import com.gsu25se05.itellispeak.dto.Response;
-import com.gsu25se05.itellispeak.dto.topic.TopicRequest;
-import com.gsu25se05.itellispeak.dto.topic.TopicResponse;
-import com.gsu25se05.itellispeak.dto.topic.UpdateTopicRequest;
-import com.gsu25se05.itellispeak.dto.topic.UpdateTopicResponse;
+import com.gsu25se05.itellispeak.dto.forumtopic.ForumTopicRequest;
+import com.gsu25se05.itellispeak.dto.forumtopic.ForumTopicResponse;
+import com.gsu25se05.itellispeak.dto.forumtopic.UpdateForumTopicRequest;
+import com.gsu25se05.itellispeak.dto.forumtopic.UpdateForumTopicResponse;
 import com.gsu25se05.itellispeak.entity.ForumTopicType;
 import com.gsu25se05.itellispeak.service.ForumTopicTypeService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -26,12 +26,12 @@ public class ForumTopicTypeController {
     }
 
     @PostMapping
-    public Response<TopicResponse> createTopicType(@RequestBody TopicRequest topicType) {
+    public Response<ForumTopicResponse> createTopicType(@RequestBody ForumTopicRequest topicType) {
         return topicTypeService.createTopicType(topicType);
     }
 
     @PutMapping("/{id}")
-    public Response<UpdateTopicResponse> updateTopicType(@PathVariable Long id, @RequestBody UpdateTopicRequest topicType) {
+    public Response<UpdateForumTopicResponse> updateTopicType(@PathVariable Long id, @RequestBody UpdateForumTopicRequest topicType) {
         return topicTypeService.updateTopicType(id, topicType);
     }
 

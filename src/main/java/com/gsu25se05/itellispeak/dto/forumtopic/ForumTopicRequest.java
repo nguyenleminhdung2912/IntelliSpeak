@@ -1,4 +1,4 @@
-package com.gsu25se05.itellispeak.dto.topic;
+package com.gsu25se05.itellispeak.dto.forumtopic;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class TopicRequest {
+public class ForumTopicRequest {
     @NotBlank(message = "Topic title cannot be empty")
     private String title;
 }

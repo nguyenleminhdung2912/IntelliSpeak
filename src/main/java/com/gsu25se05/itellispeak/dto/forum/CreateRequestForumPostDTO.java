@@ -21,7 +21,7 @@ public class CreateRequestForumPostDTO {
 
     private String image;
 
-    private ForumTopicType forumTopicType;
+    private Long forumTopicTypeId;
 
-    private ForumCategory forumCategory;
+    private Long forumCategoryId;
 }
