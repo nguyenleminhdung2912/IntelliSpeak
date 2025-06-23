@@ -4,15 +4,12 @@ package com.gsu25se05.itellispeak.service;
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.forum.CreateRequestForumPostDTO;
 import com.gsu25se05.itellispeak.dto.forum.CreateResponseForumDTO;
-import com.gsu25se05.itellispeak.entity.ForumPost;
-import com.gsu25se05.itellispeak.entity.ForumPostPicture;
-import com.gsu25se05.itellispeak.entity.User;
+import com.gsu25se05.itellispeak.entity.*;
 import com.gsu25se05.itellispeak.exception.ErrorCode;
 import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
+import com.gsu25se05.itellispeak.exception.auth.NotFoundException;
 import com.gsu25se05.itellispeak.exception.service.CreateServiceException;
-import com.gsu25se05.itellispeak.repository.ForumPostPictureRepository;
-import com.gsu25se05.itellispeak.repository.ForumPostRepository;
-import com.gsu25se05.itellispeak.repository.UserRepository;
+import com.gsu25se05.itellispeak.repository.*;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
@@ -26,16 +23,25 @@ public class ForumPostService {
     private final UserRepository userRepository;
     private final ForumPostRepository forumPostRepository;
     private final ForumPostPictureRepository forumPostPictureRepository;
+    private final ForumCategoryRepository forumCategoryRepository;
+    private final ForumTopicTypeRepository forumTopicTypeRepository;
 
-    public ForumPostService(AccountUtils accountUtils, UserRepository userRepository, ForumPostRepository forumPostRepository, ForumPostPictureRepository forumPostPictureRepository) {
+    public ForumPostService(AccountUtils accountUtils, UserRepository userRepository, ForumPostRepository forumPostRepository, ForumPostPictureRepository forumPostPictureRepository, ForumCategoryRepository forumCategoryRepository, ForumTopicTypeRepository forumTopicTypeRepository) {
         this.accountUtils = accountUtils;
         this.userRepository = userRepository;
         this.forumPostRepository = forumPostRepository;
         this.forumPostPictureRepository = forumPostPictureRepository;
+        this.forumCategoryRepository = forumCategoryRepository;
+        this.forumTopicTypeRepository = forumTopicTypeRepository;
     }
 
     public List<ForumPost> getAllPosts() {
         return forumPostRepository.findByIsDeletedFalse();
+    }
+
+    public ForumPost getPostById(Long id) {
+        return forumPostRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Forum Post not found with id: " + id));
     }
 
     public Response<CreateResponseForumDTO> createForumPost (@Valid CreateRequestForumPostDTO createRequestForumPostDTO){
@@ -48,8 +54,17 @@ public class ForumPostService {
         forumPost.setContent(createRequestForumPostDTO.getContent());
         forumPost.setCreateAt(LocalDateTime.now());
         forumPost.setIsDeleted(false);
-        forumPost.setForumCategory(createRequestForumPostDTO.getForumCategory());
-        forumPost.setForumTopicType(createRequestForumPostDTO.getForumTopicType());
+
+        ForumCategory forumCategory = forumCategoryRepository.findById(createRequestForumPostDTO.getForumCategoryId())
+                .orElseThrow(() -> new NotFoundException("Category not found with id: " + createRequestForumPostDTO.getForumCategoryId()));
+
+        forumPost.setForumCategory(forumCategory);
+
+        ForumTopicType forumTopicType = forumTopicTypeRepository.findById(createRequestForumPostDTO.getForumTopicTypeId())
+                .orElseThrow(() -> new NotFoundException("Forum topic type not found with id: " + createRequestForumPostDTO.getForumTopicTypeId()));
+
+        forumPost.setForumTopicType(forumTopicType);
+
         ForumPostPicture forumPostPicture = new ForumPostPicture();
         forumPostPicture.setForumPost(forumPost);
         forumPostPicture.setUrl(createRequestForumPostDTO.getImage());
