@@ -88,7 +88,7 @@ public class CVService {
         JsonNode evalNode = rootNode.get("evaluation");
         JsonNode infoNode = rootNode.get("extractedInfo");
 
-        User user = userRepository.findByUserId(UUID.fromString("029ffe92-8d76-41bb-be00-aafd67f52fd9")).orElse(null);
+        User user = userRepository.findByUserId(UUID.fromString("820f5d67-1008-41ad-8903-f63555896abc")).orElse(null);
 
         // Create and save MemberCV
         MemberCV memberCV = new MemberCV();
