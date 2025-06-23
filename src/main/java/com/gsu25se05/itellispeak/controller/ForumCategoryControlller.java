@@ -45,9 +45,8 @@ public class ForumCategoryControlller {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
-        forumCategoryService.deleteCategory(id);
-        return ResponseEntity.noContent().build();
+    public Response<String> deleteCategory(@PathVariable Long id) {
+        return forumCategoryService.deleteCategory(id);
     }
 }
 

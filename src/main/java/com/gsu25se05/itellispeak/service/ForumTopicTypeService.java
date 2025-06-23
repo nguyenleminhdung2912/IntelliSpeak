@@ -86,10 +86,15 @@ public class ForumTopicTypeService {
 
     }
 
-    public void deleteTopicType(Long id) {
-        ForumTopicType topicType = getTopicTypeById(id);
-        topicType.setDeleted(true);
-        topicType.setUpdateAt(LocalDateTime.now());
-        forumTopicTypeRepository.save(topicType);
+    public Response<String> deleteTopicType(Long id) {
+        User account = accountUtils.getCurrentAccount();
+        if (account == null) return new Response<>(401, "Please login first", null);
+        ForumTopicType topic = getTopicTypeById(id);
+        if (topic == null) return new Response<>(404, "Forum topic type not found", null);
+        if (topic.isDeleted()) return new Response<>(400, "Forum topic type is already deleted", null);
+        topic.setDeleted(true);
+        topic.setUpdateAt(LocalDateTime.now());
+        forumTopicTypeRepository.save(topic);
+        return new Response<>(200, "Forum topic type deleted successfully!", "topic with ID " + id + " was soft deleted.");
     }
 }
