@@ -87,6 +87,19 @@ public class ForumPostService {
     }
 
 
+    public Response<String> deletePost(Long id) {
+        User user = checkAccount();
+        if (user == null) return new Response<>(401, "Please login first", null);
+        ForumPost forumPost = getPostById(id);
+        if (forumPost == null) return new Response<>(404, "Forum post not found", null);
+        if (forumPost.getIsDeleted()) return new Response<>(400, "Forum post is already deleted", null);
+        forumPost.setIsDeleted(true);
+        forumPost.setUpdateAt(LocalDateTime.now());
+        forumPostRepository.save(forumPost);
+        return new Response<>(200, "Forum post deleted successfully!", "post with ID " + id + " was soft deleted.");
+    }
+
+
     private User checkAccount() {
         // Get the current account
         User account = accountUtils.getCurrentAccount();

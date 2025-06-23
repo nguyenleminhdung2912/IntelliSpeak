@@ -36,8 +36,7 @@ public class ForumTopicTypeController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTopicType(@PathVariable Long id) {
-        topicTypeService.deleteTopicType(id);
-        return ResponseEntity.noContent().build();
+    public Response<String> deleteTopicType(@PathVariable Long id) {
+        return topicTypeService.deleteTopicType(id);
     }
 }

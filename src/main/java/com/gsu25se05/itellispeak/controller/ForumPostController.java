@@ -10,6 +10,7 @@ import com.gsu25se05.itellispeak.entity.ForumTopicType;
 import com.gsu25se05.itellispeak.service.ForumPostService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,6 +37,11 @@ public class ForumPostController {
     @PostMapping
     public Response<CreateResponseForumDTO> createForumPost(@RequestBody CreateRequestForumPostDTO forumPostDTO) {
         return forumPostService.createForumPost(forumPostDTO);
+    }
+
+    @DeleteMapping("/{id}")
+    public Response<String> deletePost(@PathVariable Long id) {
+        return forumPostService.deletePost(id);
     }
 
 }

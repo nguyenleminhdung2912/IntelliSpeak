@@ -85,11 +85,15 @@ public class ForumCategoryService {
         return new Response<>(200, "Category updated successfully!", data);
     }
 
-    public void deleteCategory(Long id) {
+    public Response<String> deleteCategory(Long id) {
+        User account = accountUtils.getCurrentAccount();
+        if (account == null) return new Response<>(401, "Please login first", null);
         ForumCategory category = getCategoryById(id);
+        if (category == null) return new Response<>(404, "Forum category type not found", null);
+        if (category.isDeleted()) return new Response<>(400, "Forum category is already deleted", null);
         category.setDeleted(true);
         category.setUpdateAt(LocalDateTime.now());
         forumCategoryRepository.save(category);
+        return new Response<>(200, "Forum category deleted successfully!", "category with ID " + id + " was soft deleted.");
     }
-
 }
