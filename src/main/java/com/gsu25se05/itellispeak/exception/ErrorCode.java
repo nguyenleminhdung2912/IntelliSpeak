@@ -49,43 +49,9 @@ public enum ErrorCode {
     INVALID_PRICE(2007, "Invalid price", HttpStatus.BAD_REQUEST),
     FILE_MAX_SIZE(2008, "Maximum file size exceeded", HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE),
 
-//    WALLETS | CODE: 3XXX
-    WALLET_NOT_FOUND(3000, "This wallet does not exist, please re-check", HttpStatus.BAD_REQUEST),
-    WALLET_LOG_NOT_FOUND(3001, "There is no such wallet log, please-recheck", HttpStatus.BAD_REQUEST),
-    ACCOUNT_NOT_MATCH(3002, "Account not match.", HttpStatus.BAD_REQUEST),
-    CANCELLED(3003, "Cancelled", HttpStatus.BAD_REQUEST),
-    MONTH_WITHOUT_WALLET_LOG(3004, "This are no wallet log this month", HttpStatus.BAD_REQUEST),
-    WALLET_LOG_IS_DELETED(5001,"This Order has been deleted", HttpStatus.BAD_REQUEST),
-    ERROR_DELETE_WALLET(3005, "Error deleting wallet ", HttpStatus.BAD_REQUEST),
-    VALIDATION_ERROR(3005, "Validation failed for create wallet request", HttpStatus.BAD_REQUEST),
-    WALLET_ALREADY_EXISTS(3006, "Wallet already exists", HttpStatus.BAD_REQUEST),
-//    CATEGORIES | CODE: 4XXX
-    NO_CATEGORY_FOUND(4000, "There is no such category, please-recheck", HttpStatus.BAD_REQUEST),
-    INVALID_CATEGORY(4001, "Invalid category, please recheck", HttpStatus.BAD_REQUEST),
-    INVALID_INPUT(4002, "Invalid input, please recheck", HttpStatus.BAD_REQUEST),
-
-//    SCHEDULE | CODE: 5XXX
-    SCHEDULE_NOT_FOUND(5000, "Schedule not found", HttpStatus.NOT_FOUND),
-    ORDER_IS_DELETED(5001,"This Order has been deleted", HttpStatus.BAD_REQUEST),
-
-//    WALLETS | CODE: 6XXX
-    PRICE_INVALID(6000, "Price must be greater than 0", HttpStatus.BAD_REQUEST),
-    BALANCE_INVALID(6001, "Amount must be greater than 0 and less than the remaining balance.", HttpStatus.BAD_REQUEST),
-    BALANCE_NOT_ENOUGH(6002, "Doesn't have enough balance", HttpStatus.BAD_REQUEST),
-    // TRANSACTIONS | CODE: 7XXX
-    TRANSACTION_NOT_FOUND(7000, "Transaction not found", HttpStatus.NOT_FOUND),
-
-//    SEMESTER | CODE: 7XXX
-    SEMESTER_NOT_FOUND(7000, "Semester not found, please re-check", HttpStatus.BAD_REQUEST),
-
 // BILLING | CODE 8XXX
     BILLING_NOT_EMPTY(7001, "Billing is not empty", HttpStatus.BAD_REQUEST),
     BILLING_NOT_FOUNT(7002, "Billing not found, please re-check", HttpStatus.NOT_FOUND),
-// SUBSCRIBE | CODE 9XXX
-    SUBSCRIBE_IS_EMPTY(7003, "You are already following this person", HttpStatus.NOT_FOUND),
-
-    // QUIZ | Code 71XX
-
 
     ;
     @Getter

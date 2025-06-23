@@ -6,10 +6,11 @@ import com.gsu25se05.itellispeak.entity.CVEvaluate;
 import com.gsu25se05.itellispeak.entity.CVExtractedInfo;
 import com.gsu25se05.itellispeak.entity.MemberCV;
 import com.gsu25se05.itellispeak.entity.User;
-import com.gsu25se05.itellispeak.repository.CVEvaluateReposiotory;
+import com.gsu25se05.itellispeak.exception.auth.NotFoundException;
+import com.gsu25se05.itellispeak.repository.CVEvaluateRepository;
 import com.gsu25se05.itellispeak.repository.CVExtractedInfoRepository;
 import com.gsu25se05.itellispeak.repository.MemberCVRepository;
-import com.gsu25se05.itellispeak.repository.UserRepository;
+import com.gsu25se05.itellispeak.utils.AccountUtils;
 import com.gsu25se05.itellispeak.utils.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,19 +20,19 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Service
 public class CVService {
     private final WebClient webClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-    private final CVEvaluateReposiotory cvEvaluateRepository;
+    private final CVEvaluateRepository cvEvaluateRepository;
     private final CVExtractedInfoRepository cvExtractedInfoRepository;
     private final MemberCVRepository memberCVRepository;
-    private final UserRepository userRepository;
+    private final AccountUtils accountUtils;
 
-    public CVService(@Value("${genai.api.key}") String apiKey, CVEvaluateReposiotory cvEvaluateRepository, CVExtractedInfoRepository cvExtractedInfoRepository, MemberCVRepository memberCVRepository, UserRepository userRepository) {
+
+    public CVService(@Value("${genai.api.key}") String apiKey, CVEvaluateRepository cvEvaluateRepository, CVExtractedInfoRepository cvExtractedInfoRepository, MemberCVRepository memberCVRepository, AccountUtils accountUtils) {
         this.webClient = WebClient.builder()
                 .baseUrl(API_URL + "?key=" + apiKey)
                 .defaultHeader("Content-Type", "application/json")
@@ -39,7 +40,7 @@ public class CVService {
         this.cvEvaluateRepository = cvEvaluateRepository;
         this.cvExtractedInfoRepository = cvExtractedInfoRepository;
         this.memberCVRepository = memberCVRepository;
-        this.userRepository = userRepository;
+        this.accountUtils = accountUtils;
     }
 
     public CVEvaluate analyzeAndSaveFromFile(MultipartFile file) throws Exception {
@@ -88,7 +89,10 @@ public class CVService {
         JsonNode evalNode = rootNode.get("evaluation");
         JsonNode infoNode = rootNode.get("extractedInfo");
 
-        User user = userRepository.findByUserId(UUID.fromString("820f5d67-1008-41ad-8903-f63555896abc")).orElse(null);
+        User user = accountUtils.getCurrentAccount();
+        if (user == null) {
+            throw new NotFoundException("Không tìm thấy người dùng đăng nhập");
+        }
 
         // Create and save MemberCV
         MemberCV memberCV = new MemberCV();
