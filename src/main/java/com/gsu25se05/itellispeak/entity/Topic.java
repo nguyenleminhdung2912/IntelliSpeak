@@ -1,0 +1,38 @@
+package com.gsu25se05.itellispeak.entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.Entity;
+import jakarta.persistence.*;
+import lombok.Data;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Entity
+@Table(name = "topic")
+@Data
+public class Topic {
+    @Id
+    @GeneratedValue
+    private Long topicId;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Column
+    private String description;
+
+    @Column(nullable = false)
+    private LocalDateTime createAt;
+
+    @Column
+    private LocalDateTime updateAt;
+
+    @Column(nullable = false)
+    private Boolean isDeleted;
+
+    @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<InterviewSession> interviewSessions;
+}
+

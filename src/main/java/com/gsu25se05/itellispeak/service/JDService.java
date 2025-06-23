@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gsu25se05.itellispeak.dto.jd.JDInputDTO;
 import com.gsu25se05.itellispeak.entity.JD;
 import com.gsu25se05.itellispeak.entity.User;
+import com.gsu25se05.itellispeak.exception.auth.NotFoundException;
 import com.gsu25se05.itellispeak.repository.JDRepository;
 import com.gsu25se05.itellispeak.repository.UserRepository;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
@@ -91,6 +92,10 @@ public class JDService {
         }
 
         User user = accountUtils.getCurrentAccount();
+        if (user == null) {
+            throw new NotFoundException("Không tìm thấy người dùng đăng nhập");
+        }
+
         JD jd = new JD();
         jd.setUser(user);
         jd.setLinkToJd(input.getLinkToJd());
