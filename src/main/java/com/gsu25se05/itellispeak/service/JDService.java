@@ -90,7 +90,7 @@ public class JDService {
             throw new IllegalArgumentException("AI trả về kết quả không hợp lệ JSON:\n" + responseText);
         }
 
-        User user = accountUtils.getCurrentAccount();
+        User user = userRepository.findByUserId(UUID.fromString("820f5d67-1008-41ad-8903-f63555896abc")).orElse(null);
         JD jd = new JD();
         jd.setUser(user);
         jd.setLinkToJd(input.getLinkToJd());
