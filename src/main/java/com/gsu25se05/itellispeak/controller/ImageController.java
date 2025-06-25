@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("image")
@@ -18,7 +20,11 @@ public class ImageController {
     private CloudinaryUtils cloudinaryUtils;
 
     @PostMapping("/upload")
-    public String uploadImage(@RequestParam("image") MultipartFile file) throws IOException {
-        return cloudinaryUtils.uploadImage(file);
+    public List<String> uploadImages(@RequestParam("images") List<MultipartFile> files) throws IOException {
+        List<String> urls = new ArrayList<>();
+        for (MultipartFile file : files) {
+            urls.add(cloudinaryUtils.uploadImage(file));
+        }
+        return urls;
     }
 }

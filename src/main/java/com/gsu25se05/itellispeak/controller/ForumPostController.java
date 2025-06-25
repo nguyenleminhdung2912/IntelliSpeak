@@ -2,8 +2,12 @@ package com.gsu25se05.itellispeak.controller;
 
 
 import com.gsu25se05.itellispeak.dto.Response;
+import com.gsu25se05.itellispeak.dto.category.UpdateCategoryRequest;
+import com.gsu25se05.itellispeak.dto.category.UpdateCategoryResponse;
 import com.gsu25se05.itellispeak.dto.forum.CreateRequestForumPostDTO;
 import com.gsu25se05.itellispeak.dto.forum.CreateResponseForumDTO;
+import com.gsu25se05.itellispeak.dto.forum.UpdateRequestPostDTO;
+import com.gsu25se05.itellispeak.dto.forum.UpdateResponsePostDTO;
 import com.gsu25se05.itellispeak.entity.ForumCategory;
 import com.gsu25se05.itellispeak.entity.ForumPost;
 import com.gsu25se05.itellispeak.entity.ForumTopicType;
@@ -39,9 +43,25 @@ public class ForumPostController {
         return forumPostService.createForumPost(forumPostDTO);
     }
 
+    @PutMapping("/{id}")
+    public Response<UpdateResponsePostDTO> updatePost(@PathVariable Long id, @RequestBody UpdateRequestPostDTO post) {
+        return forumPostService.updateForumPost(id, post);
+    }
+
     @DeleteMapping("/{id}")
     public Response<String> deletePost(@PathVariable Long id) {
         return forumPostService.deletePost(id);
     }
+
+    @DeleteMapping("/posts/{postId}/images/{imageId}")
+    @SecurityRequirement(name = "api")
+    public ResponseEntity<Response<String>> deleteImageFromPost(
+            @PathVariable Long postId,
+            @PathVariable Long imageId
+    ) {
+        Response<String> response = forumPostService.deleteImageFromPost(postId, imageId);
+        return ResponseEntity.status(response.getCode()).body(response);
+    }
+
 
 }
