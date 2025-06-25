@@ -2,14 +2,12 @@ package com.gsu25se05.itellispeak.service;
 
 
 import com.gsu25se05.itellispeak.dto.Response;
-import com.gsu25se05.itellispeak.dto.forum.CreateRequestForumPostDTO;
-import com.gsu25se05.itellispeak.dto.forum.CreateResponseForumDTO;
+import com.gsu25se05.itellispeak.dto.forum.*;
 import com.gsu25se05.itellispeak.entity.*;
-import com.gsu25se05.itellispeak.exception.ErrorCode;
-import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
 import com.gsu25se05.itellispeak.exception.auth.NotFoundException;
 import com.gsu25se05.itellispeak.repository.*;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 
@@ -36,13 +34,28 @@ public class ForumPostService {
     }
 
     public List<ForumPost> getAllPosts() {
-        return forumPostRepository.findByIsDeletedFalse();
+        List<ForumPost> posts = forumPostRepository.findByIsDeletedFalse();
+        for (ForumPost post : posts) {
+            List<ForumPostPicture> activePictures = post.getPictures().stream()
+                    .filter(p -> !Boolean.TRUE.equals(p.isDeleted()))
+                    .collect(Collectors.toList());
+            post.setPictures(activePictures);
+        }
+        return posts;
     }
 
     public ForumPost getPostById(Long id) {
-        return forumPostRepository.findById(id)
+        ForumPost post = forumPostRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Forum Post not found with id: " + id));
+
+        List<ForumPostPicture> activePictures = post.getPictures().stream()
+                .filter(p -> !Boolean.TRUE.equals(p.isDeleted()))
+                .collect(Collectors.toList());
+        post.setPictures(activePictures);
+
+        return post;
     }
+
 
     public Response<CreateResponseForumDTO> createForumPost(@Valid CreateRequestForumPostDTO dto) {
         User user = accountUtils.getCurrentAccount();
@@ -75,12 +88,17 @@ public class ForumPostService {
 
         forumPostRepository.save(post);
 
+        List<String> imageUrls = post.getPictures().stream()
+                .filter(p -> !Boolean.TRUE.equals(p.isDeleted()))
+                .map(ForumPostPicture::getUrl)
+                .collect(Collectors.toList());
+
         // response
         CreateResponseForumDTO responseDTO = new CreateResponseForumDTO(
                 post.getId(),
                 post.getTitle(),
                 post.getContent(),
-                dto.getImages().isEmpty() ? null : dto.getImages().get(0),
+                imageUrls,
                 post.getForumTopicType(),
                 post.getForumCategory(),
                 post.getCreateAt()
@@ -88,6 +106,111 @@ public class ForumPostService {
 
         return new Response<>(201, "Forum Post created successfully!", responseDTO);
     }
+
+
+    public Response<UpdateResponsePostDTO> updateForumPost(Long postId, @Valid UpdateRequestPostDTO dto) {
+        User user = accountUtils.getCurrentAccount();
+        if (user == null) return new Response<>(401, "Please login first", null);
+
+        ForumPost post = forumPostRepository.findById(postId)
+                .orElseThrow(() -> new NotFoundException("Forum post not found"));
+
+        // Only the post owner can edit
+        if (!post.getUser().getUserId().equals(user.getUserId())) {
+            return new Response<>(403, "You are not the owner of this post", null);
+        }
+
+
+        if (dto.getTitle() != null) {
+            post.setTitle(dto.getTitle());
+        }
+
+        if (dto.getContent() != null) {
+            post.setContent(dto.getContent());
+        }
+        post.setUpdateAt(LocalDateTime.now());
+
+
+        if (dto.getForumCategoryId() != null) {
+            ForumCategory category = forumCategoryRepository.findById(dto.getForumCategoryId())
+                    .orElseThrow(() -> new NotFoundException("Category not found"));
+            post.setForumCategory(category);
+        }
+
+        if (dto.getForumTopicTypeId() != null) {
+            ForumTopicType topicType = forumTopicTypeRepository.findById(dto.getForumTopicTypeId())
+                    .orElseThrow(() -> new NotFoundException("Topic type not found"));
+            post.setForumTopicType(topicType);
+        }
+
+        List<ForumPostPicture> currentPictures = post.getPictures();
+
+
+        for (UpdateImageDTO imageDTO : dto.getImages()) {
+            if (imageDTO.getId() != null) {
+                ForumPostPicture pic = currentPictures.stream()
+                        .filter(p -> p.getId().equals(imageDTO.getId()))
+                        .findFirst()
+                        .orElseThrow(() -> new NotFoundException("Image not found with id: " + imageDTO.getId()));
+                pic.setUrl(imageDTO.getUrl());
+            } else {
+                ForumPostPicture newPic = new ForumPostPicture();
+                newPic.setForumPost(post);
+                newPic.setUrl(imageDTO.getUrl());
+                newPic.setCreateAt(LocalDateTime.now());
+                newPic.setDeleted(false);
+                currentPictures.add(newPic);
+            }
+        }
+
+            post.setPictures(currentPictures);
+
+            forumPostRepository.save(post);
+
+        List<String> imageUrls = post.getPictures().stream()
+                .filter(p -> !Boolean.TRUE.equals(p.isDeleted()))
+                .map(ForumPostPicture::getUrl)
+                .collect(Collectors.toList());
+
+            UpdateResponsePostDTO responseDTO = new UpdateResponsePostDTO(
+                    post.getId(),
+                    post.getTitle(),
+                    post.getContent(),
+                    imageUrls,
+                    post.getForumTopicType(),
+                    post.getForumCategory(),
+                    post.getUpdateAt()
+            );
+
+            return new Response<>(200, "Forum post updated successfully!", responseDTO);
+        }
+
+    @Transactional
+    public Response<String> deleteImageFromPost(Long postId, Long imageId) {
+        User user = accountUtils.getCurrentAccount();
+        if (user == null) return new Response<>(401, "Please login first", null);
+
+        ForumPost post = forumPostRepository.findById(postId)
+                .orElseThrow(() -> new NotFoundException("Post not found"));
+
+        if (!post.getUser().getUserId().equals(user.getUserId())) {
+            return new Response<>(403, "You are not the owner of this post", null);
+        }
+
+        ForumPostPicture image = forumPostPictureRepository.findById(imageId)
+                .orElseThrow(() -> new NotFoundException("Image not found"));
+
+        if (!image.getForumPost().getId().equals(postId)) {
+            return new Response<>(400, "Image does not belong to the specified post", null);
+        }
+
+        image.setDeleted(true);
+        image.setUpdateAt(LocalDateTime.now());
+        forumPostPictureRepository.save(image);
+
+        return new Response<>(200, "Image deleted from post successfully", null);
+    }
+
 
 
     public Response<String> deletePost(Long id) {

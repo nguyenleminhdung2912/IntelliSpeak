@@ -2,7 +2,6 @@ package com.gsu25se05.itellispeak.dto.forum;
 
 import com.gsu25se05.itellispeak.entity.ForumCategory;
 import com.gsu25se05.itellispeak.entity.ForumTopicType;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,7 +14,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateResponseForumDTO {
+public class UpdateResponsePostDTO {
     private Long postId;
 
     private String title;
@@ -28,5 +27,5 @@ public class CreateResponseForumDTO {
 
     private ForumCategory forumCategory;
 
-    private LocalDateTime createAt;
+    private LocalDateTime updateAt;
 }
