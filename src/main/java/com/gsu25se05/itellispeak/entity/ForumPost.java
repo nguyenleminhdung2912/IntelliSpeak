@@ -6,6 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -28,8 +31,11 @@ public class ForumPost {
     @JsonIgnore
     private ForumCategory forumCategory;
 
-    @OneToOne
-    @JoinColumn(name = "forum_topic_type_id")
+    @OneToMany(mappedBy = "forumPost", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ForumPostPicture> pictures = new ArrayList<>();
+
+    @ManyToOne
+    @JoinColumn(name = "forum_topic_type_id", nullable = false)
     private ForumTopicType forumTopicType;
 
     @Column(name = "title")

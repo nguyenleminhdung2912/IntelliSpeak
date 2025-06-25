@@ -8,7 +8,6 @@ import com.gsu25se05.itellispeak.entity.*;
 import com.gsu25se05.itellispeak.exception.ErrorCode;
 import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
 import com.gsu25se05.itellispeak.exception.auth.NotFoundException;
-import com.gsu25se05.itellispeak.exception.service.CreateServiceException;
 import com.gsu25se05.itellispeak.repository.*;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
 import jakarta.validation.Valid;
@@ -16,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ForumPostService {
@@ -44,51 +44,54 @@ public class ForumPostService {
                 .orElseThrow(() -> new NotFoundException("Forum Post not found with id: " + id));
     }
 
-    public Response<CreateResponseForumDTO> createForumPost (@Valid CreateRequestForumPostDTO createRequestForumPostDTO){
+    public Response<CreateResponseForumDTO> createForumPost(@Valid CreateRequestForumPostDTO dto) {
+        User user = accountUtils.getCurrentAccount();
+        if (user == null) return new Response<>(401, "Please login first", null);
+        ForumPost post = new ForumPost();
+        post.setUser(user);
+        post.setTitle(dto.getTitle());
+        post.setContent(dto.getContent());
+        post.setCreateAt(LocalDateTime.now());
+        post.setIsDeleted(false);
 
-        User user = checkAccount();
+        ForumCategory category = forumCategoryRepository.findById(dto.getForumCategoryId())
+                .orElseThrow(() -> new NotFoundException("Category not found"));
+        post.setForumCategory(category);
 
-        ForumPost forumPost = new ForumPost();
-        forumPost.setUser(user);
-        forumPost.setTitle(createRequestForumPostDTO.getTitle());
-        forumPost.setContent(createRequestForumPostDTO.getContent());
-        forumPost.setCreateAt(LocalDateTime.now());
-        forumPost.setIsDeleted(false);
+        ForumTopicType topicType = forumTopicTypeRepository.findById(dto.getForumTopicTypeId())
+                .orElseThrow(() -> new NotFoundException("Topic type not found"));
+        post.setForumTopicType(topicType);
 
-        ForumCategory forumCategory = forumCategoryRepository.findById(createRequestForumPostDTO.getForumCategoryId())
-                .orElseThrow(() -> new NotFoundException("Category not found with id: " + createRequestForumPostDTO.getForumCategoryId()));
+        List<ForumPostPicture> pictures = dto.getImages().stream().map(url -> {
+            ForumPostPicture pic = new ForumPostPicture();
+            pic.setForumPost(post);
+            pic.setUrl(url);
+            pic.setCreateAt(LocalDateTime.now());
+            pic.setDeleted(false);
+            return pic;
+        }).collect(Collectors.toList());
 
-        forumPost.setForumCategory(forumCategory);
+        post.setPictures(pictures);
 
-        ForumTopicType forumTopicType = forumTopicTypeRepository.findById(createRequestForumPostDTO.getForumTopicTypeId())
-                .orElseThrow(() -> new NotFoundException("Forum topic type not found with id: " + createRequestForumPostDTO.getForumTopicTypeId()));
+        forumPostRepository.save(post);
 
-        forumPost.setForumTopicType(forumTopicType);
+        // response
+        CreateResponseForumDTO responseDTO = new CreateResponseForumDTO(
+                post.getId(),
+                post.getTitle(),
+                post.getContent(),
+                dto.getImages().isEmpty() ? null : dto.getImages().get(0),
+                post.getForumTopicType(),
+                post.getForumCategory(),
+                post.getCreateAt()
+        );
 
-        ForumPostPicture forumPostPicture = new ForumPostPicture();
-        forumPostPicture.setForumPost(forumPost);
-        forumPostPicture.setUrl(createRequestForumPostDTO.getImage());
-        forumPostPicture.setDeleted(false);
-        forumPostPicture.setCreateAt(LocalDateTime.now());
-
-
-        try {
-            forumPostRepository.save(forumPost);
-            forumPostPictureRepository.save(forumPostPicture);
-
-        } catch (Exception e) {
-            throw new CreateServiceException("There was something wrong when creating the blog, please try again...");
-        }
-
-        CreateResponseForumDTO createForumRespnseDTO = new CreateResponseForumDTO(forumPost.getId(), forumPost.getTitle(), forumPost.getContent(), forumPostPicture.getUrl(), forumPost.getForumTopicType(), forumPost.getForumCategory(), forumPost.getCreateAt());
-
-        return new Response<>(201, "Forum Post created successfully!", createForumRespnseDTO);
-
+        return new Response<>(201, "Forum Post created successfully!", responseDTO);
     }
 
 
     public Response<String> deletePost(Long id) {
-        User user = checkAccount();
+        User user = accountUtils.getCurrentAccount();
         if (user == null) return new Response<>(401, "Please login first", null);
         ForumPost forumPost = getPostById(id);
         if (forumPost == null) return new Response<>(404, "Forum post not found", null);
@@ -99,19 +102,5 @@ public class ForumPostService {
         return new Response<>(200, "Forum post deleted successfully!", "post with ID " + id + " was soft deleted.");
     }
 
-
-    private User checkAccount() {
-        // Get the current account
-        User account = accountUtils.getCurrentAccount();
-        if (account == null) {
-            throw new AuthAppException(ErrorCode.NOT_LOGIN);
-        }
-
-        account = userRepository.findByEmail(account.getEmail()).orElse(null);
-        if (account == null) {
-            throw new AuthAppException(ErrorCode.ACCOUNT_NOT_FOUND);
-        }
-        return account;
-    }
 
 }

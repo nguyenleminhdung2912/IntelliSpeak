@@ -1,12 +1,13 @@
 package com.gsu25se05.itellispeak.dto.forum;
 
-import com.gsu25se05.itellispeak.entity.ForumCategory;
-import com.gsu25se05.itellispeak.entity.ForumTopicType;
+
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.List;
 
 @Setter
 @Getter
@@ -19,7 +20,7 @@ public class CreateRequestForumPostDTO {
     @NotBlank(message = "Content cannot be empty")
     private String content;
 
-    private String image;
+    private List<String> images;
 
     private Long forumTopicTypeId;
 
