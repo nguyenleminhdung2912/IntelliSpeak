@@ -2,6 +2,8 @@ package com.gsu25se05.itellispeak.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gsu25se05.itellispeak.dto.Response;
+import com.gsu25se05.itellispeak.dto.cv.CVAnalysisResponseDTO;
 import com.gsu25se05.itellispeak.entity.CVEvaluate;
 import com.gsu25se05.itellispeak.entity.CVExtractedInfo;
 import com.gsu25se05.itellispeak.entity.MemberCV;
@@ -43,12 +45,12 @@ public class CVService {
         this.accountUtils = accountUtils;
     }
 
-    public CVEvaluate analyzeAndSaveFromFile(MultipartFile file) throws Exception {
+    public Response<CVAnalysisResponseDTO> analyzeAndSaveFromFile(MultipartFile file) throws Exception {
         String text = FileUtils.extractTextFromCV(file);
         return analyzeAndSaveEvaluation(text);
     }
 
-    public CVEvaluate analyzeAndSaveEvaluation(String cvText) throws Exception {
+    public Response<CVAnalysisResponseDTO> analyzeAndSaveEvaluation(String cvText) throws Exception {
         String prompt = String.format("""
         Hãy đánh giá và trích xuất thông tin từ CV dưới đây. 
         Trả kết quả dưới dạng JSON hợp lệ gồm 2 phần:
@@ -90,9 +92,7 @@ public class CVService {
         JsonNode infoNode = rootNode.get("extractedInfo");
 
         User user = accountUtils.getCurrentAccount();
-        if (user == null) {
-            throw new NotFoundException("Không tìm thấy người dùng đăng nhập");
-        }
+        if (user == null) return new Response<>(401, "Please login first", null);
 
         // Create and save MemberCV
         MemberCV memberCV = new MemberCV();
@@ -135,7 +135,9 @@ public class CVService {
         extractedInfo.setUpdateAt(LocalDateTime.now());
         cvExtractedInfoRepository.save(extractedInfo);
 
-        return evaluation;
+        CVAnalysisResponseDTO dto = new CVAnalysisResponseDTO(evaluation, extractedInfo);
+
+        return new Response<>(200, "Analysis successfully", dto);
     }
 
 
