@@ -1,7 +1,8 @@
 package com.gsu25se05.itellispeak.controller;
 
 
-import com.gsu25se05.itellispeak.entity.CVEvaluate;
+import com.gsu25se05.itellispeak.dto.cv.CVAnalysisResponseDTO;
+import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.service.CVService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
@@ -20,13 +21,14 @@ public class CVController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<?> uploadCV(
-            @RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Response<CVAnalysisResponseDTO>> uploadCV(@RequestParam("file") MultipartFile file) {
         try {
-            CVEvaluate result = cvService.analyzeAndSaveFromFile(file);
-            return ResponseEntity.ok(result);
+            Response<CVAnalysisResponseDTO> response = cvService.analyzeAndSaveFromFile(file);
+            return ResponseEntity.status(response.getCode() == 200 ? 200 : 400).body(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Lỗi: " + e.getMessage());
+            Response<CVAnalysisResponseDTO> errorResponse = new Response<>(400, "Error: " + e.getMessage(), null);
+            return ResponseEntity.badRequest().body(errorResponse);
         }
     }
+
 }

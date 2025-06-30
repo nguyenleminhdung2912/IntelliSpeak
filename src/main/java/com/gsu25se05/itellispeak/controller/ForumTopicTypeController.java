@@ -5,12 +5,15 @@ import com.gsu25se05.itellispeak.dto.forumtopic.ForumTopicRequest;
 import com.gsu25se05.itellispeak.dto.forumtopic.ForumTopicResponse;
 import com.gsu25se05.itellispeak.dto.forumtopic.UpdateForumTopicRequest;
 import com.gsu25se05.itellispeak.dto.forumtopic.UpdateForumTopicResponse;
+import com.gsu25se05.itellispeak.entity.ForumCategory;
 import com.gsu25se05.itellispeak.entity.ForumTopicType;
 import com.gsu25se05.itellispeak.service.ForumTopicTypeService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/topic-type")
@@ -19,6 +22,11 @@ import org.springframework.web.bind.annotation.*;
 public class ForumTopicTypeController {
     @Autowired
     private ForumTopicTypeService topicTypeService;
+
+    @GetMapping
+    public List<ForumTopicType> getAllTopicTypes() {
+        return topicTypeService.getAllTopicTypes();
+    }
 
     @GetMapping("/{id}")
     public ForumTopicType getTopicTypeById(@PathVariable Long id) {
