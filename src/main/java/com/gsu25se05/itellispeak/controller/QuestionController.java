@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/topic")
+@RequestMapping("/question")
 @CrossOrigin("**")
 @SecurityRequirement(name = "api")
 public class QuestionController {
