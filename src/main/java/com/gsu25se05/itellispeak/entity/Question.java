@@ -2,6 +2,7 @@ package com.gsu25se05.itellispeak.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.util.HashSet;
 import java.util.List;
@@ -9,6 +10,11 @@ import java.util.Set;
 
 @Entity
 @Table(name = "question")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Question {
     @Id
     @GeneratedValue
@@ -40,6 +46,9 @@ public class Question {
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
     private Set<Tag> tags = new HashSet<>();
+
+    @ManyToMany(mappedBy = "questions")
+    private Set<InterviewSession> interviewSessions = new HashSet<>();
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL)
     @JsonIgnore

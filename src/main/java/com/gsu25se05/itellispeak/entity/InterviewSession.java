@@ -2,6 +2,7 @@ package com.gsu25se05.itellispeak.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -10,6 +11,11 @@ import java.util.List;
 import java.util.Set;
 
 @Entity
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "interview_session")
 public class InterviewSession {
     @Id
@@ -56,5 +62,13 @@ public class InterviewSession {
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
     private Set<Tag> tags = new HashSet<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "interview_session_question",
+            joinColumns = @JoinColumn(name = "interview_session_id"),
+            inverseJoinColumns = @JoinColumn(name = "question_id")
+    )
+    private Set<Question> questions = new HashSet<>();
 }
 
