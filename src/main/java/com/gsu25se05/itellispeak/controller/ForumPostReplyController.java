@@ -3,8 +3,12 @@ package com.gsu25se05.itellispeak.controller;
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.category.CategoryRequest;
 import com.gsu25se05.itellispeak.dto.category.CategoryResponse;
+import com.gsu25se05.itellispeak.dto.forumtopic.UpdateForumTopicRequest;
+import com.gsu25se05.itellispeak.dto.forumtopic.UpdateForumTopicResponse;
 import com.gsu25se05.itellispeak.dto.reply.CreateReplyPostRequestDTO;
 import com.gsu25se05.itellispeak.dto.reply.CreateReplyPostResponseDTO;
+import com.gsu25se05.itellispeak.dto.reply.UpdateReplyPostRequestDTO;
+import com.gsu25se05.itellispeak.dto.reply.UpdateReplyPostResponseDTO;
 import com.gsu25se05.itellispeak.entity.ForumCategory;
 import com.gsu25se05.itellispeak.entity.ForumPostReply;
 import com.gsu25se05.itellispeak.entity.ForumTopicType;
@@ -39,6 +43,12 @@ public class ForumPostReplyController {
     public Response<CreateReplyPostResponseDTO> createReply(@Valid @RequestBody CreateReplyPostRequestDTO reply) {
         return forumPostReplyService.createReply(reply);
     }
+
+    @PutMapping("/{id}")
+    public Response<UpdateReplyPostResponseDTO> updateReply(@PathVariable Long id, @RequestBody UpdateReplyPostRequestDTO reply) {
+        return forumPostReplyService.updateReply(id, reply);
+    }
+
 
     @DeleteMapping("/{id}")
     public Response<String> deleteReply(@PathVariable Long id) {
