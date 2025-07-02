@@ -5,6 +5,7 @@ import com.gsu25se05.itellispeak.dto.forumtopic.ForumTopicRequest;
 import com.gsu25se05.itellispeak.dto.forumtopic.ForumTopicResponse;
 import com.gsu25se05.itellispeak.dto.forumtopic.UpdateForumTopicRequest;
 import com.gsu25se05.itellispeak.dto.forumtopic.UpdateForumTopicResponse;
+import com.gsu25se05.itellispeak.dto.reply.UpdateReplyPostResponseDTO;
 import com.gsu25se05.itellispeak.entity.ForumTopicType;
 import com.gsu25se05.itellispeak.entity.User;
 import com.gsu25se05.itellispeak.exception.auth.NotFoundException;
@@ -58,7 +59,7 @@ public class ForumTopicTypeService {
                 forumTopicType.getCreateAt()
         );
 
-        return new Response<>(200, "Category created successfully!", topicResponse);
+        return new Response<>(200, "Topic type created successfully!", topicResponse);
 
     }
 
