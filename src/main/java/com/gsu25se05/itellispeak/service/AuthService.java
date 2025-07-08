@@ -12,10 +12,12 @@ import com.gsu25se05.itellispeak.dto.auth.request.ResetPasswordRequest;
 import com.gsu25se05.itellispeak.email.EmailDetail;
 import com.gsu25se05.itellispeak.email.EmailService;
 import com.gsu25se05.itellispeak.entity.User;
+import com.gsu25se05.itellispeak.entity.Wallet;
 import com.gsu25se05.itellispeak.exception.ErrorCode;
 import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
 import com.gsu25se05.itellispeak.jwt.JWTService;
 import com.gsu25se05.itellispeak.repository.UserRepository;
+import com.gsu25se05.itellispeak.repository.WalletRepository;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -61,6 +63,9 @@ public class AuthService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private WalletRepository walletRepository;
 
     public User findUserByEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
@@ -155,6 +160,11 @@ public class AuthService implements UserDetailsService {
             User account = convertToUser(registerRequestDTO);
             account.setIsDeleted(false);
             userRepository.save(account);
+
+            Wallet wallet = new Wallet();
+            wallet.setTotal(0D);
+            wallet.setUser(account);
+            walletRepository.save(wallet);
 
             String responseMessage = "Successful registration, please check your email for verification";
             RegisterResponseDTO response = new RegisterResponseDTO(responseMessage, null, 201, registerRequestDTO.getEmail());
