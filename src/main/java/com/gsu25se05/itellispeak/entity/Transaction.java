@@ -22,18 +22,15 @@ public class Transaction {
     @JoinColumn(name = "wallet_id", nullable = false)
     private  Wallet wallet;
 
+    @Column(name = "order_code")
+    private Long orderCode;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "transaction_type")
-    private TransactionType transactionType;
+    private TransactionStatus transactionStatus;
 
     @Column(name = "amount", nullable = false)
     private Double amount;
-
-    @Column(name = "from_user_id")
-    private Long from;
-
-    @Column(name = "to_user_id")
-    private Long to;
 
     @Column(name = "create_at")
     private LocalDateTime createAt;

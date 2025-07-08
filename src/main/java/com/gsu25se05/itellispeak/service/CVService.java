@@ -8,7 +8,6 @@ import com.gsu25se05.itellispeak.entity.CVEvaluate;
 import com.gsu25se05.itellispeak.entity.CVExtractedInfo;
 import com.gsu25se05.itellispeak.entity.MemberCV;
 import com.gsu25se05.itellispeak.entity.User;
-import com.gsu25se05.itellispeak.exception.auth.NotFoundException;
 import com.gsu25se05.itellispeak.repository.CVEvaluateRepository;
 import com.gsu25se05.itellispeak.repository.CVExtractedInfoRepository;
 import com.gsu25se05.itellispeak.repository.MemberCVRepository;
