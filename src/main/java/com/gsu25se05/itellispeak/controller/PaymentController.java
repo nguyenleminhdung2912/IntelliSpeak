@@ -30,7 +30,7 @@ public class PaymentController {
      */
     @GetMapping("/check")
     public Response<String> checkPaymentStatus(@RequestParam Long orderCode) {
-        return paymentService.checkTopupStatus(orderCode);
+        return paymentService.checkPaymentStatus(orderCode);
     }
 
     @PostMapping("/cancel/{orderCode}")
