@@ -18,9 +18,9 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "wallet_id", nullable = false)
-    private  Wallet wallet;
+//    @ManyToOne
+//    @JoinColumn(name = "wallet_id", nullable = false)
+//    private  Wallet wallet;
 
     @Column(name = "order_code")
     private Long orderCode;
@@ -31,6 +31,9 @@ public class Transaction {
 
     @Column(name = "amount", nullable = false)
     private Double amount;
+
+    @Column(name = "description", nullable = false)
+    private String description;
 
     @Column(name = "create_at")
     private LocalDateTime createAt;
