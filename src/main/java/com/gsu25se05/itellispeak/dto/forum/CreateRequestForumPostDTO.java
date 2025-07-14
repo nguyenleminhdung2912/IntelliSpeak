@@ -24,5 +24,5 @@ public class CreateRequestForumPostDTO {
 
     private Long forumTopicTypeId;
 
-    private Long forumCategoryId;
+//    private Long forumCategoryId;
 }

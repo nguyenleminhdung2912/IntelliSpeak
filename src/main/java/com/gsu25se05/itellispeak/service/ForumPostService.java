@@ -23,14 +23,16 @@ public class ForumPostService {
     private final ForumPostPictureRepository forumPostPictureRepository;
     private final ForumCategoryRepository forumCategoryRepository;
     private final ForumTopicTypeRepository forumTopicTypeRepository;
+    private final SavedPostRepository savedPostRepository;
 
-    public ForumPostService(AccountUtils accountUtils, UserRepository userRepository, ForumPostRepository forumPostRepository, ForumPostPictureRepository forumPostPictureRepository, ForumCategoryRepository forumCategoryRepository, ForumTopicTypeRepository forumTopicTypeRepository) {
+    public ForumPostService(AccountUtils accountUtils, UserRepository userRepository, ForumPostRepository forumPostRepository, ForumPostPictureRepository forumPostPictureRepository, ForumCategoryRepository forumCategoryRepository, ForumTopicTypeRepository forumTopicTypeRepository, SavedPostRepository savedPostRepository) {
         this.accountUtils = accountUtils;
         this.userRepository = userRepository;
         this.forumPostRepository = forumPostRepository;
         this.forumPostPictureRepository = forumPostPictureRepository;
         this.forumCategoryRepository = forumCategoryRepository;
         this.forumTopicTypeRepository = forumTopicTypeRepository;
+        this.savedPostRepository = savedPostRepository;
     }
 
     public List<ForumPost> getAllPosts() {
@@ -67,9 +69,9 @@ public class ForumPostService {
         post.setCreateAt(LocalDateTime.now());
         post.setIsDeleted(false);
 
-        ForumCategory category = forumCategoryRepository.findById(dto.getForumCategoryId())
-                .orElseThrow(() -> new NotFoundException("Category not found"));
-        post.setForumCategory(category);
+//        ForumCategory category = forumCategoryRepository.findById(dto.getForumCategoryId())
+//                .orElseThrow(() -> new NotFoundException("Category not found"));
+//        post.setForumCategory(category);
 
         ForumTopicType topicType = forumTopicTypeRepository.findById(dto.getForumTopicTypeId())
                 .orElseThrow(() -> new NotFoundException("Topic type not found"));
@@ -100,7 +102,7 @@ public class ForumPostService {
                 post.getContent(),
                 imageUrls,
                 post.getForumTopicType(),
-                post.getForumCategory(),
+//                post.getForumCategory(),
                 post.getCreateAt()
         );
 
@@ -131,11 +133,11 @@ public class ForumPostService {
         post.setUpdateAt(LocalDateTime.now());
 
 
-        if (dto.getForumCategoryId() != null) {
-            ForumCategory category = forumCategoryRepository.findById(dto.getForumCategoryId())
-                    .orElseThrow(() -> new NotFoundException("Category not found"));
-            post.setForumCategory(category);
-        }
+//        if (dto.getForumCategoryId() != null) {
+//            ForumCategory category = forumCategoryRepository.findById(dto.getForumCategoryId())
+//                    .orElseThrow(() -> new NotFoundException("Category not found"));
+//            post.setForumCategory(category);
+//        }
 
         if (dto.getForumTopicTypeId() != null) {
             ForumTopicType topicType = forumTopicTypeRepository.findById(dto.getForumTopicTypeId())
@@ -178,7 +180,7 @@ public class ForumPostService {
                     post.getContent(),
                     imageUrls,
                     post.getForumTopicType(),
-                    post.getForumCategory(),
+//                    post.getForumCategory(),
                     post.getUpdateAt()
             );
 
@@ -226,4 +228,74 @@ public class ForumPostService {
     }
 
 
+
+    public Response<String> savePost(Long postId) {
+        User user = accountUtils.getCurrentAccount();
+        if (user == null) return new Response<>(401, "Please login first", null);
+
+        ForumPost post = forumPostRepository.findById(postId)
+                .orElseThrow(() -> new NotFoundException("Post not found"));
+
+        if (savedPostRepository.findByUserAndForumPost(user, post).isPresent()) {
+            return new Response<>(400, "Post already saved", null);
+        }
+
+        SavedPost savedPost = SavedPost.builder()
+                .user(user)
+                .forumPost(post)
+                .savedAt(LocalDateTime.now())
+                .build();
+
+        savedPostRepository.save(savedPost);
+        return new Response<>(200, "Post saved successfully", null);
+    }
+
+    public Response<List<ForumPost>> getSavedPosts() {
+        User user = accountUtils.getCurrentAccount();
+        if (user == null) return new Response<>(401, "Please login first", null);
+
+        List<SavedPost> savedPosts = savedPostRepository.findByUser(user).stream()
+                .filter(savedPost -> !savedPost.isDeleted())
+                .collect(Collectors.toList());
+
+        List<ForumPost> posts = savedPosts.stream()
+                .map(SavedPost::getForumPost)
+                .filter(post -> !Boolean.TRUE.equals(post.getIsDeleted()))
+                .collect(Collectors.toList());
+
+        return new Response<>(200, "Retrieved saved posts", posts);
+    }
+
+    public Response<String> unSavePost(Long postId) {
+        User user = accountUtils.getCurrentAccount();
+        if (user == null) return new Response<>(401, "Please login first", null);
+
+        ForumPost post = forumPostRepository.findById(postId)
+                .orElseThrow(() -> new NotFoundException("Post not found"));
+
+        SavedPost savedPost = savedPostRepository.findByUserAndForumPost(user, post)
+                .orElseThrow(() -> new NotFoundException("Saved post not found"));
+
+        savedPost.setDeleted(true);
+        savedPost.setSavedAt(LocalDateTime.now());
+        savedPostRepository.save(savedPost);
+
+        return new Response<>(200, "Post unsaved successfully", null);
+    }
+
+
+
+    public Response<List<ForumPost>> getTopPostsByReplies(int limit) {
+        List<ForumPost> posts = forumPostRepository.findTopPostsByReplyCount(limit);
+
+        // Lọc ảnh không bị xóa
+        for (ForumPost post : posts) {
+            List<ForumPostPicture> activePictures = post.getPictures().stream()
+                    .filter(p -> !Boolean.TRUE.equals(p.isDeleted()))
+                    .collect(Collectors.toList());
+            post.setPictures(activePictures);
+        }
+
+        return new Response<>(200, "Top posts by reply count", posts);
+    }
 }

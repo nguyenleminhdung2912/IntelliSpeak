@@ -23,5 +23,5 @@ public class UpdateRequestPostDTO {
 
     private Long forumTopicTypeId;
 
-    private Long forumCategoryId;
+//    private Long forumCategoryId;
 }
