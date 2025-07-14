@@ -12,6 +12,7 @@ import com.gsu25se05.itellispeak.entity.ForumCategory;
 import com.gsu25se05.itellispeak.entity.ForumPost;
 import com.gsu25se05.itellispeak.entity.ForumTopicType;
 import com.gsu25se05.itellispeak.service.ForumPostService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -63,5 +64,14 @@ public class ForumPostController {
         return ResponseEntity.status(response.getCode()).body(response);
     }
 
+
+
+    @Operation(summary = "Sắp xếp bài viết có lượt comment từ cao xuống thấp")
+    @GetMapping("/top-replied")
+    public ResponseEntity<Response<List<ForumPost>>> getTopRepliedPosts(
+            @RequestParam(defaultValue = "5") int limit) {
+        Response<List<ForumPost>> response = forumPostService.getTopPostsByReplies(limit);
+        return ResponseEntity.status(response.getCode()).body(response);
+    }
 
 }

@@ -25,7 +25,7 @@ public class UpdateResponsePostDTO {
 
     private ForumTopicType forumTopicType;
 
-    private ForumCategory forumCategory;
+//    private ForumCategory forumCategory;
 
     private LocalDateTime updateAt;
 }
