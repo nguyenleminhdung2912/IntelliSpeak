@@ -19,5 +19,6 @@ public class QuestionDTO {
     private String difficulty;
     private String suitableAnswer1;
     private String suitableAnswer2;
+    private boolean is_deleted;
     private Set<Tag> tags;
 }
