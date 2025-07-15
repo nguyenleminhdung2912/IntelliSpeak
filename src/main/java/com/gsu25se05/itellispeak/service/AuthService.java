@@ -1,14 +1,9 @@
 package com.gsu25se05.itellispeak.service;
 
 import com.auth0.jwt.exceptions.TokenExpiredException;
-import com.gsu25se05.itellispeak.dto.auth.reponse.ForgotPasswordResponse;
-import com.gsu25se05.itellispeak.dto.auth.reponse.LoginResponseDTO;
-import com.gsu25se05.itellispeak.dto.auth.reponse.RegisterResponseDTO;
-import com.gsu25se05.itellispeak.dto.auth.reponse.ResetPasswordResponse;
-import com.gsu25se05.itellispeak.dto.auth.request.ForgotPasswordRequest;
-import com.gsu25se05.itellispeak.dto.auth.request.LoginRequestDTO;
-import com.gsu25se05.itellispeak.dto.auth.request.RegisterRequestDTO;
-import com.gsu25se05.itellispeak.dto.auth.request.ResetPasswordRequest;
+import com.gsu25se05.itellispeak.dto.Response;
+import com.gsu25se05.itellispeak.dto.auth.reponse.*;
+import com.gsu25se05.itellispeak.dto.auth.request.*;
 import com.gsu25se05.itellispeak.email.EmailDetail;
 import com.gsu25se05.itellispeak.email.EmailService;
 import com.gsu25se05.itellispeak.entity.User;
@@ -37,6 +32,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -71,12 +67,62 @@ public class AuthService implements UserDetailsService {
         return userRepository.findByEmail(email).orElse(null);
     }
 
+
+    public Response<UserProfileDTO> getCurrentUserProfile() {
+        User user = accountUtils.getCurrentAccount();
+        if (user == null) return new Response<>(401, "Please login first", null);
+
+        UserProfileDTO profile = UserProfileDTO.builder()
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .bio(user.getBio())
+                .avatar(user.getAvatar())
+                .website(user.getWebsite())
+                .github(user.getGithub())
+                .linkedin(user.getLinkedin())
+                .facebook(user.getFacebook())
+                .youtube(user.getYoutube())
+                .build();
+
+        return new Response<>(200, "Get profile success", profile);
+    }
+
+
+    public Response<String> updateProfile(UpdateProfileRequestDTO request) {
+        User user = accountUtils.getCurrentAccount();
+        if (user == null) return new Response<>(401, "Please login first", null);
+
+        if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
+        if (request.getLastName() != null) user.setLastName(request.getLastName());
+        if (request.getBio() != null) user.setBio(request.getBio());
+        if (request.getAvatar() != null) user.setAvatar(request.getAvatar());
+        if (request.getWebsite() != null) user.setWebsite(request.getWebsite());
+        if (request.getGithub() != null) user.setGithub(request.getGithub());
+        if (request.getLinkedin() != null) user.setLinkedin(request.getLinkedin());
+        if (request.getFacebook() != null) user.setFacebook(request.getFacebook());
+        if (request.getYoutube() != null) user.setYoutube(request.getYoutube());
+
+        user.setUpdateAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        return new Response<>(200, "Update profile success", null);
+    }
+
+
+    public ResponseEntity<String> logout(HttpServletResponse response) {
+        // Xóa cookie token
+        Cookie tokenCookie = jwtService.clearTokenCookie();
+        Cookie refreshTokenCookie = jwtService.clearRefreshTokenCookie();
+
+        response.addCookie(tokenCookie);
+        response.addCookie(refreshTokenCookie);
+
+        return ResponseEntity.ok("Logout successfully");
+    }
+
     private @NotNull User convertToUser(RegisterRequestDTO registerRequestDTO) {
         User account = new User(
-                registerRequestDTO.getFirstName(),
-                registerRequestDTO.getLastName(),
-                registerRequestDTO.getEmail(),
-                registerRequestDTO.getRole()
+                registerRequestDTO.getEmail()
         );
         account.setAvatar(defaultAvatar);
 
@@ -157,9 +203,14 @@ public class AuthService implements UserDetailsService {
                     throw new AuthAppException(ErrorCode.EMAIL_WAIT_VERIFY);
 
             }
+
+            if (!registerRequestDTO.getPassword().equals(registerRequestDTO.getConfirmPassword())) {
+                throw new AuthAppException(ErrorCode.PASSWORD_REPEAT_INCORRECT);
+            }
+
             User account = convertToUser(registerRequestDTO);
             account.setIsDeleted(false);
-
+            account.setRole(User.Role.USER);
             userRepository.save(account);
 
 //            Wallet wallet = new Wallet();

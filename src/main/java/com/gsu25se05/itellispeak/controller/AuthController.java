@@ -1,16 +1,12 @@
 package com.gsu25se05.itellispeak.controller;
 
-import com.gsu25se05.itellispeak.dto.auth.reponse.ForgotPasswordResponse;
-import com.gsu25se05.itellispeak.dto.auth.reponse.LoginResponseDTO;
-import com.gsu25se05.itellispeak.dto.auth.reponse.RegisterResponseDTO;
-import com.gsu25se05.itellispeak.dto.auth.reponse.ResetPasswordResponse;
-import com.gsu25se05.itellispeak.dto.auth.request.ForgotPasswordRequest;
-import com.gsu25se05.itellispeak.dto.auth.request.LoginRequestDTO;
-import com.gsu25se05.itellispeak.dto.auth.request.RegisterRequestDTO;
-import com.gsu25se05.itellispeak.dto.auth.request.ResetPasswordRequest;
+import com.gsu25se05.itellispeak.dto.Response;
+import com.gsu25se05.itellispeak.dto.auth.reponse.*;
+import com.gsu25se05.itellispeak.dto.auth.request.*;
 import com.gsu25se05.itellispeak.jwt.JWTService;
 import com.gsu25se05.itellispeak.repository.UserRepository;
 import com.gsu25se05.itellispeak.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -46,6 +42,16 @@ public class AuthController {
     @Lazy
     private PasswordEncoder passwordEncoder;
 
+    @GetMapping("/profile")
+    public Response<UserProfileDTO> getProfile() {
+        return authService.getCurrentUserProfile();
+    }
+
+    @Operation(summary = "Cập nhật profile cá nhân")
+    @PutMapping("/profile")
+    public ResponseEntity<Response<String>> updateProfile(@RequestBody UpdateProfileRequestDTO request) {
+        return ResponseEntity.ok(authService.updateProfile(request));
+    }
 
     @PostMapping("/register")
     public ResponseEntity<RegisterResponseDTO> registerAccount(@Valid @RequestBody RegisterRequestDTO registerRequestDTO, HttpServletResponse response) {
@@ -55,6 +61,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO loginRequestDTO, HttpServletResponse response) {
         return authService.checkLogin(loginRequestDTO, response);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpServletResponse response) {
+        return authService.logout(response);
     }
 
     @GetMapping("/verify/{token}")
