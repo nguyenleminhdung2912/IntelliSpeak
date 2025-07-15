@@ -57,6 +57,24 @@ public class User implements UserDetails {
     @Column(length = 20)
     private String status;
 
+    @Column(length = 1000)
+    private String bio;
+
+    @Column(name = "website")
+    private String website;
+
+    @Column(name = "github")
+    private String github;
+
+    @Column(name = "linkedin")
+    private String linkedin;
+
+    @Column(name = "facebook")
+    private String facebook;
+
+    @Column(name = "youtube")
+    private String youtube;
+
     @Column(name = "create_at")
     private LocalDateTime createAt;
 
