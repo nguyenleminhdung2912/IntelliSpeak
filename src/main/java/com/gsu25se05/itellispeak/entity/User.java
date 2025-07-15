@@ -84,11 +84,10 @@ public class User implements UserDetails {
     @Column(name = "is_deleted")
     private Boolean isDeleted;
 
-    public User(String firstName, String lastName, String email, Role role) {
+    public User(String firstName, String lastName, String email) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
-        this.role = role;
     }
 
     @Override

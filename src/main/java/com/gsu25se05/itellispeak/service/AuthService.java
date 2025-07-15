@@ -124,8 +124,7 @@ public class AuthService implements UserDetailsService {
         User account = new User(
                 registerRequestDTO.getFirstName(),
                 registerRequestDTO.getLastName(),
-                registerRequestDTO.getEmail(),
-                registerRequestDTO.getRole()
+                registerRequestDTO.getEmail()
         );
         account.setAvatar(defaultAvatar);
 
@@ -206,9 +205,14 @@ public class AuthService implements UserDetailsService {
                     throw new AuthAppException(ErrorCode.EMAIL_WAIT_VERIFY);
 
             }
+
+            if (!registerRequestDTO.getPassword().equals(registerRequestDTO.getConfirmPassword())) {
+                throw new AuthAppException(ErrorCode.PASSWORD_REPEAT_INCORRECT);
+            }
+
             User account = convertToUser(registerRequestDTO);
             account.setIsDeleted(false);
-
+            account.setRole(User.Role.USER);
             userRepository.save(account);
 
 //            Wallet wallet = new Wallet();
