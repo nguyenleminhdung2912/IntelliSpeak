@@ -122,8 +122,6 @@ public class AuthService implements UserDetailsService {
 
     private @NotNull User convertToUser(RegisterRequestDTO registerRequestDTO) {
         User account = new User(
-                registerRequestDTO.getFirstName(),
-                registerRequestDTO.getLastName(),
                 registerRequestDTO.getEmail()
         );
         account.setAvatar(defaultAvatar);
