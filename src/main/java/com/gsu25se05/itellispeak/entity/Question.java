@@ -39,6 +39,13 @@ public class Question {
     @Column(nullable = false)
     private Difficulty difficulty;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private QuestionStatus questionStatus;
+
+    @Column
+    private boolean is_deleted;
+
     @ManyToMany
     @JoinTable(
             name = "question_tag",

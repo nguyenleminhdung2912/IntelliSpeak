@@ -30,7 +30,11 @@ public class InterviewSessionService {
 
     @Transactional
     public InterviewSession save(InterviewSessionDTO dto) {
-        Set<Question> questions = new HashSet<>(questionRepository.findAllById(dto.getQuestionIds()));
+        Set<Question> questions = new HashSet<>();
+        if (dto.getQuestionIds() != null && !dto.getQuestionIds().isEmpty()) {
+            questions.addAll(questionRepository.findAllById(dto.getQuestionIds()));
+        }
+
         InterviewSession entity = interviewSessionMapper.toEntity(dto, questions);
         return interviewSessionRepository.save(entity);
     }
@@ -61,5 +65,10 @@ public class InterviewSessionService {
 
         session.getQuestions().addAll(questions); // Add only new questions
         return interviewSessionRepository.save(session);
+    }
+
+    @Transactional
+    public Iterable<InterviewSession> getAllInterviewSession() {
+        return interviewSessionRepository.findAll();
     }
 }
