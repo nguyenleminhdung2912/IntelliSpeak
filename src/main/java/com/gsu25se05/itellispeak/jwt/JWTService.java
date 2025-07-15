@@ -51,6 +51,25 @@ public class JWTService {
         return cookie;
     }
 
+    public Cookie clearTokenCookie() {
+        Cookie cookie = new Cookie("token", null);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0); // xóa cookie
+        return cookie;
+    }
+
+    public Cookie clearRefreshTokenCookie() {
+        Cookie cookie = new Cookie("refreshToken", null);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0); // xóa cookie
+        return cookie;
+    }
+
+
     public String generateToken(String email) {
         Date now = new Date(); // get current time
         long EXPIRATION = 2 * 24 * 60 * 60 * 1000;
