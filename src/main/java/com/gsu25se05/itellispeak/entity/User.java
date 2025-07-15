@@ -27,10 +27,10 @@ public class User implements UserDetails {
     @Column(name = "user_id")
     private UUID userId;
 
-    @Column(name = "first_name", nullable = false, length = 50)
+    @Column(name = "first_name", length = 50)
     private String firstName;
 
-    @Column(name = "last_name", nullable = false, length = 50)
+    @Column(name = "last_name", length = 50)
     private String lastName;
 
     @Column(nullable = false, unique = true, length = 100)
@@ -84,11 +84,8 @@ public class User implements UserDetails {
     @Column(name = "is_deleted")
     private Boolean isDeleted;
 
-    public User(String firstName, String lastName, String email, Role role) {
-        this.firstName = firstName;
-        this.lastName = lastName;
+    public User(String email) {
         this.email = email;
-        this.role = role;
     }
 
     @Override
