@@ -10,8 +10,10 @@ import com.gsu25se05.itellispeak.exception.auth.NotFoundException;
 import com.gsu25se05.itellispeak.repository.JDRepository;
 import com.gsu25se05.itellispeak.repository.UserRepository;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
+import com.gsu25se05.itellispeak.utils.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
@@ -39,25 +41,13 @@ public class JDService {
         this.userRepository = userRepository;
     }
 
-    public JD analyzeAndSaveJD(JDInputDTO input) throws Exception {
-//        User user = accountUtils.getCurrentAccount();
+    public JD analyzeAndSaveJD(MultipartFile file) throws Exception {
+        User user = accountUtils.getCurrentAccount();
+        String text = FileUtils.extractTextFromCV(file);
 
         String prompt;
 
-        if (input.getLinkToJd() != null && !input.getLinkToJd().isEmpty()) {
-            prompt = String.format("""
-                    Bạn hãy truy cập vào link sau và phân tích mô tả công việc, tóm tắt các thông tin quan trọng dưới dạng **JSON hợp lệ** (chỉ JSON, không Markdown, không giải thích):
-                    {
-                      "jobTitle": "",
-                      "summary": "",
-                      "mustHaveSkills": "",
-                      "niceToHaveSkills": "",
-                      "suitableLevel": "",
-                      "recommendedLearning": ""
-                    }
-                    Link JD: %s
-                    """, input.getLinkToJd());
-        } else if (input.getJdRawContent() != null && !input.getJdRawContent().isEmpty()) {
+        if (text != null && !text.isEmpty()) {
             prompt = String.format("""
                     Hãy phân tích nội dung mô tả công việc dưới đây và trả kết quả dưới dạng **JSON hợp lệ** (chỉ JSON, không Markdown, không giải thích):
                     
@@ -70,7 +60,7 @@ public class JDService {
                       "recommendedLearning": ""
                     }
                     Nội dung JD: %s
-                    """, input.getJdRawContent());
+                    """, text);
         } else {
             throw new IllegalArgumentException("Phải nhập link hoặc nội dung JD");
         }
@@ -91,14 +81,13 @@ public class JDService {
             throw new IllegalArgumentException("AI trả về kết quả không hợp lệ JSON:\n" + responseText);
         }
 
-        User user = accountUtils.getCurrentAccount();
         if (user == null) {
             throw new NotFoundException("Không tìm thấy người dùng đăng nhập");
         }
 
         JD jd = new JD();
         jd.setUser(user);
-        jd.setLinkToJd(input.getLinkToJd());
+        jd.setLinkToJd("");
         jd.setJobTitle(getJsonText(jsonNode, "jobTitle"));
         jd.setSummary(getJsonText(jsonNode, "summary"));
         jd.setMustHaveSkills(getJsonText(jsonNode, "mustHaveSkills"));

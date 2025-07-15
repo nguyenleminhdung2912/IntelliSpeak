@@ -31,6 +31,11 @@ public class InterviewSessionController {
         return interviewSessionService.addQuestionToSession(sessionId, questionId);
     }
 
+    @PostMapping("/{sessionId}/questions")
+    public InterviewSession addQuestions(@PathVariable Long sessionId, @RequestBody Set<Question> questions) {
+        return interviewSessionService.addQuestionsToSession(sessionId, questions);
+    }
+
     @GetMapping("/{sessionId}/questions")
     public Set<Question> getQuestions(@PathVariable Long sessionId) {
         return interviewSessionService.getQuestions(sessionId);

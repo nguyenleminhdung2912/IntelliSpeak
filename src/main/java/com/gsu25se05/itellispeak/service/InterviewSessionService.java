@@ -49,4 +49,17 @@ public class InterviewSessionService {
         Optional<InterviewSession> sessionOpt = interviewSessionRepository.findById(sessionId);
         return sessionOpt.map(InterviewSession::getQuestions).orElse(new HashSet<>());
     }
+
+    @Transactional
+    public InterviewSession addQuestionsToSession(Long sessionId, Set<Question> questions) {
+        InterviewSession session = interviewSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Interview Session with ID " + sessionId + " not found"));
+
+        // Filter out questions that already exist in the session to avoid duplicates
+        Set<Question> existingQuestions = session.getQuestions();
+        questions.removeAll(existingQuestions); // Remove questions already present
+
+        session.getQuestions().addAll(questions); // Add only new questions
+        return interviewSessionRepository.save(session);
+    }
 }
