@@ -17,20 +17,25 @@ public class AuthHandleException {
     }
 
     @ExceptionHandler(AuthorizationDeniedException.class)
-    public ResponseEntity<?> accessDeniedException(AuthorizationDeniedException authorizationDeniedException) {
-        Response response = new Response(403, authorizationDeniedException.getMessage(), null);
+    public ResponseEntity<Response> accessDeniedException(AuthorizationDeniedException ex) {
+        Response response = new Response(403, ex.getMessage(), null);
         return ResponseEntity.status(403).body(response);
     }
 
     @ExceptionHandler(InvalidToken.class)
-    public ResponseEntity invalidToken(InvalidToken invalidToken) {
-        Response response = new Response(400, invalidToken.getMessage(), null);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<Response> invalidToken(InvalidToken ex) {
+        Response response = new Response(400, ex.getMessage(), null);
+        return ResponseEntity.status(400).body(response);
     }
 
     @ExceptionHandler(AuthAppException.class)
-    public ResponseEntity authAppException(ErrorCode errorCode) {
-        Response response = new Response(400, errorCode.getMessage(), null);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<Response> authAppException(AuthAppException ex) {
+        ErrorCode errorCode = ex.getErrorCode();
+        Response response = new Response(
+                errorCode.getCode(),
+                errorCode.getMessage(),
+                null
+        );
+        return ResponseEntity.status(errorCode.getHttpStatus()).body(response);
     }
 }

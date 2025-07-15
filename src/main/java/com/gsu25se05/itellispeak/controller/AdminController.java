@@ -1,7 +1,9 @@
 package com.gsu25se05.itellispeak.controller;
 
 import com.gsu25se05.itellispeak.dto.Response;
+import com.gsu25se05.itellispeak.dto.hr.HRAdminResponseDTO;
 import com.gsu25se05.itellispeak.service.AdminService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,5 +42,24 @@ public class AdminController {
         return ResponseEntity.ok(new Response<>(200, "Yearly revenue fetched", revenue));
     }
 
+    @Operation(summary = "Admin xem thông tin của HR để duyệt hay từ chối")
+    @GetMapping("/hr-applications")
+    public Response<List<HRAdminResponseDTO>> getHRApplications() {
+        List<HRAdminResponseDTO> data = adminService.getAllHRApplications();
+        return new Response<>(200, "Fetched HR applications successfully", data);
+    }
 
+    @Operation(summary = "Admin duyệt HR")
+    @PutMapping("/hr/{id}/approve")
+    public ResponseEntity<Response<String>> approveHR(@PathVariable Long id) {
+        adminService.approveHR(id);
+        return ResponseEntity.ok(new Response<>(200, "HR approved successfully", null));
+    }
+
+    @Operation(summary = "Admin từ chối HR")
+    @PutMapping("/hr/{id}/reject")
+    public ResponseEntity<Response<String>> rejectHR(@PathVariable Long id) {
+        adminService.rejectHR(id);
+        return ResponseEntity.ok(new Response<>(200, "HR rejected successfully", null));
+    }
 }
