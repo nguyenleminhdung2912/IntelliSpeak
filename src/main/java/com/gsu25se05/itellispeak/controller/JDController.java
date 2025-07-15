@@ -32,9 +32,9 @@ public class JDController {
     }
 
     @PostMapping("/analyze")
-    public ResponseEntity<?> analyzeJD(@RequestBody JDInputDTO input) {
+    public ResponseEntity<?> analyzeJD(@RequestParam("file") MultipartFile file) {
         try {
-            JD jd = jdService.analyzeAndSaveJD(input);
+            JD jd = jdService.analyzeAndSaveJD(file);
             return ResponseEntity.ok(jd);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
