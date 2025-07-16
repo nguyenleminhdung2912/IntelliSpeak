@@ -15,22 +15,20 @@ public class QuestionMapper {
                 .difficulty(entity.getDifficulty().name())
                 .suitableAnswer1(entity.getSuitableAnswer1())
                 .suitableAnswer2(entity.getSuitableAnswer2())
-                .is_deleted(entity.is_deleted())
-                .tags(entity.getTags())
+                .isDeleted(entity.is_deleted())
+                .tags(entity.getTags()) // set tags for output
                 .build();
     }
 
     public Question toEntity(QuestionDTO dto) {
         if (dto == null) return null;
         Question entity = new Question();
-        entity.setQuestionId(dto.getQuestionId());
         entity.setTitle(dto.getTitle());
         entity.setContent(dto.getContent());
         entity.setDifficulty(Enum.valueOf(com.gsu25se05.itellispeak.entity.Difficulty.class, dto.getDifficulty()));
         entity.setSuitableAnswer1(dto.getSuitableAnswer1());
         entity.setSuitableAnswer2(dto.getSuitableAnswer2());
         entity.set_deleted(false);
-        entity.setTags(dto.getTags());
         return entity;
     }
 }

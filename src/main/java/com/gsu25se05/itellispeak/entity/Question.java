@@ -1,6 +1,8 @@
 package com.gsu25se05.itellispeak.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -52,9 +54,11 @@ public class Question {
             joinColumns = @JoinColumn(name = "question_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
+    @JsonBackReference
     private Set<Tag> tags = new HashSet<>();
 
     @ManyToMany(mappedBy = "questions")
+    @JsonBackReference
     private Set<InterviewSession> interviewSessions = new HashSet<>();
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL)
