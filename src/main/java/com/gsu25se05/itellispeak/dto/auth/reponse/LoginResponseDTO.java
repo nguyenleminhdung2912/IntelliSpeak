@@ -1,7 +1,6 @@
 package com.gsu25se05.itellispeak.dto.auth.reponse;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.gsu25se05.itellispeak.entity.User;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,6 +13,11 @@ public class LoginResponseDTO {
     private String message;
 
     private String error;
+
+
+    private String token;
+    private String refreshToken;
+    private UserDTO user;
 
 
     public LoginResponseDTO(int code, String message, String error) {
