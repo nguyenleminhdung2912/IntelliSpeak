@@ -28,12 +28,11 @@ public class TagMapper {
     public Tag toEntity(TagDTO dto) {
         if (dto == null) return null;
         Tag tag = new Tag();
-        tag.setTagId(dto.getId());
         tag.setTitle(dto.getTitle());
         tag.setDescription(dto.getDescription());
-        tag.setCreateAt(dto.getCreateAt());
-        tag.setUpdateAt(dto.getUpdateAt());
-        tag.setIsDeleted(dto.getIsDeleted());
+        tag.setCreateAt(LocalDateTime.now());
+        tag.setUpdateAt(LocalDateTime.now());
+        tag.setIsDeleted(false);
         return tag;
     }
 

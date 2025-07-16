@@ -3,8 +3,12 @@ package com.gsu25se05.itellispeak.service;
 import com.gsu25se05.itellispeak.dto.interview_session.InterviewSessionDTO;
 import com.gsu25se05.itellispeak.entity.InterviewSession;
 import com.gsu25se05.itellispeak.entity.Question;
+import com.gsu25se05.itellispeak.entity.Tag;
+import com.gsu25se05.itellispeak.entity.Topic;
 import com.gsu25se05.itellispeak.repository.InterviewSessionRepository;
 import com.gsu25se05.itellispeak.repository.QuestionRepository;
+import com.gsu25se05.itellispeak.repository.TagRepository;
+import com.gsu25se05.itellispeak.repository.TopicRepository;
 import com.gsu25se05.itellispeak.utils.mapper.InterviewSessionMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,14 +22,21 @@ public class InterviewSessionService {
     private final InterviewSessionRepository interviewSessionRepository;
     private final QuestionRepository questionRepository;
     private final InterviewSessionMapper interviewSessionMapper;
+    private final TagRepository tagRepository;
+    private final TopicRepository topicRepository;
+
 
     public InterviewSessionService(
             InterviewSessionRepository interviewSessionRepository,
             QuestionRepository questionRepository,
-            InterviewSessionMapper interviewSessionMapper) {
+            InterviewSessionMapper interviewSessionMapper,
+            TagRepository tagRepository,
+            TopicRepository topicRepository) {
         this.interviewSessionRepository = interviewSessionRepository;
         this.questionRepository = questionRepository;
         this.interviewSessionMapper = interviewSessionMapper;
+        this.tagRepository = tagRepository;
+        this.topicRepository = topicRepository;
     }
 
     @Transactional
@@ -34,8 +45,15 @@ public class InterviewSessionService {
         if (dto.getQuestionIds() != null && !dto.getQuestionIds().isEmpty()) {
             questions.addAll(questionRepository.findAllById(dto.getQuestionIds()));
         }
-
-        InterviewSession entity = interviewSessionMapper.toEntity(dto, questions);
+        Set<Tag> tags = new HashSet<>();
+        if (dto.getTagIds() != null && !dto.getTagIds().isEmpty()) {
+            tags.addAll(tagRepository.findAllById(dto.getTagIds()));
+        }
+        Topic topic = null;
+        if (dto.getTopicId() != null) {
+            topic = topicRepository.findById(dto.getTopicId()).orElse(null);
+        }
+        InterviewSession entity = interviewSessionMapper.toEntity(dto, questions, tags, topic);
         return interviewSessionRepository.save(entity);
     }
 

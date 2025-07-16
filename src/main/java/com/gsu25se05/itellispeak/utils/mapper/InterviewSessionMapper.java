@@ -2,10 +2,10 @@ package com.gsu25se05.itellispeak.utils.mapper;
 
 
 import com.gsu25se05.itellispeak.dto.interview_session.InterviewSessionDTO;
-import com.gsu25se05.itellispeak.entity.InterviewSession;
-import com.gsu25se05.itellispeak.entity.Question;
+import com.gsu25se05.itellispeak.entity.*;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -23,14 +23,19 @@ public class InterviewSessionMapper {
         return dto;
     }
 
-    public InterviewSession toEntity(InterviewSessionDTO dto, Set<Question> questions) {
+    public InterviewSession toEntity(InterviewSessionDTO dto, Set<Question> questions, Set<Tag> tags, Topic topic) {
         InterviewSession entity = new InterviewSession();
-        entity.setInterviewSessionId(dto.getInterviewSessionId());
         entity.setTitle(dto.getTitle());
         entity.setDescription(dto.getDescription());
         entity.setTotalQuestion(dto.getTotalQuestion());
-        entity.setDifficulty(Enum.valueOf(com.gsu25se05.itellispeak.entity.Difficulty.class, dto.getDifficulty()));
+        entity.setDifficulty(Enum.valueOf(Difficulty.class, dto.getDifficulty()));
         entity.setQuestions(questions != null ? questions : new HashSet<>());
+        entity.setTags(tags != null ? tags : new HashSet<>());
+        entity.setTopic(topic);
+        entity.setDurationEstimate(dto.getDurationEstimate());
+        entity.setCreateAt(LocalDateTime.now());
+        entity.setUpdateAt(LocalDateTime.now());
+        entity.setIsDeleted(false);
         return entity;
     }
 }
