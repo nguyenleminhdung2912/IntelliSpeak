@@ -68,9 +68,36 @@ public class AuthService implements UserDetailsService {
     }
 
 
+    private UserDTO convertToUserDTO(User user) {
+        if (user == null) return null;
+
+        return UserDTO.builder()
+                .userId(user.getUserId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .planType(user.getPlanType())
+                .birthday(user.getBirthday())
+                .avatar(user.getAvatar())
+                .status(user.getStatus())
+                .bio(user.getBio())
+                .website(user.getWebsite())
+                .github(user.getGithub())
+                .linkedin(user.getLinkedin())
+                .facebook(user.getFacebook())
+                .youtube(user.getYoutube())
+                .createAt(user.getCreateAt())
+                .updateAt(user.getUpdateAt())
+                .isDeleted(user.getIsDeleted())
+                .build();
+    }
+
+
     public Response<UserProfileDTO> getCurrentUserProfile() {
         User user = accountUtils.getCurrentAccount();
-        if (user == null) return new Response<>(401, "Please login first", null);
+        if (user == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
+
 
         UserProfileDTO profile = UserProfileDTO.builder()
                 .firstName(user.getFirstName())
@@ -84,13 +111,14 @@ public class AuthService implements UserDetailsService {
                 .youtube(user.getYoutube())
                 .build();
 
-        return new Response<>(200, "Get profile success", profile);
+        return new Response<>(200, "Lấy thông tin hồ sơ thành công", profile);
     }
 
 
     public Response<String> updateProfile(UpdateProfileRequestDTO request) {
         User user = accountUtils.getCurrentAccount();
-        if (user == null) return new Response<>(401, "Please login first", null);
+        if (user == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
+
 
         if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
         if (request.getLastName() != null) user.setLastName(request.getLastName());
@@ -105,7 +133,8 @@ public class AuthService implements UserDetailsService {
         user.setUpdateAt(LocalDateTime.now());
         userRepository.save(user);
 
-        return new Response<>(200, "Update profile success", null);
+        return new Response<>(200, "Cập nhật hồ sơ thành công", null);
+
     }
 
 
@@ -145,7 +174,7 @@ public class AuthService implements UserDetailsService {
             if (account == null) {
                 throw new AuthAppException(ErrorCode.EMAIL_NOT_FOUND);
             }
-            if (account.getIsDeleted().equals(true)) {
+            if (Boolean.TRUE.equals(account.getIsDeleted())) {
                 throw new AuthAppException(ErrorCode.ACCOUNT_IS_DELETED);
             }
 
@@ -165,35 +194,39 @@ public class AuthService implements UserDetailsService {
             // Set authentication in SecurityContext
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // Generate token and set it in a cookie
+            // Generate JWT tokens and set cookies
             String token = jwtService.generateToken(loginRequestDTO.getEmail());
-            Cookie cookie = jwtService.createTokenCookie(token);
-            response.addCookie(cookie);
+            Cookie tokenCookie = jwtService.createTokenCookie(token);
+            response.addCookie(tokenCookie);
 
             String refreshToken = jwtService.generateRefreshToken(loginRequestDTO.getEmail());
             Cookie refreshTokenCookie = jwtService.createRefreshTokenCookie(refreshToken);
             response.addCookie(refreshTokenCookie);
 
             // Build response
-            String responseString = "Login successful";
-            LoginResponseDTO loginResponseDTO = new LoginResponseDTO(
-                    200,
-                    responseString,
-                    null
-            );
+            UserDTO userDTO = convertToUserDTO(account); // Convert User -> UserDTO
+
+            LoginResponseDTO loginResponseDTO = new LoginResponseDTO();
+            loginResponseDTO.setCode(200);
+            loginResponseDTO.setMessage("Đăng nhập thành công");
+            loginResponseDTO.setToken(token);
+            loginResponseDTO.setRefreshToken(refreshToken);
+            loginResponseDTO.setUser(userDTO);
+
             return new ResponseEntity<>(loginResponseDTO, HttpStatus.OK);
 
         } catch (AuthAppException e) {
             ErrorCode errorCode = e.getErrorCode();
-            String errorResponse = "Login failed";
-            LoginResponseDTO loginResponseDTO = new LoginResponseDTO(
-                    400,
-                    e.getMessage(),
-                    errorResponse
-            );
+
+            LoginResponseDTO loginResponseDTO = new LoginResponseDTO();
+            loginResponseDTO.setCode(errorCode.getCode());
+            loginResponseDTO.setMessage(e.getMessage());
+            loginResponseDTO.setError("Login failed");
+
             return new ResponseEntity<>(loginResponseDTO, errorCode.getHttpStatus());
         }
     }
+
 
     public ResponseEntity<RegisterResponseDTO> registerAccount(RegisterRequestDTO registerRequestDTO) {
         try {
@@ -211,6 +244,7 @@ public class AuthService implements UserDetailsService {
             User account = convertToUser(registerRequestDTO);
             account.setIsDeleted(false);
             account.setRole(User.Role.USER);
+            account.setCreateAt(LocalDateTime.now());
             userRepository.save(account);
 
 //            Wallet wallet = new Wallet();
@@ -218,14 +252,14 @@ public class AuthService implements UserDetailsService {
 //            wallet.setUser(account);
 //            walletRepository.save(wallet);
 
-            String responseMessage = "Successful registration, please check your email for verification";
+            String responseMessage = "Đăng ký thành công, vui lòng kiểm tra email để xác minh";
             RegisterResponseDTO response = new RegisterResponseDTO(responseMessage, null, 201, registerRequestDTO.getEmail());
 
             //Send email here
             EmailDetail emailDetail = EmailDetail.builder()
                     .recipient(account.getEmail())
-                    .msgBody("Please verify your account to continue.")
-                    .subject("Please verify your account!")
+                    .msgBody("Vui lòng xác minh tài khoản của bạn để tiếp tục.")
+                    .subject("Vui lòng xác minh tài khoản của bạn!")
                     .name(account.getUsername())
                     .build();
             emailService.sendVerifyEmail(emailDetail);
@@ -233,8 +267,12 @@ public class AuthService implements UserDetailsService {
             return new ResponseEntity<>(response, HttpStatus.CREATED);
         } catch (AuthAppException e) {
             ErrorCode errorCode = e.getErrorCode();
-            String errorMessage = "Register failed";
-            RegisterResponseDTO response = new RegisterResponseDTO(errorMessage, errorCode.getMessage(), errorCode.getCode(), null);
+            RegisterResponseDTO response = new RegisterResponseDTO(
+                    errorCode.getCode(),
+                    errorCode.getMessage(),
+                    "Register failed"
+            );
+
             return new ResponseEntity<>(response, errorCode.getHttpStatus());
         }
     }
@@ -251,7 +289,7 @@ public class AuthService implements UserDetailsService {
             userRepository.save(account);
             return true;
         } catch (Exception e) {
-            throw new TokenExpiredException("Invalid or expired token!", Instant.now());
+            throw new TokenExpiredException("Token không hợp lệ hoặc đã hết hạn!", Instant.now());
         }
     }
 
@@ -268,28 +306,34 @@ public class AuthService implements UserDetailsService {
 
             // GENERATE TOKEN FOR EMAIL FORGOT PASSWORD (ENSURE UNIQUE AND JUST ONLY EMAIL CAN USE)
             String token = jwtService.generateToken(forgotPasswordRequest.getEmail());
-            User account = tempAccount.orElseThrow(() -> new UsernameNotFoundException("User not found"));
+            User account = tempAccount.orElseThrow(() -> new AuthAppException(ErrorCode.USER_NOT_FOUND));
             account.setTokens(token);
 
             //SEND MAIL
             EmailDetail emailDetail = EmailDetail.builder()
                     .recipient(account.getEmail())
-                    .msgBody("Dear " + account.getLastName() + ",\n\n" +
-                            "We received a request to reset the password for your account. To complete the process, please click the link below:\n\n" +
-                            "<a href=\"https://circuit-project.vercel.app/forgotPassword?" + token + "\">Reset My Password</a>\n\n" +
-                            "If you did not request a password reset, please ignore this email or contact support if you have any concerns.\n\n" +
-                            "Thank you,\nThe Support Team")
-                    .subject("Password Reset Request - Action Required")
+                    .msgBody("Chào bạn " + account.getLastName() + ",\n\n" +
+                            "Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn. Để hoàn tất quá trình, vui lòng nhấn vào liên kết dưới đây:\n\n" +
+                            "<a href=\"https://circuit-project.vercel.app/forgotPassword?" + token + "\">Đặt lại mật khẩu</a>\n\n" +
+                            "Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này hoặc liên hệ bộ phận hỗ trợ nếu có bất kỳ thắc mắc nào.\n\n" +
+                            "Trân trọng,\nĐội ngũ hỗ trợ")
+                    .subject("Yêu cầu đặt lại mật khẩu - Hành động cần thiết")
+
                     .name(account.getLastName())
                     .build();
             emailService.sendForgotPasswordEmail(emailDetail);
 
             userRepository.save(account);
-            ForgotPasswordResponse forgotPasswordResponse = new ForgotPasswordResponse("Password reset token generated successfully. Please check your email", null, 200);
+            ForgotPasswordResponse forgotPasswordResponse = new ForgotPasswordResponse(
+                    "Tạo mã đặt lại mật khẩu thành công. Vui lòng kiểm tra email của bạn.",
+                    null,
+                    200
+            );
+
             return new ResponseEntity<>(forgotPasswordResponse, HttpStatus.OK);
         } catch (AuthAppException e) {
             ErrorCode errorCode = e.getErrorCode();
-            ForgotPasswordResponse forgotPasswordResponse = new ForgotPasswordResponse("Password reset failed", e.getMessage(), errorCode.getCode());
+            ForgotPasswordResponse forgotPasswordResponse = new ForgotPasswordResponse(    "Đặt lại mật khẩu thất bại", e.getMessage(), errorCode.getCode());
             return new ResponseEntity<>(forgotPasswordResponse, errorCode.getHttpStatus());
         }
     }
@@ -313,11 +357,16 @@ public class AuthService implements UserDetailsService {
                 userRepository.save(account);
             }
 
-            ResetPasswordResponse resetPasswordResponse = new ResetPasswordResponse("Password reset token generated successfully.", null, 200);
+            ResetPasswordResponse resetPasswordResponse = new ResetPasswordResponse(
+                    "Đặt lại mật khẩu thành công.",
+                    null,
+                    200
+            );
+
             return new ResponseEntity<>(resetPasswordResponse, HttpStatus.CREATED);
         } catch (AuthAppException e) {
             ErrorCode errorCode = e.getErrorCode();
-            ResetPasswordResponse resetPasswordResponse = new ResetPasswordResponse("Password reset failed", e.getMessage(), errorCode.getCode());
+            ResetPasswordResponse resetPasswordResponse = new ResetPasswordResponse("Đặt lại mật khẩu thất bại", e.getMessage(), errorCode.getCode());
             return new ResponseEntity<>(resetPasswordResponse, errorCode.getHttpStatus());
         }
 
@@ -325,7 +374,7 @@ public class AuthService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByEmail(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return userRepository.findByEmail(username).orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng"));
     }
 
 }

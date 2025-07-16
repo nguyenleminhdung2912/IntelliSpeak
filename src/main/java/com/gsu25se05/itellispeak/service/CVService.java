@@ -136,7 +136,8 @@ public class CVService {
 
         CVAnalysisResponseDTO dto = new CVAnalysisResponseDTO(evaluation, extractedInfo);
 
-        return new Response<>(200, "Analysis successfully", dto);
+        return new Response<>(200, "Phân tích thành công", dto);
+
     }
 
 

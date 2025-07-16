@@ -57,11 +57,12 @@ public class EmailService {
             context.setVariable("link", resetLink);
             context.setVariable("button", "Reset Password");
 
-            emailDetail.setSubject("Password Reset Request");
-            emailDetail.setMsgBody("Hi " + emailDetail.getName() + ",\n\n" +
-                    "We received a request to reset your password. Click the button below to reset it:\n\n" +
-                    "<a href=\"" + resetLink + "\">Reset Password</a>");
-
+            emailDetail.setSubject("Yêu cầu đặt lại mật khẩu");
+            emailDetail.setMsgBody("Xin chào " + emailDetail.getName() + ",\n\n" +
+                    "Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu từ bạn. Vui lòng nhấn vào nút bên dưới để thực hiện:\n\n" +
+                    "<a href=\"" + resetLink + "\">Đặt lại mật khẩu</a>\n\n" +
+                    "Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email này hoặc liên hệ với bộ phận hỗ trợ.\n\n" +
+                    "Trân trọng,\nĐội ngũ hỗ trợ ItelliSpeak");
             proceedToSendMail(emailDetail, context, "forgot-password");
         } catch (MessagingException e) {
             e.printStackTrace();

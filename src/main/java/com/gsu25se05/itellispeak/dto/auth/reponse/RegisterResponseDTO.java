@@ -15,6 +15,12 @@ public class RegisterResponseDTO {
     private Integer code;
     private String data;
 
+    public RegisterResponseDTO(Integer code, String message, String error) {
+        this.code = code;
+        this.message = message;
+        this.error = error;
+    }
+
     public RegisterResponseDTO(String message, String error, Integer code, String data) {
         super();
         this.message = message;
