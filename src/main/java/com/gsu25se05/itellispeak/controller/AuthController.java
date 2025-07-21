@@ -42,6 +42,7 @@ public class AuthController {
     @Lazy
     private PasswordEncoder passwordEncoder;
 
+    @Operation(summary = "Lấy thông tin profile user")
     @GetMapping("/profile")
     public Response<UserProfileDTO> getProfile() {
         return authService.getCurrentUserProfile();
