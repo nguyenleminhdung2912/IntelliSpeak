@@ -3,6 +3,8 @@ package com.gsu25se05.itellispeak.controller;
 
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.interview_session.InterviewSessionDTO;
+import com.gsu25se05.itellispeak.dto.interview_session.QuestionSelectionRequestDTO;
+import com.gsu25se05.itellispeak.dto.interview_session.SessionWithQuestionsDTO;
 import com.gsu25se05.itellispeak.entity.InterviewSession;
 import com.gsu25se05.itellispeak.entity.Question;
 import com.gsu25se05.itellispeak.service.InterviewSessionService;
@@ -41,15 +43,24 @@ public class InterviewSessionController {
         return ResponseEntity.ok(new Response<>(200, "Questions added to session", session));
     }
 
-    @GetMapping("/{sessionId}/questions")
-    public ResponseEntity<Response<Set<Question>>> getQuestions(@PathVariable Long sessionId) {
-        Set<Question> questions = interviewSessionService.getQuestions(sessionId);
-        return ResponseEntity.ok(new Response<>(200, "Questions fetched", questions));
-    }
 
     @GetMapping("/sessions/get-all")
     public ResponseEntity<Response<Iterable<InterviewSession>>> getAllSessions() {
         Iterable<InterviewSession> sessions = interviewSessionService.getAllInterviewSession();
         return ResponseEntity.ok(new Response<>(200, "All interview sessions fetched", sessions));
+    }
+
+    @PostMapping("/random-questions")
+    public ResponseEntity<Response<SessionWithQuestionsDTO>> getRandomQuestions(@RequestBody QuestionSelectionRequestDTO request) {
+        try {
+            SessionWithQuestionsDTO dto = interviewSessionService.getRandomQuestions(request);
+            return ResponseEntity.ok(new Response<>(200, "Random questions fetched", dto));
+        } catch (RuntimeException e) {
+            // For known business exceptions
+            return ResponseEntity.badRequest().body(new Response<>(400, e.getMessage(), null));
+        } catch (Exception e) {
+            // For unexpected errors
+            return ResponseEntity.status(500).body(new Response<>(500, "Internal server error: " + e.getMessage(), null));
+        }
     }
 }

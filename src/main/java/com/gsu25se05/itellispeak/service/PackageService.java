@@ -3,7 +3,6 @@ package com.gsu25se05.itellispeak.service;
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.apackage.PackageRequestDTO;
 import com.gsu25se05.itellispeak.dto.apackage.PackageResponseDTO;
-import com.gsu25se05.itellispeak.dto.hr.HRResponseDTO;
 import com.gsu25se05.itellispeak.entity.User;
 import com.gsu25se05.itellispeak.repository.PackageRepository;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
