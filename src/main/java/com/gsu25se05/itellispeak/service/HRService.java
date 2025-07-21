@@ -25,7 +25,7 @@ public class HRService {
 
     public Response<HRResponseDTO> applyHR(HRRequestDTO request) {
         User user = accountUtils.getCurrentAccount();
-        if (user == null) return new Response<>(401, "Please login first", null);
+        if (user == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
 
         // Kiểm tra nếu user đã gửi yêu cầu HR
         if (hrRepository.findByUser(user).isPresent()) {
@@ -55,6 +55,6 @@ public class HRService {
                 saved.getCvUrl(),
                 saved.getSubmittedAt()
         );
-        return new Response<>(200, "HR application submitted successfully", responseDTO);
+        return new Response<>(200, "Gửi đơn ứng tuyển HR thành công", responseDTO);
     }
 }

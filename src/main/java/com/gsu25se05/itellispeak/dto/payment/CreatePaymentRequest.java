@@ -10,7 +10,5 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreatePaymentRequest {
-
-    private String plan;
-    private Double amount;
+    private Long packageId;
 }
