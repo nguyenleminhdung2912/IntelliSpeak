@@ -74,6 +74,7 @@ public class AuthService implements UserDetailsService {
         String email = user.getEmail();
         String userName = email != null && email.contains("@") ? email.split("@")[0] : "";
 
+        //abcd
         return UserDTO.builder()
                 .userId(user.getUserId())
                 .firstName(user.getFirstName())
@@ -81,7 +82,7 @@ public class AuthService implements UserDetailsService {
                 .userName(userName)
                 .email(user.getEmail())
                 .role(user.getRole())
-                .packageId(user.getAPackage().getPackageId())
+//                .packageId(user.getAPackage().getPackageId())
                 .birthday(user.getBirthday())
                 .avatar(user.getAvatar())
                 .status(user.getStatus())
