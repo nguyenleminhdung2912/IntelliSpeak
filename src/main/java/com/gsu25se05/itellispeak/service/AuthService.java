@@ -71,17 +71,21 @@ public class AuthService implements UserDetailsService {
     private UserDTO convertToUserDTO(User user) {
         if (user == null) return null;
 
+        String email = user.getEmail();
+        String userName = email != null && email.contains("@") ? email.split("@")[0] : "";
+
         return UserDTO.builder()
                 .userId(user.getUserId())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
-                .fullName(user.getLastName() + " " + user.getFirstName())
+                .userName(userName)
                 .email(user.getEmail())
                 .role(user.getRole())
                 .packageId(user.getAPackage().getPackageId())
                 .birthday(user.getBirthday())
                 .avatar(user.getAvatar())
                 .status(user.getStatus())
+                .phone(user.getPhone())
                 .bio(user.getBio())
                 .website(user.getWebsite())
                 .github(user.getGithub())
@@ -99,12 +103,17 @@ public class AuthService implements UserDetailsService {
         User user = accountUtils.getCurrentAccount();
         if (user == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
 
+        String email = user.getEmail();
+        String userName = email != null && email.contains("@") ? email.split("@")[0] : "";
 
         UserProfileDTO profile = UserProfileDTO.builder()
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
-                .fullName(user.getLastName() + " " + user.getFirstName())
+                .userName(userName)
                 .bio(user.getBio())
+                .role(user.getRole())
+                .phone(user.getPhone())
+                .email(email)
                 .avatar(user.getAvatar())
                 .website(user.getWebsite())
                 .github(user.getGithub())
@@ -117,6 +126,8 @@ public class AuthService implements UserDetailsService {
     }
 
 
+
+
     public Response<String> updateProfile(UpdateProfileRequestDTO request) {
         User user = accountUtils.getCurrentAccount();
         if (user == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
@@ -124,6 +135,7 @@ public class AuthService implements UserDetailsService {
 
         if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
         if (request.getLastName() != null) user.setLastName(request.getLastName());
+        if (request.getPhone() != null) user.setPhone(request.getPhone());
         if (request.getBio() != null) user.setBio(request.getBio());
         if (request.getAvatar() != null) user.setAvatar(request.getAvatar());
         if (request.getWebsite() != null) user.setWebsite(request.getWebsite());

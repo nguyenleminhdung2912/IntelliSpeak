@@ -9,6 +9,7 @@ public class UpdateProfileRequestDTO {
     private String firstName;
     private String lastName;
     private String bio;
+    private String phone;
     private String avatar;
     private String website;
     private String github;

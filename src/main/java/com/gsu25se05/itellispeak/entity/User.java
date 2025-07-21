@@ -62,6 +62,9 @@ public class User implements UserDetails {
     @Column(length = 1000)
     private String bio;
 
+    @Column(name = "phone")
+    private String phone;
+
     @Column(name = "website")
     private String website;
 

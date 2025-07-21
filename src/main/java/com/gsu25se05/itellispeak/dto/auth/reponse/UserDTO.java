@@ -18,13 +18,14 @@ public class UserDTO {
     private UUID userId;
     private String firstName;
     private String lastName;
-    private String fullName;
+    private String userName;
     private String email;
     private User.Role role;
     private Long packageId;
     private LocalDate birthday;
     private String avatar;
     private String status;
+    private String phone;
     private String bio;
     private String website;
     private String github;

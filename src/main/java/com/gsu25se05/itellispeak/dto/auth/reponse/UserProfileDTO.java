@@ -1,5 +1,6 @@
 package com.gsu25se05.itellispeak.dto.auth.reponse;
 
+import com.gsu25se05.itellispeak.entity.User;
 import lombok.Builder;
 import lombok.Data;
 
@@ -8,8 +9,11 @@ import lombok.Data;
 public class UserProfileDTO {
     private String firstName;
     private String lastName;
-    private String fullName;
+    private String userName;
     private String bio;
+    private User.Role role;
+    private String phone;
+    private String email;
     private String avatar;
     private String website;
     private String github;
