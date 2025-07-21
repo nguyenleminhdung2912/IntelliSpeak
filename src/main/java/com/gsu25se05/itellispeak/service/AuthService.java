@@ -210,12 +210,29 @@ public class AuthService implements UserDetailsService {
 
             // Generate JWT tokens and set cookies
             String token = jwtService.generateToken(loginRequestDTO.getEmail());
+            // Sau khi tạo cookie
             Cookie tokenCookie = jwtService.createTokenCookie(token);
             response.addCookie(tokenCookie);
+            response.addHeader("Set-Cookie",
+                    String.format("%s=%s; Path=%s; Max-Age=%d; HttpOnly; Secure; SameSite=None",
+                            tokenCookie.getName(),
+                            tokenCookie.getValue(),
+                            tokenCookie.getPath(),
+                            tokenCookie.getMaxAge()
+                    )
+            );
 
             String refreshToken = jwtService.generateRefreshToken(loginRequestDTO.getEmail());
             Cookie refreshTokenCookie = jwtService.createRefreshTokenCookie(refreshToken);
             response.addCookie(refreshTokenCookie);
+            response.addHeader("Set-Cookie",
+                    String.format("%s=%s; Path=%s; Max-Age=%d; HttpOnly; Secure; SameSite=None",
+                            refreshTokenCookie.getName(),
+                            refreshTokenCookie.getValue(),
+                            refreshTokenCookie.getPath(),
+                            refreshTokenCookie.getMaxAge()
+                    )
+            );
 
             // Build response
             UserDTO userDTO = convertToUserDTO(account); // Convert User -> UserDTO
