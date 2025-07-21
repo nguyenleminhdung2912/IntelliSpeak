@@ -74,6 +74,7 @@ public class AuthService implements UserDetailsService {
         String email = user.getEmail();
         String userName = email != null && email.contains("@") ? email.split("@")[0] : "";
 
+        //abcd
         return UserDTO.builder()
                 .userId(user.getUserId())
                 .firstName(user.getFirstName())
