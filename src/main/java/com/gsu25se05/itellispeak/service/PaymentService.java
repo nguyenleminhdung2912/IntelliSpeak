@@ -1,10 +1,8 @@
 package com.gsu25se05.itellispeak.service;
 
 
-import com.gsu25se05.itellispeak.config.PayOSConfig;
 import com.gsu25se05.itellispeak.dto.payment.CreatePaymentRequest;
 import com.gsu25se05.itellispeak.dto.payment.UrlPaymentResponse;
-import com.gsu25se05.itellispeak.entity.PlanType;
 import com.gsu25se05.itellispeak.entity.Transaction;
 import com.gsu25se05.itellispeak.entity.TransactionStatus;
 import com.gsu25se05.itellispeak.entity.User;
@@ -19,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.core.ParameterizedTypeReference;
 import vn.payos.PayOS;
 import vn.payos.type.CheckoutResponseData;
 import vn.payos.type.ItemData;
@@ -27,8 +24,6 @@ import vn.payos.type.PaymentData;
 
 
 import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -115,7 +110,7 @@ public class PaymentService {
                 tx.setTransactionStatus(TransactionStatus.PAID);
                 transactionRepository.save(tx);
 
-                user.setPlanType(PlanType.PROFESSIONAL);
+//                user.setPlanType(PlanType.PROFESSIONAL);
                 userRepository.save(user); // Hoặc userRepository.save(user);
 
                 return new Response<>(200, "Thanh toán thành công, đã kích hoạt gói", "PAID");

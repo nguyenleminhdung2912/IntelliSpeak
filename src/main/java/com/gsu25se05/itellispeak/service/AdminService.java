@@ -3,7 +3,6 @@ package com.gsu25se05.itellispeak.service;
 import com.gsu25se05.itellispeak.dto.hr.HRAdminResponseDTO;
 import com.gsu25se05.itellispeak.entity.HR;
 import com.gsu25se05.itellispeak.entity.HRStatus;
-import com.gsu25se05.itellispeak.entity.PlanType;
 import com.gsu25se05.itellispeak.entity.User;
 import com.gsu25se05.itellispeak.exception.ErrorCode;
 import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
@@ -42,8 +41,8 @@ public class AdminService {
 
     public Map<String, Long> getPlanCounts() {
         Map<String, Long> result = new HashMap<>();
-        result.put("PROFESSIONAL", userRepository.countByPlanType(PlanType.PROFESSIONAL));
-        result.put("BUSINESS", userRepository.countByPlanType(PlanType.BUSINESS));
+//        result.put("PROFESSIONAL", userRepository.countByPlanType(PlanType.PROFESSIONAL));
+//        result.put("BUSINESS", userRepository.countByPlanType(PlanType.BUSINESS));
         return result;
     }
 

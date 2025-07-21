@@ -77,7 +77,7 @@ public class AuthService implements UserDetailsService {
                 .lastName(user.getLastName())
                 .email(user.getEmail())
                 .role(user.getRole())
-                .planType(user.getPlanType())
+//                .planType(user.getPlanType())
                 .birthday(user.getBirthday())
                 .avatar(user.getAvatar())
                 .status(user.getStatus())

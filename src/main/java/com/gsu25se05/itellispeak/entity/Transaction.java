@@ -22,6 +22,14 @@ public class Transaction {
 //    @JoinColumn(name = "wallet_id", nullable = false)
 //    private  Wallet wallet;
 
+        @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private  User user;
+
+    @ManyToOne
+    @JoinColumn(name = "package_id", nullable = false)
+    private  Package aPackage;
+
     @Column(name = "order_code")
     private Long orderCode;
 
