@@ -1,6 +1,5 @@
 package com.gsu25se05.itellispeak.dto.apackage;
 
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

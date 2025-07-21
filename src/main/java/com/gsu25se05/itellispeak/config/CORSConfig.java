@@ -12,8 +12,9 @@ public class CORSConfig implements WebMvcConfigurer {
         registry.addMapping("/**") // Áp dụng cho tất cả các endpoint
                 .allowedOrigins("http://localhost:3000",
                         "http://localhost:8080",
-                        "https://itelli-speak-web.vercel.app",
-                        "http://localhost:5173" ) // Thêm các domain được phép truy cập
+                        "http://localhost:5173",
+                        "https://itelli-speak-web.vercel.app/",
+                        "https://intellispeak-admin.vercel.app/") // Thêm các domain được phép truy cập
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Cho phép các phương thức
                 .allowedHeaders("*") // Cho phép tất cả các header
                 .allowCredentials(true); // Cho phép gửi thông tin xác thực (cookie, auth headers)
