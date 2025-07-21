@@ -44,9 +44,10 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private Role role;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "payment_plan", length = 50, nullable = true)
-    private PlanType planType;
+    @OneToOne
+    @JoinColumn(name = "package_id", referencedColumnName = "package_id")
+    @JsonIgnore
+    private Package aPackage;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     @Column

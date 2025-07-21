@@ -2,6 +2,7 @@ package com.gsu25se05.itellispeak.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Transaction {
 
     @Id
@@ -21,6 +23,14 @@ public class Transaction {
 //    @ManyToOne
 //    @JoinColumn(name = "wallet_id", nullable = false)
 //    private  Wallet wallet;
+
+        @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private  User user;
+
+    @ManyToOne
+    @JoinColumn(name = "package_id", nullable = false)
+    private  Package aPackage;
 
     @Column(name = "order_code")
     private Long orderCode;

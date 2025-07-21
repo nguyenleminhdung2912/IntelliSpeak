@@ -1,6 +1,5 @@
 package com.gsu25se05.itellispeak.dto.auth.reponse;
 
-import com.gsu25se05.itellispeak.entity.PlanType;
 import com.gsu25se05.itellispeak.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,7 +20,7 @@ public class UserDTO {
     private String lastName;
     private String email;
     private User.Role role;
-    private PlanType planType;
+//    private PlanType planType;
     private LocalDate birthday;
     private String avatar;
     private String status;
