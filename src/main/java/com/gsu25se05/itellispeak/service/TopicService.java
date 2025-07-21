@@ -2,7 +2,9 @@ package com.gsu25se05.itellispeak.service;
 
 import com.gsu25se05.itellispeak.dto.interview_topic.TopicRequest;
 import com.gsu25se05.itellispeak.entity.Topic;
+import com.gsu25se05.itellispeak.entity.User;
 import com.gsu25se05.itellispeak.repository.TopicRepository;
+import com.gsu25se05.itellispeak.utils.AccountUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,8 +17,13 @@ import java.util.List;
 public class TopicService {
 
     private final TopicRepository topicRepository;
+    private final AccountUtils accountUtils;
 
     public List<Topic> getAllTopics() {
+        User user = accountUtils.getCurrentAccount();
+        if (user == null) {
+            return null;
+        }
         return topicRepository.findAllByIsDeletedFalse();
     }
 
@@ -27,6 +34,11 @@ public class TopicService {
 
     @Transactional
     public Topic createTopic(TopicRequest topicRequest) {
+        User user = accountUtils.getCurrentAccount();
+        if (user == null) {
+            return new Topic();
+        }
+
         Topic topic = new Topic();
         topic.setTitle(topicRequest.getTitle());
         topic.setDescription(topicRequest.getDescription());
