@@ -82,7 +82,7 @@ public class AuthService implements UserDetailsService {
                 .userName(userName)
                 .email(user.getEmail())
                 .role(user.getRole())
-                .packageId(user.getAPackage().getPackageId())
+//                .packageId(user.getAPackage().getPackageId())
                 .birthday(user.getBirthday())
                 .avatar(user.getAvatar())
                 .status(user.getStatus())
