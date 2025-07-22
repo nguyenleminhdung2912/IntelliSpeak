@@ -129,7 +129,7 @@ public class AuthService implements UserDetailsService {
 
 
 
-    public Response<String> updateProfile(UpdateProfileRequestDTO request) {
+    public Response<UserDTO> updateProfile(UpdateProfileRequestDTO request) {
         User user = accountUtils.getCurrentAccount();
         if (user == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
 
@@ -148,7 +148,9 @@ public class AuthService implements UserDetailsService {
         user.setUpdateAt(LocalDateTime.now());
         userRepository.save(user);
 
-        return new Response<>(200, "Cập nhật hồ sơ thành công", null);
+        UserDTO userDTO = convertToUserDTO(user);
+
+        return new Response<>(200, "Cập nhật hồ sơ thành công", userDTO);
 
     }
 
@@ -274,6 +276,7 @@ public class AuthService implements UserDetailsService {
             }
 
             User account = convertToUser(registerRequestDTO);
+            account.setAvatar(defaultAvatar);
             account.setIsDeleted(false);
             account.setRole(User.Role.USER);
             account.setCreateAt(LocalDateTime.now());

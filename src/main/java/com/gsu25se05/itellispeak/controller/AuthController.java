@@ -50,7 +50,7 @@ public class AuthController {
 
     @Operation(summary = "Cập nhật profile cá nhân")
     @PutMapping("/profile")
-    public ResponseEntity<Response<String>> updateProfile(@RequestBody UpdateProfileRequestDTO request) {
+    public ResponseEntity<Response<UserDTO>> updateProfile(@RequestBody UpdateProfileRequestDTO request) {
         return ResponseEntity.ok(authService.updateProfile(request));
     }
 
