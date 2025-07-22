@@ -48,6 +48,9 @@ public class Question {
     @Column
     private boolean is_deleted;
 
+    @Column
+    private String source;
+
     @ManyToMany
     @JoinTable(
             name = "question_tag",
@@ -64,5 +67,6 @@ public class Question {
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<InterviewHistoryDetail> historyDetails;
+
 }
 
