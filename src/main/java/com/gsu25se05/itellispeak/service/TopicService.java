@@ -20,10 +20,10 @@ public class TopicService {
     private final AccountUtils accountUtils;
 
     public List<Topic> getAllTopics() {
-        User user = accountUtils.getCurrentAccount();
-        if (user == null) {
-            return null;
-        }
+//        User user = accountUtils.getCurrentAccount();
+//        if (user == null) {
+//            return null;
+//        }
         return topicRepository.findAllByIsDeletedFalse();
     }
 
@@ -34,10 +34,10 @@ public class TopicService {
 
     @Transactional
     public Topic createTopic(TopicRequest topicRequest) {
-        User user = accountUtils.getCurrentAccount();
-        if (user == null) {
-            return new Topic();
-        }
+//        User user = accountUtils.getCurrentAccount();
+//        if (user == null) {
+//            return new Topic();
+//        }
 
         Topic topic = new Topic();
         topic.setTitle(topicRequest.getTitle());
