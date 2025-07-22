@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -62,6 +63,11 @@ public class ForumPostService {
     public Response<CreateResponseForumDTO> createForumPost(@Valid CreateRequestForumPostDTO dto) {
         User user = accountUtils.getCurrentAccount();
         if (user == null) return new Response<>(401, "Please login first", null);
+
+        if (dto.getForumTopicTypeId() == null) {
+            return new Response<>(400, "forumTopicTypeId is required", null);
+        }
+
         ForumPost post = new ForumPost();
         post.setUser(user);
         post.setTitle(dto.getTitle());
@@ -69,15 +75,15 @@ public class ForumPostService {
         post.setCreateAt(LocalDateTime.now());
         post.setIsDeleted(false);
 
-//        ForumCategory category = forumCategoryRepository.findById(dto.getForumCategoryId())
-//                .orElseThrow(() -> new NotFoundException("Category not found"));
-//        post.setForumCategory(category);
-
         ForumTopicType topicType = forumTopicTypeRepository.findById(dto.getForumTopicTypeId())
                 .orElseThrow(() -> new NotFoundException("Topic type not found"));
         post.setForumTopicType(topicType);
 
-        List<ForumPostPicture> pictures = dto.getImages().stream().map(url -> {
+        System.out.println("Images received = " + dto.getImages());
+
+
+        List<String> imageUrls = dto.getImages() != null ? dto.getImages() : Collections.emptyList();
+        List<ForumPostPicture> pictures = imageUrls.stream().map(url -> {
             ForumPostPicture pic = new ForumPostPicture();
             pic.setForumPost(post);
             pic.setUrl(url);
@@ -90,24 +96,24 @@ public class ForumPostService {
 
         forumPostRepository.save(post);
 
-        List<String> imageUrls = post.getPictures().stream()
+        // response
+        List<String> responseImageUrls = post.getPictures().stream()
                 .filter(p -> !Boolean.TRUE.equals(p.isDeleted()))
                 .map(ForumPostPicture::getUrl)
                 .collect(Collectors.toList());
 
-        // response
         CreateResponseForumDTO responseDTO = new CreateResponseForumDTO(
                 post.getId(),
                 post.getTitle(),
                 post.getContent(),
-                imageUrls,
+                responseImageUrls,
                 post.getForumTopicType(),
-//                post.getForumCategory(),
                 post.getCreateAt()
         );
 
         return new Response<>(201, "Forum Post created successfully!", responseDTO);
     }
+
 
 
     public Response<UpdateResponsePostDTO> updateForumPost(Long postId, @Valid UpdateRequestPostDTO dto) {
