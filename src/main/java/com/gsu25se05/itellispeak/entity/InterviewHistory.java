@@ -9,7 +9,7 @@ import java.util.List;
 @Table(name = "interview_history")
 public class InterviewHistory {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long interviewHistoryId;
 
     @ManyToOne

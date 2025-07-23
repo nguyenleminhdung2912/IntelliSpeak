@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -31,9 +32,13 @@ public class CloudinaryUtils implements ICloudinaryUtils {
         log.info("extension is: {}", extension);
         File fileUpload = convert(file);
         log.info("fileUpload is: {}", fileUpload);
-        cloudinary.uploader().upload(fileUpload, ObjectUtils.asMap("public_id", publicValue));
+        // Upload và lấy kết quả
+        Map uploadResult = cloudinary.uploader().upload(fileUpload, ObjectUtils.asMap("public_id", publicValue));
+
         cleanDisk(fileUpload);
-        return  cloudinary.url().generate(StringUtils.join(publicValue, ".", extension));
+
+        // Trả về URL thật từ Cloudinary
+        return uploadResult.get("secure_url").toString();
     }
 
     private File convert(MultipartFile file) throws IOException {

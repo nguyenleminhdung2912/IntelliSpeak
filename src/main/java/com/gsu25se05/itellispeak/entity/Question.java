@@ -19,7 +19,7 @@ import java.util.Set;
 @Builder
 public class Question {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long questionId;
 
     @Column(nullable = false)
