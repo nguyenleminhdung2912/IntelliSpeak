@@ -24,9 +24,14 @@ public class CreateResponseForumDTO {
 
     private List<String> image;
 
+    private String userName;
+
     private ForumTopicType forumTopicType;
 
 //    private ForumCategory forumCategory;
 
     private LocalDateTime createAt;
+
+    private Integer reactionCount;
+    private Integer readTimeEstimate;
 }

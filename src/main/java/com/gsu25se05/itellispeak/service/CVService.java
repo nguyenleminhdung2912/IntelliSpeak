@@ -91,7 +91,7 @@ public class CVService {
         JsonNode infoNode = rootNode.get("extractedInfo");
 
         User user = accountUtils.getCurrentAccount();
-        if (user == null) return new Response<>(401, "Please login first", null);
+        if (user == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
 
         // Create and save MemberCV
         MemberCV memberCV = new MemberCV();

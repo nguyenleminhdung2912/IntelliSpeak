@@ -383,7 +383,8 @@ public class AuthService implements UserDetailsService {
                 throw new AuthAppException(ErrorCode.PASSWORD_REPEAT_INCORRECT);
             }
             // CALL FUNC
-            String email = getString(token);
+            String email = jwtService.extractEmail(token);
+
             // FIND EMAIL IN DATABASE AND UPDATE NEW PASSWORD
             Optional<User> accountOptional = userRepository.findByEmail(email);
             if (accountOptional.isPresent()) {
