@@ -62,7 +62,7 @@ public class ForumPostService {
 
     public Response<CreateResponseForumDTO> createForumPost(@Valid CreateRequestForumPostDTO dto) {
         User user = accountUtils.getCurrentAccount();
-        if (user == null) return new Response<>(401, "Please login first", null);
+        if (user == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
 
         if (dto.getForumTopicTypeId() == null) {
             return new Response<>(400, "forumTopicTypeId is required", null);
@@ -72,6 +72,7 @@ public class ForumPostService {
         post.setUser(user);
         post.setTitle(dto.getTitle());
         post.setContent(dto.getContent());
+        post.setLikeCount(0);
         post.setCreateAt(LocalDateTime.now());
         post.setIsDeleted(false);
 
@@ -102,23 +103,37 @@ public class ForumPostService {
                 .map(ForumPostPicture::getUrl)
                 .collect(Collectors.toList());
 
+        String email = post.getUser().getEmail();
+        String username = email != null && email.contains("@") ? email.split("@")[0] : "unknown";
+
+        // Read time estimate
+        int readTime = estimateReadTime(post.getContent());
+
         CreateResponseForumDTO responseDTO = new CreateResponseForumDTO(
                 post.getId(),
                 post.getTitle(),
                 post.getContent(),
                 responseImageUrls,
+                username,
                 post.getForumTopicType(),
-                post.getCreateAt()
+                post.getCreateAt(),
+                post.getLikeCount(),
+                readTime
         );
 
         return new Response<>(201, "Forum Post created successfully!", responseDTO);
     }
 
+    private int estimateReadTime(String content) {
+        if (content == null || content.trim().isEmpty()) return 1;
+        int wordCount = content.trim().split("\\s+").length;
+        return Math.max(1, wordCount / 200); // 200 từ/phút
+    }
 
 
     public Response<UpdateResponsePostDTO> updateForumPost(Long postId, @Valid UpdateRequestPostDTO dto) {
         User user = accountUtils.getCurrentAccount();
-        if (user == null) return new Response<>(401, "Please login first", null);
+        if (user == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
 
         ForumPost post = forumPostRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Forum post not found"));

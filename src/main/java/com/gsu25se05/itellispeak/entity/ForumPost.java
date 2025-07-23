@@ -47,6 +47,9 @@ public class ForumPost {
     @Column(length = 20)
     private String status;
 
+    @Column(name = "like_count")
+    private Integer likeCount;
+
     @Column(name = "create_at")
     private LocalDateTime createAt;
 
