@@ -3,6 +3,7 @@ package com.gsu25se05.itellispeak.controller;
 
 import com.gsu25se05.itellispeak.dto.cv.CVAnalysisResponseDTO;
 import com.gsu25se05.itellispeak.dto.Response;
+import com.gsu25se05.itellispeak.entity.CVEvaluate;
 import com.gsu25se05.itellispeak.service.CVService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,17 @@ public class CVController {
             return ResponseEntity.status(response.getCode() == 200 ? 200 : 400).body(response);
         } catch (Exception e) {
             Response<CVAnalysisResponseDTO> errorResponse = new Response<>(400, "Error: " + e.getMessage(), null);
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+
+    @GetMapping("{id}")
+    public ResponseEntity<Response<CVEvaluate>> getCV(@PathVariable Long id) {
+        try {
+            Response<CVEvaluate> response = cvService.getCV(id);
+            return ResponseEntity.status(response.getCode() == 200 ? 200 : 400).body(response);
+        } catch (Exception e) {
+            Response<CVEvaluate> errorResponse = new Response<>(400, "Error: " + e.getMessage(), null);
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }

@@ -4,13 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.cv.CVAnalysisResponseDTO;
-import com.gsu25se05.itellispeak.entity.CVEvaluate;
-import com.gsu25se05.itellispeak.entity.CVExtractedInfo;
-import com.gsu25se05.itellispeak.entity.MemberCV;
-import com.gsu25se05.itellispeak.entity.User;
-import com.gsu25se05.itellispeak.repository.CVEvaluateRepository;
-import com.gsu25se05.itellispeak.repository.CVExtractedInfoRepository;
-import com.gsu25se05.itellispeak.repository.MemberCVRepository;
+import com.gsu25se05.itellispeak.entity.*;
+import com.gsu25se05.itellispeak.repository.*;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
 import com.gsu25se05.itellispeak.utils.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,124 +22,194 @@ public class CVService {
     private final WebClient webClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+
     private final CVEvaluateRepository cvEvaluateRepository;
+    private final CVFeedbackCategoryRepository categoryRepository;
+    private final CVFeedbackTipRepository tipRepository;
     private final CVExtractedInfoRepository cvExtractedInfoRepository;
     private final MemberCVRepository memberCVRepository;
     private final AccountUtils accountUtils;
 
-
-    public CVService(@Value("${genai.api.key}") String apiKey, CVEvaluateRepository cvEvaluateRepository, CVExtractedInfoRepository cvExtractedInfoRepository, MemberCVRepository memberCVRepository, AccountUtils accountUtils) {
+    public CVService(
+            @Value("${genai.api.key}") String apiKey,
+            CVEvaluateRepository cvEvaluateRepository,
+            CVFeedbackCategoryRepository categoryRepository,
+            CVFeedbackTipRepository tipRepository,
+            CVExtractedInfoRepository cvExtractedInfoRepository,
+            MemberCVRepository memberCVRepository,
+            AccountUtils accountUtils
+    ) {
         this.webClient = WebClient.builder()
                 .baseUrl(API_URL + "?key=" + apiKey)
                 .defaultHeader("Content-Type", "application/json")
                 .build();
         this.cvEvaluateRepository = cvEvaluateRepository;
+        this.categoryRepository = categoryRepository;
+        this.tipRepository = tipRepository;
         this.cvExtractedInfoRepository = cvExtractedInfoRepository;
         this.memberCVRepository = memberCVRepository;
         this.accountUtils = accountUtils;
     }
 
+    private String sanitizeText(String text) {
+        // Loại bỏ ký tự control ASCII không in được (mã < 32 trừ newline/tab)
+        return text.replaceAll("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F]", "")
+                .replaceAll("�", "") // Loại ký tự lỗi font
+                .replaceAll("\\p{C}", ""); // Ký tự "invisible" (Unicode control)
+    }
+
     public Response<CVAnalysisResponseDTO> analyzeAndSaveFromFile(MultipartFile file) throws Exception {
-        String text = FileUtils.extractTextFromCV(file);
-        return analyzeAndSaveEvaluation(text);
+        String rawText = FileUtils.extractTextFromCV(file);
+        String cleanText = sanitizeText(rawText);
+        return analyzeAndSaveEvaluation(cleanText);
     }
 
     public Response<CVAnalysisResponseDTO> analyzeAndSaveEvaluation(String cvText) throws Exception {
-        String prompt = String.format("""
-        Hãy đánh giá và trích xuất thông tin từ CV dưới đây. 
-        Trả kết quả dưới dạng JSON hợp lệ gồm 2 phần:
-
-        {
-          "evaluation": {
-            "score": 85,
-            "isGood": true,
-            "whatToImprove": "...",
-            "presentationFeedback": "...",
-            "grammarFeedback": "...",
-            "relevanceScore": 80,
-            "missingSkills": "...",
-            "highlightedSkills": "...",
-            "recommendations": "..."
-          },
-          "extractedInfo": {
-            "fullName": "...",
-            "email": "...",
-            "phone": "...",
-            "totalYearsExperience": 3,
-            "educationLevel": "...",
-            "university": "...",
-            "skills": ["Java", "Spring Boot", "..."],
-            "certifications": "...",
-            "careerGoals": "...",
-            "workExperience": "..."
-          }
-        }
-
-        CV nội dung: %s
-    """, cvText);
-
+        String prompt = preparePrompt(cvText);
         String response = callGemini(prompt);
         String cleaned = cleanJson(response);
-        JsonNode rootNode = objectMapper.readTree(cleaned);
+        JsonNode root = objectMapper.readTree(cleaned);
 
-        JsonNode evalNode = rootNode.get("evaluation");
-        JsonNode infoNode = rootNode.get("extractedInfo");
+        JsonNode feedbackNode = root.get("feedback");
+        JsonNode infoNode = root.get("extractedInfo");
 
         User user = accountUtils.getCurrentAccount();
         if (user == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
 
-        // Create and save MemberCV
+        // Save MemberCV
         MemberCV memberCV = new MemberCV();
-        memberCV.setCreateAt(LocalDateTime.now());
-        memberCV.setDeleted(false);
         memberCV.setUser(user);
+        memberCV.setDeleted(false);
+        memberCV.setCreateAt(LocalDateTime.now());
         memberCVRepository.save(memberCV);
 
-        // Create and save CVEvaluate
-        CVEvaluate evaluation = new CVEvaluate();
-        evaluation.setScore(evalNode.get("score").asInt());
-        evaluation.setIsGood(evalNode.get("isGood").asBoolean());
-        evaluation.setWhatToImprove(evalNode.get("whatToImprove").asText());
-        evaluation.setPresentationFeedback(evalNode.get("presentationFeedback").asText());
-        evaluation.setGrammarFeedback(evalNode.get("grammarFeedback").asText());
-        evaluation.setRelevanceScore(evalNode.get("relevanceScore").asInt());
-        evaluation.setMissingSkills(evalNode.get("missingSkills").asText());
-        evaluation.setHighlightedSkills(evalNode.get("highlightedSkills").asText());
-        evaluation.setRecommendations(evalNode.get("recommendations").asText());
-        evaluation.setCreateAt(LocalDateTime.now());
-        evaluation.setUpdateAt(LocalDateTime.now());
-        evaluation.setDeleted(false);
-        evaluation.setMemberCV(memberCV);
-        cvEvaluateRepository.save(evaluation);
+        // Save CVEvaluate
+        CVEvaluate cvEvaluate = new CVEvaluate();
+        cvEvaluate.setMemberCV(memberCV);
+        cvEvaluate.setOverallScore(feedbackNode.get("overallScore").asInt());
+        cvEvaluate.setCreateAt(LocalDateTime.now());
+        cvEvaluate.setUpdateAt(LocalDateTime.now());
+        cvEvaluate.setDeleted(false);
+        cvEvaluateRepository.save(cvEvaluate);
 
-        // Create and save CVExtractedInfo
-        CVExtractedInfo extractedInfo = new CVExtractedInfo();
-        extractedInfo.setMemberCV(memberCV);
-        extractedInfo.setFullName(infoNode.get("fullName").asText());
-        extractedInfo.setEmail(infoNode.get("email").asText());
-        extractedInfo.setPhone(infoNode.get("phone").asText());
-        extractedInfo.setTotalYearsExperience(infoNode.get("totalYearsExperience").asInt());
-        extractedInfo.setEducationLevel(infoNode.get("educationLevel").asText());
-        extractedInfo.setUniversity(infoNode.get("university").asText());
-        extractedInfo.setSkills(objectMapper.writeValueAsString(infoNode.get("skills")));
-        extractedInfo.setCertifications(infoNode.get("certifications").asText());
-        extractedInfo.setCareerGoals(infoNode.get("careerGoals").asText());
-        extractedInfo.setWorkExperience(infoNode.get("workExperience").asText());
-        extractedInfo.setCreateAt(LocalDateTime.now());
-        extractedInfo.setUpdateAt(LocalDateTime.now());
-        cvExtractedInfoRepository.save(extractedInfo);
+        // Save each feedback category and tips
+        List<String> categories = List.of("ATS", "toneAndStyle", "content", "structure", "skills");
+        for (String cat : categories) {
+            JsonNode catNode = feedbackNode.get(cat);
+            CVFeedbackCategory category = new CVFeedbackCategory();
+            category.setCvEvaluate(cvEvaluate);
+            category.setCategoryName(cat);
+            category.setScore(catNode.get("score").asInt());
+            categoryRepository.save(category);
 
-        CVAnalysisResponseDTO dto = new CVAnalysisResponseDTO(evaluation, extractedInfo);
+            for (JsonNode tipNode : catNode.get("tips")) {
+                CVFeedbackTip tip = new CVFeedbackTip();
+                tip.setFeedbackCategory(category);
+                String rawType = tipNode.get("type").asText();
+                TipType tipType = TipType.fromString(rawType);
 
+                if (tipType == null) {
+                    // Log cảnh báo để debug
+                    System.err.println("❌ Invalid tip type from AI: " + rawType);
+                    continue; // skip tip
+                }
+
+                tip.setType(tipType);
+                tip.setTip(tipNode.get("tip").asText());
+                tip.setExplanation(tipNode.has("explanation") ? tipNode.get("explanation").asText() : null);
+                tipRepository.save(tip);
+            }
+        }
+
+        // Save extracted info
+        CVExtractedInfo extracted = new CVExtractedInfo();
+        extracted.setMemberCV(memberCV);
+        extracted.setFullName(infoNode.get("fullName").asText());
+        extracted.setEmail(infoNode.get("email").asText());
+        extracted.setPhone(infoNode.get("phone").asText());
+        extracted.setTotalYearsExperience(infoNode.get("totalYearsExperience").asInt());
+        extracted.setEducationLevel(infoNode.get("educationLevel").asText());
+        extracted.setUniversity(infoNode.get("university").asText());
+        extracted.setSkills(objectMapper.writeValueAsString(infoNode.get("skills")));
+        extracted.setCertifications(infoNode.get("certifications").asText());
+        extracted.setCareerGoals(infoNode.get("careerGoals").asText());
+        extracted.setWorkExperience(infoNode.get("workExperience").asText());
+        extracted.setCreateAt(LocalDateTime.now());
+        extracted.setUpdateAt(LocalDateTime.now());
+
+        List<CVFeedbackCategory> returnCvEvaluate1 = getCV(cvEvaluate.getId()).getData().getCategories();
+        System.out.println("Thông tin categories 2");
+        for (CVFeedbackCategory category : returnCvEvaluate1)
+        {
+            System.out.println(category);
+        }
+
+        CVAnalysisResponseDTO dto = new CVAnalysisResponseDTO(getCV(cvEvaluate.getId()).getData(), cvExtractedInfoRepository.save(extracted));
         return new Response<>(200, "Phân tích thành công", dto);
-
     }
 
-
-
-    private String cleanJson(String text) {
-        return text.replaceAll("(?i)```json", "").replaceAll("(?i)```", "").trim();
+    private String preparePrompt(String cvText) {
+        return String.format("""
+                Bạn là một chuyên gia về hệ thống ATS (Applicant Tracking System) và phân tích CV.
+                Hãy đánh giá và cho điểm CV sau, đồng thời đưa ra gợi ý để cải thiện.
+                Hãy đánh giá chi tiết, trung thực. Nếu CV chưa tốt, hãy chấm điểm thấp và giải thích rõ lý do.
+                
+                Trả về dữ liệu ở định dạng JSON, **chỉ JSON**, không thêm giải thích nào khác.
+                Trong đó:
+                - `overallScore`: tổng điểm (tối đa 100).
+                - `type` trong `tips` chỉ được dùng 1 trong các giá trị: `"good"`, `"improve"`, `"warning"`, `"dangerous"`, `"neutral"`, `"note"`.
+                
+                Dưới đây là cấu trúc kết quả mẫu:
+                
+                {
+                  "feedback": {
+                    "overallScore": 85,
+                    "ATS": {
+                      "score": 90,
+                      "tips": [
+                        {
+                          "type": "good",
+                          "tip": "Sử dụng định dạng thân thiện với ATS.",
+                          "explanation": "CV có cấu trúc rõ ràng, giúp hệ thống ATS dễ đọc và phân tích."
+                        }
+                      ]
+                    },
+                    "toneAndStyle": {
+                      "score": 85,
+                      "tips": [...]
+                    },
+                    "content": {
+                      "score": 80,
+                      "tips": [...]
+                    },
+                    "structure": {
+                      "score": 75,
+                      "tips": [...]
+                    },
+                    "skills": {
+                      "score": 70,
+                      "tips": [...]
+                    }
+                  },
+                  "extractedInfo": {
+                    "fullName": "Nguyễn Văn A",
+                    "email": "example@gmail.com",
+                    "phone": "0123456789",
+                    "totalYearsExperience": 3,
+                    "educationLevel": "Đại học",
+                    "university": "Đại học FPT",
+                    "skills": ["Java", "Spring Boot"],
+                    "certifications": "Chứng chỉ AWS",
+                    "careerGoals": "Trở thành lập trình viên backend chuyên nghiệp.",
+                    "workExperience": "..."
+                  }
+                }
+                
+                Dưới đây là nội dung CV:
+                %s
+                """, cvText);
     }
+
 
     private String callGemini(String prompt) {
         try {
@@ -166,5 +231,14 @@ public class CVService {
             e.printStackTrace();
             return "Lỗi khi gọi Gemini API.";
         }
+    }
+
+    private String cleanJson(String text) {
+        return text.replaceAll("(?i)```json", "").replaceAll("(?i)```", "").trim();
+    }
+
+    public Response<CVEvaluate> getCV(Long id) {
+        CVEvaluate cvEvaluate = cvEvaluateRepository.findById(id).orElse(null);
+        return new Response<>(200, "Thành công", cvEvaluate);
     }
 }
