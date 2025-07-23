@@ -16,7 +16,7 @@ import java.util.Set;
 @Table(name = "tag")
 public class Tag {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long tagId;
 
     @Column(nullable = false)

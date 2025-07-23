@@ -21,7 +21,7 @@ import java.util.Set;
 @Table(name = "interview_session")
 public class InterviewSession {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long interviewSessionId;
 
     @ManyToOne
