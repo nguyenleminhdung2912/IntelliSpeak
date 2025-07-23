@@ -133,7 +133,6 @@ public class AuthService implements UserDetailsService {
         User user = accountUtils.getCurrentAccount();
         if (user == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
 
-
         if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
         if (request.getLastName() != null) user.setLastName(request.getLastName());
         if (request.getPhone() != null) user.setPhone(request.getPhone());
