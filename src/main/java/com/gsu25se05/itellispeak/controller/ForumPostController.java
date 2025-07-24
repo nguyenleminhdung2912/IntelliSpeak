@@ -117,7 +117,7 @@ public class ForumPostController {
         return ResponseEntity.status(response.getCode()).body(response);
     }
 
-    @PostMapping("/forum-post/{postId}/like")
+    @PostMapping("/{postId}/like")
     public ResponseEntity<Response<String>> likeOrUnlikePost(
             @PathVariable Long postId,
             @RequestParam boolean liked

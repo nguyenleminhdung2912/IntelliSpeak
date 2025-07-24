@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "member_cv")
@@ -19,14 +21,19 @@ public class MemberCV {
     @Column(name = "member_cv_id")
     private Long memberCvId;
 
-
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnore
     private User user;
 
+    @Column(name = "cv_title")
+    private String cvTitle;
+
     @Column(name = "link_to_cv")
     private String linkToCv;
+
+    @Column(name = "is_active")
+    private boolean isActive;
 
     @Column(name = "create_at")
     private LocalDateTime createAt;
@@ -36,4 +43,8 @@ public class MemberCV {
 
     @Column(name = "is_deleted")
     private boolean isDeleted = false;
+
+    @OneToMany(mappedBy = "memberCV", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<CVEvaluate> cvEvaluations = new ArrayList<>();
 }
