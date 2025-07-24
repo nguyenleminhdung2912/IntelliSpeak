@@ -8,6 +8,7 @@ import com.gsu25se05.itellispeak.dto.question.TagWithQuestionsDTO;
 import com.gsu25se05.itellispeak.entity.Question;
 import com.gsu25se05.itellispeak.service.TagService;
 import com.gsu25se05.itellispeak.utils.mapper.QuestionMapper;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -47,6 +48,7 @@ public class TagController {
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Cập nhật thông tin Tag theo ID (Tức là nhập ID lên Uri á Lĩu")
     public ResponseEntity<Response<TagDTO>> update(@PathVariable Long id, @RequestBody TagDTO dto) {
         return tagService.update(id, dto)
                 .map(tag -> ResponseEntity.ok(new Response<>(200, "Tag updated successfully", tag)))
@@ -54,6 +56,7 @@ public class TagController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Xóa Tag theo ID")
     public ResponseEntity<Response<Void>> delete(@PathVariable Long id) {
         if (tagService.delete(id)) {
             return ResponseEntity.ok(new Response<>(200, "Tag deleted successfully", null));
@@ -63,6 +66,7 @@ public class TagController {
     }
 
     @PutMapping("/{questionId}/tags/{tagId}")
+    @Operation(summary = "Thêm Tag vào Question theo ID (Nhập question id và tag id là để thêm Tag có TagID đó vào Question có QuestionID đó)")
     public ResponseEntity<Response<QuestionDTO>> addTagToQuestion(
             @PathVariable Long questionId,
             @PathVariable Long tagId) {
@@ -72,6 +76,8 @@ public class TagController {
     }
 
     @PutMapping("/{tagId}/questions")
+    @Operation(summary = "Thêm Tag vào nhiều Question theo ID",
+            description = "Nhập TagID lên trên đường dẫn, và danh sách QuestionIds vào body, là Thêm 1 tag vào nhiều Question")
     public ResponseEntity<Response<List<QuestionDTO>>> addTagToQuestions(
             @PathVariable Long tagId,
             @RequestBody List<Long> questionIds) {
@@ -83,6 +89,7 @@ public class TagController {
     }
 
     @DeleteMapping("/{questionId}/tags/{tagId}")
+    @Operation(summary = "Xóa Tag khỏi Question theo ID")
     public ResponseEntity<Response<QuestionDTO>> removeTagFromQuestion(
             @PathVariable Long questionId,
             @PathVariable Long tagId) {
@@ -92,6 +99,7 @@ public class TagController {
     }
 
     @GetMapping("/with-questions")
+    @Operation(summary = "Hiện danh sách câu hỏi thuộc Tag đó")
     public ResponseEntity<Response<List<TagWithQuestionsDTO>>> getAllTagsWithQuestions() {
         List<TagWithQuestionsDTO> result = tagService.getAllTagsWithQuestions();
         return ResponseEntity.ok(new Response<>(200, "Fetched tags with questions", result));

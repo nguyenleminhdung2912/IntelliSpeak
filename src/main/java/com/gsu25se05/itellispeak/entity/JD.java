@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "jd")
@@ -54,6 +56,9 @@ public class JD {
 
     @Column(name = "is_deleted")
     private boolean isDeleted = false;
+
+    @OneToMany(mappedBy = "jd", cascade = CascadeType.REFRESH, orphanRemoval = true)
+    private List<JDEvaluate> jdEvaluates = new ArrayList<>();
 }
 
 

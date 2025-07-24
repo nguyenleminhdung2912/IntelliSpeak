@@ -3,10 +3,13 @@ package com.gsu25se05.itellispeak.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.gsu25se05.itellispeak.dto.jd.JDInputDTO;
 import com.gsu25se05.itellispeak.entity.JD;
+import com.gsu25se05.itellispeak.entity.JDEvaluate;
 import com.gsu25se05.itellispeak.entity.User;
 import com.gsu25se05.itellispeak.exception.auth.NotFoundException;
+import com.gsu25se05.itellispeak.repository.JDEvaluateRepository;
 import com.gsu25se05.itellispeak.repository.JDRepository;
 import com.gsu25se05.itellispeak.repository.UserRepository;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
@@ -30,8 +33,9 @@ public class JDService {
     private final String API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
     private final AccountUtils accountUtils;
     private final UserRepository userRepository;
+    private final JDEvaluateRepository jdEvaluateRepository;
 
-    public JDService(JDRepository jdRepository, @Value("${genai.api.key}") String apiKey, AccountUtils accountUtils, UserRepository userRepository) {
+    public JDService(JDRepository jdRepository, @Value("${genai.api.key}") String apiKey, AccountUtils accountUtils, UserRepository userRepository, JDEvaluateRepository jdEvaluateRepository) {
         this.jdRepository = jdRepository;
         this.webClient = WebClient.builder()
                 .baseUrl(API_URL + "?key=" + apiKey)
@@ -39,6 +43,7 @@ public class JDService {
                 .build();
         this.accountUtils = accountUtils;
         this.userRepository = userRepository;
+        this.jdEvaluateRepository = jdEvaluateRepository;
     }
 
     public JD analyzeAndSaveJD(MultipartFile file) throws Exception {
@@ -49,7 +54,7 @@ public class JDService {
 
         if (text != null && !text.isEmpty()) {
             prompt = String.format("""
-                    Hãy phân tích nội dung mô tả công việc dưới đây và trả kết quả dưới dạng **JSON hợp lệ** (chỉ JSON, không Markdown, không giải thích):
+                    Hãy phân tích nội dung mô tả công việc dưới đây và trả kết quả dưới dạng JSON hợp lệ (chỉ JSON, không Markdown, không giải thích):
                     
                     {
                       "jobTitle": "",
@@ -57,7 +62,17 @@ public class JDService {
                       "mustHaveSkills": "",
                       "niceToHaveSkills": "",
                       "suitableLevel": "",
-                      "recommendedLearning": ""
+                      "recommendedLearning": "",
+                      "questions": [
+                        {
+                          "question": "",
+                          "suitableAnswer1": "",
+                          "suitableAnswer2": "",
+                          "skillNeeded": "",
+                          "difficultyLevel": "",  // dễ / khó / siêu khó
+                          "questionType": ""       // technical / behavior / logic...
+                        }
+                      ]
                     }
                     Nội dung JD: %s
                     """, text);
@@ -98,7 +113,26 @@ public class JDService {
         jd.setUpdateAt(LocalDateTime.now());
         jd.setDeleted(false);
 
-        return jdRepository.save(jd);
+        JD savedJD = jdRepository.save(jd);
+
+        if (jsonNode.has("questions") && jsonNode.get("questions").isArray()) {
+            ArrayNode questions = (ArrayNode) jsonNode.get("questions");
+            for (JsonNode q : questions) {
+                JDEvaluate evaluate = new JDEvaluate();
+                evaluate.setJd(savedJD); // dùng JD đã được lưu
+                evaluate.setQuestion(getJsonText(q, "question"));
+                evaluate.setSuitableAnswer1(getJsonText(q, "suitableAnswer1"));
+                evaluate.setSuitableAnswer2(getJsonText(q, "suitableAnswer2"));
+                evaluate.setSkillNeeded(getJsonText(q, "skillNeeded"));
+                evaluate.setDifficultyLevel(getJsonText(q, "difficultyLevel"));
+                evaluate.setQuestionType(getJsonText(q, "questionType"));
+                evaluate.setCreateAt(LocalDateTime.now());
+                evaluate.setUpdateAt(LocalDateTime.now());
+
+                jdEvaluateRepository.save(evaluate); // giờ thì không lỗi nữa
+            }
+        }
+        return savedJD;
     }
 
     private String getJsonText(JsonNode node, String field) {
@@ -128,5 +162,9 @@ public class JDService {
         }
     }
 
+    public JD getJDById(Long id) {
+        return jdRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy JD với ID: " + id));
+    }
 }
 

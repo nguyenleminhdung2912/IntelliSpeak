@@ -1,5 +1,6 @@
 package com.gsu25se05.itellispeak.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,6 +21,7 @@ public class JDEvaluate {
 
     @ManyToOne
     @JoinColumn(name = "jd_id", nullable = false)
+    @JsonIgnore
     private JD jd;
 
     @Column(name = "question", columnDefinition = "TEXT")
