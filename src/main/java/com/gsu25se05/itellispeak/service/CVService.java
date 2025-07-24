@@ -4,18 +4,23 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.cv.CVAnalysisResponseDTO;
+import com.gsu25se05.itellispeak.dto.cv.GetAllCvDTO;
 import com.gsu25se05.itellispeak.entity.*;
 import com.gsu25se05.itellispeak.repository.*;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
+import com.gsu25se05.itellispeak.utils.CloudinaryUtils;
 import com.gsu25se05.itellispeak.utils.FileUtils;
+import com.gsu25se05.itellispeak.utils.PdfToImageConverter;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class CVService {
@@ -29,6 +34,7 @@ public class CVService {
     private final CVExtractedInfoRepository cvExtractedInfoRepository;
     private final MemberCVRepository memberCVRepository;
     private final AccountUtils accountUtils;
+    private final CloudinaryUtils cloudinaryUtils;
 
     public CVService(
             @Value("${genai.api.key}") String apiKey,
@@ -37,7 +43,8 @@ public class CVService {
             CVFeedbackTipRepository tipRepository,
             CVExtractedInfoRepository cvExtractedInfoRepository,
             MemberCVRepository memberCVRepository,
-            AccountUtils accountUtils
+            AccountUtils accountUtils,
+            CloudinaryUtils cloudinaryUtils
     ) {
         this.webClient = WebClient.builder()
                 .baseUrl(API_URL + "?key=" + apiKey)
@@ -49,6 +56,7 @@ public class CVService {
         this.cvExtractedInfoRepository = cvExtractedInfoRepository;
         this.memberCVRepository = memberCVRepository;
         this.accountUtils = accountUtils;
+        this.cloudinaryUtils = cloudinaryUtils;
     }
 
     private String sanitizeText(String text) {
@@ -58,13 +66,34 @@ public class CVService {
                 .replaceAll("\\p{C}", ""); // Ký tự "invisible" (Unicode control)
     }
 
-    public Response<CVAnalysisResponseDTO> analyzeAndSaveFromFile(MultipartFile file) throws Exception {
+    public Response<CVAnalysisResponseDTO> analyzeAndSaveFromFile(String cvTitle, MultipartFile file) throws Exception {
         String rawText = FileUtils.extractTextFromCV(file);
         String cleanText = sanitizeText(rawText);
-        return analyzeAndSaveEvaluation(cleanText);
+
+        //Save image to cloudinary
+        String baseName = file.getOriginalFilename()
+                .replaceAll(".pdf", "")
+                .replaceAll("\\s+", "_");
+
+        // Convert PDF -> MultipartFile image(s) in memory
+        List<MultipartFile> imageFiles = PdfToImageConverter.convertPdfToMultipartImages(file.getInputStream(), baseName);
+
+        // Upload lên Cloudinary
+        StringBuilder imageUrls = new StringBuilder();
+
+        for (MultipartFile img : imageFiles) {
+            String url = cloudinaryUtils.uploadImage(img);
+            if (imageUrls.length() > 0) {
+                imageUrls.append(";");
+            }
+            imageUrls.append(url);
+        }
+
+        return analyzeAndSaveEvaluation(cleanText, imageUrls.toString(), cvTitle);
     }
 
-    public Response<CVAnalysisResponseDTO> analyzeAndSaveEvaluation(String cvText) throws Exception {
+    @Transactional
+    public Response<CVAnalysisResponseDTO> analyzeAndSaveEvaluation(String cvText, String imageURLs, String cvTitle) throws Exception {
         String prompt = preparePrompt(cvText);
         String response = callGemini(prompt);
         String cleaned = cleanJson(response);
@@ -76,11 +105,18 @@ public class CVService {
         User user = accountUtils.getCurrentAccount();
         if (user == null) return new Response<>(401, "Please login first", null);
 
-        // Save MemberCV
+        // 1. Vô hiệu hoá các CV cũ
+        memberCVRepository.deactivateOldCVsByUser(user);
+
+        // 2. Tạo mới CV mới và đánh dấu là active
         MemberCV memberCV = new MemberCV();
+        memberCV.setLinkToCv(imageURLs);
         memberCV.setUser(user);
+        memberCV.setCvTitle(cvTitle);
         memberCV.setDeleted(false);
         memberCV.setCreateAt(LocalDateTime.now());
+        memberCV.setUpdateAt(LocalDateTime.now());
+        memberCV.setActive(true);
         memberCVRepository.save(memberCV);
 
         // Save CVEvaluate
@@ -240,5 +276,26 @@ public class CVService {
     public Response<CVEvaluate> getCV(Long id) {
         CVEvaluate cvEvaluate = cvEvaluateRepository.findById(id).orElse(null);
         return new Response<>(200, "Thành công", cvEvaluate);
+    }
+
+    public Response<List<GetAllCvDTO>> getAllCvDTOsByUser() {
+
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
+
+        List<MemberCV> cvs = memberCVRepository.findByUserUserIdAndIsDeletedFalse(currentUser.getUserId());
+
+        List<GetAllCvDTO> dtos = cvs.stream().map(cv -> {
+            // Lấy CVEvaluate mới nhất nếu có
+            Optional<CVEvaluate> latestEvaluation = cv.getCvEvaluations().stream()
+                    .filter(e -> !e.isDeleted())
+                    .max(Comparator.comparing(CVEvaluate::getCreateAt));
+
+            String overallScore = latestEvaluation.map(e -> e.getOverallScore().toString()).orElse("N/A");
+
+            return new GetAllCvDTO(overallScore, cv.getLinkToCv(), cv.getCvTitle(), cv.isActive());
+        }).sorted(Comparator.comparing(GetAllCvDTO::getCvTitle, Comparator.nullsLast(String::compareTo)))
+                .collect(Collectors.toList());
+        return new Response<>(200, "Thành công", dtos);
     }
 }
