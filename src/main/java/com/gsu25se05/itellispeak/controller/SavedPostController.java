@@ -1,6 +1,7 @@
 package com.gsu25se05.itellispeak.controller;
 
 import com.gsu25se05.itellispeak.dto.Response;
+import com.gsu25se05.itellispeak.dto.forum.CreateResponseForumDTO;
 import com.gsu25se05.itellispeak.entity.ForumPost;
 import com.gsu25se05.itellispeak.service.ForumPostService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,8 +37,9 @@ public class SavedPostController {
 
     @Operation(summary = "Lấy danh sách bài viết đã lưu")
     @GetMapping
-    public ResponseEntity<Response<List<ForumPost>>> getSavedPosts() {
-        Response<List<ForumPost>> response = forumPostService.getSavedPosts();
+    public ResponseEntity<Response<List<CreateResponseForumDTO>>> getSavedPosts() {
+        Response<List<CreateResponseForumDTO>> response = forumPostService.getSavedPosts();
         return ResponseEntity.status(response.getCode()).body(response);
     }
+
 }

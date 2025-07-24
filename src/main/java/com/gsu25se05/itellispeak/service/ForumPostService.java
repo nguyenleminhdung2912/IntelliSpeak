@@ -1,6 +1,5 @@
 package com.gsu25se05.itellispeak.service;
 
-
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.forum.*;
 import com.gsu25se05.itellispeak.entity.*;
@@ -49,7 +48,7 @@ public class ForumPostService {
 
     public ForumPost getPostById(Long id) {
         ForumPost post = forumPostRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Forum Post not found with id: " + id));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy bài viết với ID: " + id));
 
         List<ForumPostPicture> activePictures = post.getPictures().stream()
                 .filter(p -> !Boolean.TRUE.equals(p.isDeleted()))
@@ -59,13 +58,12 @@ public class ForumPostService {
         return post;
     }
 
-
     public Response<CreateResponseForumDTO> createForumPost(@Valid CreateRequestForumPostDTO dto) {
         User user = accountUtils.getCurrentAccount();
         if (user == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
 
         if (dto.getForumTopicTypeId() == null) {
-            return new Response<>(400, "forumTopicTypeId is required", null);
+            return new Response<>(400, "Bạn chưa chọn chủ đề bài viết", null);
         }
 
         ForumPost post = new ForumPost();
@@ -77,11 +75,8 @@ public class ForumPostService {
         post.setIsDeleted(false);
 
         ForumTopicType topicType = forumTopicTypeRepository.findById(dto.getForumTopicTypeId())
-                .orElseThrow(() -> new NotFoundException("Topic type not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy chủ đề"));
         post.setForumTopicType(topicType);
-
-        System.out.println("Images received = " + dto.getImages());
-
 
         List<String> imageUrls = dto.getImages() != null ? dto.getImages() : Collections.emptyList();
         List<ForumPostPicture> pictures = imageUrls.stream().map(url -> {
@@ -97,7 +92,6 @@ public class ForumPostService {
 
         forumPostRepository.save(post);
 
-        // response
         List<String> responseImageUrls = post.getPictures().stream()
                 .filter(p -> !Boolean.TRUE.equals(p.isDeleted()))
                 .map(ForumPostPicture::getUrl)
@@ -106,7 +100,6 @@ public class ForumPostService {
         String email = post.getUser().getEmail();
         String username = email != null && email.contains("@") ? email.split("@")[0] : "unknown";
 
-        // Read time estimate
         int readTime = estimateReadTime(post.getContent());
 
         CreateResponseForumDTO responseDTO = new CreateResponseForumDTO(
@@ -121,60 +114,43 @@ public class ForumPostService {
                 readTime
         );
 
-        return new Response<>(201, "Forum Post created successfully!", responseDTO);
+        return new Response<>(201, "Tạo bài viết thành công!", responseDTO);
     }
 
     private int estimateReadTime(String content) {
         if (content == null || content.trim().isEmpty()) return 1;
         int wordCount = content.trim().split("\\s+").length;
-        return Math.max(1, wordCount / 200); // 200 từ/phút
+        return Math.max(1, wordCount / 200);
     }
-
 
     public Response<UpdateResponsePostDTO> updateForumPost(Long postId, @Valid UpdateRequestPostDTO dto) {
         User user = accountUtils.getCurrentAccount();
         if (user == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
 
         ForumPost post = forumPostRepository.findById(postId)
-                .orElseThrow(() -> new NotFoundException("Forum post not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy bài viết"));
 
-        // Only the post owner can edit
         if (!post.getUser().getUserId().equals(user.getUserId())) {
-            return new Response<>(403, "You are not the owner of this post", null);
+            return new Response<>(403, "Bạn không có quyền chỉnh sửa bài viết này", null);
         }
 
-
-        if (dto.getTitle() != null) {
-            post.setTitle(dto.getTitle());
-        }
-
-        if (dto.getContent() != null) {
-            post.setContent(dto.getContent());
-        }
+        if (dto.getTitle() != null) post.setTitle(dto.getTitle());
+        if (dto.getContent() != null) post.setContent(dto.getContent());
         post.setUpdateAt(LocalDateTime.now());
-
-
-//        if (dto.getForumCategoryId() != null) {
-//            ForumCategory category = forumCategoryRepository.findById(dto.getForumCategoryId())
-//                    .orElseThrow(() -> new NotFoundException("Category not found"));
-//            post.setForumCategory(category);
-//        }
 
         if (dto.getForumTopicTypeId() != null) {
             ForumTopicType topicType = forumTopicTypeRepository.findById(dto.getForumTopicTypeId())
-                    .orElseThrow(() -> new NotFoundException("Topic type not found"));
+                    .orElseThrow(() -> new NotFoundException("Không tìm thấy chủ đề"));
             post.setForumTopicType(topicType);
         }
 
         List<ForumPostPicture> currentPictures = post.getPictures();
-
-
         for (UpdateImageDTO imageDTO : dto.getImages()) {
             if (imageDTO.getId() != null) {
                 ForumPostPicture pic = currentPictures.stream()
                         .filter(p -> p.getId().equals(imageDTO.getId()))
                         .findFirst()
-                        .orElseThrow(() -> new NotFoundException("Image not found with id: " + imageDTO.getId()));
+                        .orElseThrow(() -> new NotFoundException("Không tìm thấy hình ảnh với ID: " + imageDTO.getId()));
                 pic.setUrl(imageDTO.getUrl());
             } else {
                 ForumPostPicture newPic = new ForumPostPicture();
@@ -186,79 +162,71 @@ public class ForumPostService {
             }
         }
 
-            post.setPictures(currentPictures);
-
-            forumPostRepository.save(post);
+        post.setPictures(currentPictures);
+        forumPostRepository.save(post);
 
         List<String> imageUrls = post.getPictures().stream()
                 .filter(p -> !Boolean.TRUE.equals(p.isDeleted()))
                 .map(ForumPostPicture::getUrl)
                 .collect(Collectors.toList());
 
-            UpdateResponsePostDTO responseDTO = new UpdateResponsePostDTO(
-                    post.getId(),
-                    post.getTitle(),
-                    post.getContent(),
-                    imageUrls,
-                    post.getForumTopicType(),
-//                    post.getForumCategory(),
-                    post.getUpdateAt()
-            );
+        UpdateResponsePostDTO responseDTO = new UpdateResponsePostDTO(
+                post.getId(), post.getTitle(), post.getContent(), imageUrls,
+                post.getForumTopicType(), post.getUpdateAt()
+        );
 
-            return new Response<>(200, "Forum post updated successfully!", responseDTO);
-        }
+        return new Response<>(200, "Cập nhật bài viết thành công!", responseDTO);
+    }
 
     @Transactional
     public Response<String> deleteImageFromPost(Long postId, Long imageId) {
         User user = accountUtils.getCurrentAccount();
-        if (user == null) return new Response<>(401, "Please login first", null);
+        if (user == null) return new Response<>(401, "Vui lòng đăng nhập trước", null);
 
         ForumPost post = forumPostRepository.findById(postId)
-                .orElseThrow(() -> new NotFoundException("Post not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy bài viết"));
 
         if (!post.getUser().getUserId().equals(user.getUserId())) {
-            return new Response<>(403, "You are not the owner of this post", null);
+            return new Response<>(403, "Bạn không có quyền xóa hình ảnh khỏi bài viết này", null);
         }
 
         ForumPostPicture image = forumPostPictureRepository.findById(imageId)
-                .orElseThrow(() -> new NotFoundException("Image not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy hình ảnh"));
 
         if (!image.getForumPost().getId().equals(postId)) {
-            return new Response<>(400, "Image does not belong to the specified post", null);
+            return new Response<>(400, "Hình ảnh không thuộc bài viết đã chỉ định", null);
         }
 
         image.setDeleted(true);
         image.setUpdateAt(LocalDateTime.now());
         forumPostPictureRepository.save(image);
 
-        return new Response<>(200, "Image deleted from post successfully", null);
+        return new Response<>(200, "Xóa hình ảnh khỏi bài viết thành công", null);
     }
-
-
 
     public Response<String> deletePost(Long id) {
         User user = accountUtils.getCurrentAccount();
-        if (user == null) return new Response<>(401, "Please login first", null);
+        if (user == null) return new Response<>(401, "Vui lòng đăng nhập trước", null);
+
         ForumPost forumPost = getPostById(id);
-        if (forumPost == null) return new Response<>(404, "Forum post not found", null);
-        if (forumPost.getIsDeleted()) return new Response<>(400, "Forum post is already deleted", null);
+        if (forumPost.getIsDeleted()) return new Response<>(400, "Bài viết đã bị xóa trước đó", null);
+
         forumPost.setIsDeleted(true);
         forumPost.setUpdateAt(LocalDateTime.now());
         forumPostRepository.save(forumPost);
-        return new Response<>(200, "Forum post deleted successfully!", "post with ID " + id + " was soft deleted.");
+
+        return new Response<>(200, "Xóa bài viết thành công!", "Đã xóa mềm bài viết với ID " + id);
     }
-
-
 
     public Response<String> savePost(Long postId) {
         User user = accountUtils.getCurrentAccount();
-        if (user == null) return new Response<>(401, "Please login first", null);
+        if (user == null) return new Response<>(401, "Vui lòng đăng nhập trước", null);
 
         ForumPost post = forumPostRepository.findById(postId)
-                .orElseThrow(() -> new NotFoundException("Post not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy bài viết"));
 
         if (savedPostRepository.findByUserAndForumPost(user, post).isPresent()) {
-            return new Response<>(400, "Post already saved", null);
+            return new Response<>(400, "Bài viết đã được lưu trước đó", null);
         }
 
         SavedPost savedPost = SavedPost.builder()
@@ -268,48 +236,63 @@ public class ForumPostService {
                 .build();
 
         savedPostRepository.save(savedPost);
-        return new Response<>(200, "Post saved successfully", null);
+        return new Response<>(200, "Lưu bài viết thành công", null);
     }
 
-    public Response<List<ForumPost>> getSavedPosts() {
+    public Response<List<CreateResponseForumDTO>> getSavedPosts() {
         User user = accountUtils.getCurrentAccount();
-        if (user == null) return new Response<>(401, "Please login first", null);
+        if (user == null)
+            return new Response<>(401, "Vui lòng đăng nhập trước", null);
+
+        String email = user.getEmail();
+        String username = email != null && email.contains("@") ? email.split("@")[0] : "unknown";
 
         List<SavedPost> savedPosts = savedPostRepository.findByUser(user).stream()
                 .filter(savedPost -> !savedPost.isDeleted())
                 .collect(Collectors.toList());
 
-        List<ForumPost> posts = savedPosts.stream()
+        List<CreateResponseForumDTO> responseList = savedPosts.stream()
                 .map(SavedPost::getForumPost)
                 .filter(post -> !Boolean.TRUE.equals(post.getIsDeleted()))
+                .map(post -> {
+                    int readTime = estimateReadTime(post.getContent());
+                    CreateResponseForumDTO dto = new CreateResponseForumDTO();
+                    dto.setPostId(post.getId());
+                    dto.setTitle(post.getTitle());
+                    dto.setContent(post.getContent());
+                    dto.setImage(post.getPictures().stream().map(p -> p.getUrl()).toList());
+                    dto.setUserName(username);
+                    dto.setForumTopicType(post.getForumTopicType());
+                    dto.setCreateAt(post.getCreateAt());
+                    dto.setReactionCount(post.getLikeCount());
+                    dto.setReadTimeEstimate(readTime);
+                    return dto;
+                })
                 .collect(Collectors.toList());
 
-        return new Response<>(200, "Retrieved saved posts", posts);
+        return new Response<>(200, "Lấy danh sách bài viết đã lưu thành công", responseList);
     }
 
     public Response<String> unSavePost(Long postId) {
         User user = accountUtils.getCurrentAccount();
-        if (user == null) return new Response<>(401, "Please login first", null);
+        if (user == null) return new Response<>(401, "Vui lòng đăng nhập trước", null);
 
         ForumPost post = forumPostRepository.findById(postId)
-                .orElseThrow(() -> new NotFoundException("Post not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy bài viết"));
 
         SavedPost savedPost = savedPostRepository.findByUserAndForumPost(user, post)
-                .orElseThrow(() -> new NotFoundException("Saved post not found"));
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy bài viết đã lưu"));
 
         savedPost.setDeleted(true);
         savedPost.setSavedAt(LocalDateTime.now());
         savedPostRepository.save(savedPost);
 
-        return new Response<>(200, "Post unsaved successfully", null);
+        return new Response<>(200, "Bỏ lưu bài viết thành công", null);
     }
-
-
 
     public Response<List<ForumPost>> getTopPostsByReplies(int limit) {
         List<ForumPost> posts = forumPostRepository.findTopPostsByReplyCount(limit);
 
-        // Lọc ảnh không bị xóa
         for (ForumPost post : posts) {
             List<ForumPostPicture> activePictures = post.getPictures().stream()
                     .filter(p -> !Boolean.TRUE.equals(p.isDeleted()))
@@ -317,6 +300,6 @@ public class ForumPostService {
             post.setPictures(activePictures);
         }
 
-        return new Response<>(200, "Top posts by reply count", posts);
+        return new Response<>(200, "Lấy danh sách bài viết nổi bật thành công", posts);
     }
 }
