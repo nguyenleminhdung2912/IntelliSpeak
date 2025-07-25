@@ -58,7 +58,7 @@ public class JDService {
 
         if (text != null && !text.isEmpty()) {
             prompt = String.format("""
-                    Hãy phân tích nội dung mô tả công việc dưới đây và trả kết quả dưới dạng JSON hợp lệ (chỉ JSON, không Markdown, không giải thích):
+                    Hãy phân tích nội dung mô tả công việc dưới đây và trả kết quả dưới dạng JSON hợp lệ (chỉ JSON, không Markdown, không giải thích). Hãy chắc chắn rằng mọi thứ là tiếng Việt:
                     
                     {
                       "jobTitle": "",
@@ -202,6 +202,7 @@ public class JDService {
                 .map(jd -> GetAllJdDTO.builder()
                         .jdId(jd.getJdId())
                         .linkToJd(jd.getLinkToJd())
+                        .jobtTitle(jd.getJobTitle())
                         .summary(jd.getSummary())
                         .createAt(jd.getCreateAt())
                         .build())
