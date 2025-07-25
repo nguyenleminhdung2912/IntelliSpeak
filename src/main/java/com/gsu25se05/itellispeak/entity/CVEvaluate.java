@@ -2,6 +2,7 @@ package com.gsu25se05.itellispeak.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -42,4 +43,9 @@ public class CVEvaluate {
 
     @Column(name = "is_deleted")
     private boolean isDeleted = false;
+
+    @JsonProperty("imageURL")
+    public String getLinkToCv() {
+        return memberCV != null ? memberCV.getLinkToCv() : null;
+    }
 }
