@@ -14,6 +14,7 @@ public class GetAllJdDTO {
     private Long jdId;
     private String linkToJd;
     private String summary;
+    private String jobtTitle;
 
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDateTime createAt;
