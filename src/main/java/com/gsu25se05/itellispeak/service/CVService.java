@@ -13,7 +13,6 @@ import com.gsu25se05.itellispeak.utils.FileUtils;
 import com.gsu25se05.itellispeak.utils.PdfToImageConverter;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -293,7 +292,7 @@ public class CVService {
 
             String overallScore = latestEvaluation.map(e -> e.getOverallScore().toString()).orElse("N/A");
 
-            return new GetAllCvDTO(overallScore, cv.getLinkToCv(), cv.getCvTitle(), cv.isActive());
+            return new GetAllCvDTO(cv.getMemberCvId(), overallScore, cv.getLinkToCv(), cv.getCvTitle(), cv.getCreateAt(), cv.isActive());
         }).sorted(Comparator.comparing(GetAllCvDTO::getCvTitle, Comparator.nullsLast(String::compareTo)))
                 .collect(Collectors.toList());
         return new Response<>(200, "Thành công", dtos);

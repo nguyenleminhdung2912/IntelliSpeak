@@ -2,7 +2,6 @@ package com.gsu25se05.itellispeak.service;
 
 import com.gsu25se05.itellispeak.dto.interview_topic.TopicRequest;
 import com.gsu25se05.itellispeak.entity.Topic;
-import com.gsu25se05.itellispeak.entity.User;
 import com.gsu25se05.itellispeak.repository.TopicRepository;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +42,7 @@ public class TopicService {
         topic.setTitle(topicRequest.getTitle());
         topic.setDescription(topicRequest.getDescription());
         topic.setCreateAt(LocalDateTime.now());
+        topic.setUpdateAt(LocalDateTime.now());
         topic.setIsDeleted(false); // Mặc định khi tạo mới
         return topicRepository.save(topic);
     }
