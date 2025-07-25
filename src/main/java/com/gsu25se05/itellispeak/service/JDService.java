@@ -4,7 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.gsu25se05.itellispeak.dto.jd.JDInputDTO;
+import com.gsu25se05.itellispeak.dto.Response;
+import com.gsu25se05.itellispeak.dto.jd.GetAllJdDTO;
 import com.gsu25se05.itellispeak.entity.JD;
 import com.gsu25se05.itellispeak.entity.JDEvaluate;
 import com.gsu25se05.itellispeak.entity.User;
@@ -13,7 +14,9 @@ import com.gsu25se05.itellispeak.repository.JDEvaluateRepository;
 import com.gsu25se05.itellispeak.repository.JDRepository;
 import com.gsu25se05.itellispeak.repository.UserRepository;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
+import com.gsu25se05.itellispeak.utils.CloudinaryUtils;
 import com.gsu25se05.itellispeak.utils.FileUtils;
+import com.gsu25se05.itellispeak.utils.PdfToImageConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,7 +25,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Service
 public class JDService {
@@ -34,8 +36,9 @@ public class JDService {
     private final AccountUtils accountUtils;
     private final UserRepository userRepository;
     private final JDEvaluateRepository jdEvaluateRepository;
+    private final CloudinaryUtils cloudinaryUtils;
 
-    public JDService(JDRepository jdRepository, @Value("${genai.api.key}") String apiKey, AccountUtils accountUtils, UserRepository userRepository, JDEvaluateRepository jdEvaluateRepository) {
+    public JDService(JDRepository jdRepository, @Value("${genai.api.key}") String apiKey, AccountUtils accountUtils, UserRepository userRepository, JDEvaluateRepository jdEvaluateRepository, CloudinaryUtils cloudinaryUtils) {
         this.jdRepository = jdRepository;
         this.webClient = WebClient.builder()
                 .baseUrl(API_URL + "?key=" + apiKey)
@@ -44,6 +47,7 @@ public class JDService {
         this.accountUtils = accountUtils;
         this.userRepository = userRepository;
         this.jdEvaluateRepository = jdEvaluateRepository;
+        this.cloudinaryUtils = cloudinaryUtils;
     }
 
     public JD analyzeAndSaveJD(MultipartFile file) throws Exception {
@@ -101,8 +105,28 @@ public class JDService {
         }
 
         JD jd = new JD();
+
+        //Save image to cloudinary
+        String baseName = file.getOriginalFilename()
+                .replaceAll(".pdf", "")
+                .replaceAll("\\s+", "_");
+
+        // Convert PDF -> MultipartFile image(s) in memory
+        List<MultipartFile> imageFiles = PdfToImageConverter.convertPdfToMultipartImages(file.getInputStream(), baseName);
+
+        // Upload lên Cloudinary
+        StringBuilder imageUrls = new StringBuilder();
+
+        for (MultipartFile img : imageFiles) {
+            String url = cloudinaryUtils.uploadImage(img);
+            if (imageUrls.length() > 0) {
+                imageUrls.append(";");
+            }
+            imageUrls.append(url);
+        }
+
         jd.setUser(user);
-        jd.setLinkToJd("");
+        jd.setLinkToJd(imageUrls.toString());
         jd.setJobTitle(getJsonText(jsonNode, "jobTitle"));
         jd.setSummary(getJsonText(jsonNode, "summary"));
         jd.setMustHaveSkills(getJsonText(jsonNode, "mustHaveSkills"));
@@ -166,5 +190,24 @@ public class JDService {
         return jdRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy JD với ID: " + id));
     }
-}
 
+    public Response<List<GetAllJdDTO>> getAllJDsByUser() {
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null)
+            return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
+
+        List<JD> jds = jdRepository.findByUserAndIsDeletedFalse(currentUser);
+
+        List<GetAllJdDTO> dtos = jds.stream()
+                .map(jd -> GetAllJdDTO.builder()
+                        .jdId(jd.getJdId())
+                        .linkToJd(jd.getLinkToJd())
+                        .summary(jd.getSummary())
+                        .createAt(jd.getCreateAt())
+                        .build())
+                .toList();
+
+        return new Response<>(200, "Lấy danh sách JD thành công", dtos);
+    }
+
+}

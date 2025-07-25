@@ -1,5 +1,7 @@
 package com.gsu25se05.itellispeak.controller;
 
+import com.gsu25se05.itellispeak.dto.Response;
+import com.gsu25se05.itellispeak.dto.jd.GetAllJdDTO;
 import com.gsu25se05.itellispeak.entity.JD;
 import com.gsu25se05.itellispeak.service.JDService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -8,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -42,6 +45,24 @@ public class JDController {
             return ResponseEntity.ok(jd);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<Response<List<GetAllJdDTO>>> getJDList() {
+        try {
+            Response<List<GetAllJdDTO>> result = jdService.getAllJDsByUser();
+
+            Response<List<GetAllJdDTO>> response = Response.<List<GetAllJdDTO>>builder()
+                    .code(200)
+                    .message("Danh sách CV đã được lấy thành công")
+                    .data(result.getData())
+                    .build();
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Response<List<GetAllJdDTO>> errorResponse = new Response<>(400, "Error: " + e.getMessage(), null);
+            return ResponseEntity.badRequest().body(errorResponse);
         }
     }
 }

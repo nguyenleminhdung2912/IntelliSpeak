@@ -15,6 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 @Setter
 @Getter
+@Builder
 public class JD {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
