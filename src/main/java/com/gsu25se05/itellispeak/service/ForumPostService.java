@@ -249,7 +249,7 @@ public class ForumPostService {
         User user = accountUtils.getCurrentAccount();
         if (user == null) return new Response<>(401, "Vui lòng đăng nhập trước", null);
 
-        ForumPost forumPost = getPostById(id);
+        ForumPost forumPost = forumPostRepository.findById(id).orElseThrow(null);
         if (forumPost.getIsDeleted()) return new Response<>(400, "Bài viết đã bị xóa trước đó", null);
 
         forumPost.setIsDeleted(true);
