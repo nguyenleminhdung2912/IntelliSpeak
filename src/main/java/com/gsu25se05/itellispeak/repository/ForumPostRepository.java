@@ -1,6 +1,7 @@
 package com.gsu25se05.itellispeak.repository;
 
 import com.gsu25se05.itellispeak.entity.ForumPost;
+import com.gsu25se05.itellispeak.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,6 +12,9 @@ import java.util.List;
 @Repository
 public interface ForumPostRepository extends JpaRepository<ForumPost, Long> {
     List<ForumPost> findByIsDeletedFalse();
+
+    List<ForumPost> findByUserAndIsDeletedFalse(User user);
+
 
     @Query(value = """
     SELECT fp.* 
