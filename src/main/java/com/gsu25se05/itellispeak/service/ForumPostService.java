@@ -58,6 +58,42 @@ public class ForumPostService {
         return post;
     }
 
+    public Response<List<CreateResponseForumDTO>> getMyPosts() {
+        User user = accountUtils.getCurrentAccount();
+        if (user == null)
+            return new Response<>(401, "Vui lòng đăng nhập trước", null);
+
+        String email = user.getEmail();
+        String username = email != null && email.contains("@") ? email.split("@")[0] : "unknown";
+
+        List<ForumPost> myPosts = forumPostRepository.findByUserAndIsDeletedFalse(user);
+
+        List<CreateResponseForumDTO> responseList = myPosts.stream()
+                .map(post -> {
+                    int readTime = estimateReadTime(post.getContent());
+                    List<String> activeImages = post.getPictures().stream()
+                            .filter(pic -> !Boolean.TRUE.equals(pic.isDeleted()))
+                            .map(ForumPostPicture::getUrl)
+                            .collect(Collectors.toList());
+
+                    return new CreateResponseForumDTO(
+                            post.getId(),
+                            post.getTitle(),
+                            post.getContent(),
+                            activeImages,
+                            username,
+                            post.getForumTopicType(),
+                            post.getCreateAt(),
+                            post.getLikeCount(),
+                            readTime
+                    );
+                })
+                .collect(Collectors.toList());
+
+        return new Response<>(200, "Lấy danh sách bài viết của bạn thành công", responseList);
+    }
+
+
     public Response<CreateResponseForumDTO> createForumPost(@Valid CreateRequestForumPostDTO dto) {
         User user = accountUtils.getCurrentAccount();
         if (user == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);

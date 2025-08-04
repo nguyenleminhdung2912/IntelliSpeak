@@ -81,6 +81,11 @@ public class ForumPostController {
         return ResponseEntity.ok(new Response<>(200, "Success", mapToDTO(post)));
     }
 
+    @GetMapping("/my-posts")
+    public ResponseEntity<Response<List<CreateResponseForumDTO>>> getMyPosts() {
+        return ResponseEntity.ok(forumPostService.getMyPosts());
+    }
+
 
     @PostMapping
     public Response<CreateResponseForumDTO> createForumPost(@Valid @RequestBody CreateRequestForumPostDTO forumPostDTO) {
