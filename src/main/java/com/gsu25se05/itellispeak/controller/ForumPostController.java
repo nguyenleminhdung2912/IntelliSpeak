@@ -112,8 +112,6 @@ public class ForumPostController {
         return ResponseEntity.status(response.getCode()).body(response);
     }
 
-
-
     @Operation(summary = "Sắp xếp bài viết có lượt comment từ cao xuống thấp")
     @GetMapping("/top-replied")
     public ResponseEntity<Response<List<ForumPost>>> getTopRepliedPosts(
@@ -149,5 +147,10 @@ public class ForumPostController {
         return ResponseEntity.ok(new Response<>(200, "Cập nhật like thành công", "Tổng số like: " + post.getLikeCount()));
     }
 
+    @GetMapping("/{postId}/replies")
+    public ResponseEntity<Response<List<ForumPostReply>>> getReplies(@PathVariable Long postId) {
+        List<ForumPostReply> replies = forumPostService.getRepliesByPostId(postId);
+        return ResponseEntity.ok(new Response<>(200, "Success", replies));
+    }
 
 }

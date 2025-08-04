@@ -24,8 +24,12 @@ public class ForumPostService {
     private final ForumCategoryRepository forumCategoryRepository;
     private final ForumTopicTypeRepository forumTopicTypeRepository;
     private final SavedPostRepository savedPostRepository;
+    private final ForumPostReplyRepository forumPostReplyRepository;
 
-    public ForumPostService(AccountUtils accountUtils, UserRepository userRepository, ForumPostRepository forumPostRepository, ForumPostPictureRepository forumPostPictureRepository, ForumCategoryRepository forumCategoryRepository, ForumTopicTypeRepository forumTopicTypeRepository, SavedPostRepository savedPostRepository) {
+    public ForumPostService(AccountUtils accountUtils, UserRepository userRepository, ForumPostRepository forumPostRepository,
+                            ForumPostPictureRepository forumPostPictureRepository, ForumCategoryRepository forumCategoryRepository,
+                            ForumTopicTypeRepository forumTopicTypeRepository, SavedPostRepository savedPostRepository,
+                            ForumPostReplyRepository forumPostReplyRepository) {
         this.accountUtils = accountUtils;
         this.userRepository = userRepository;
         this.forumPostRepository = forumPostRepository;
@@ -33,6 +37,7 @@ public class ForumPostService {
         this.forumCategoryRepository = forumCategoryRepository;
         this.forumTopicTypeRepository = forumTopicTypeRepository;
         this.savedPostRepository = savedPostRepository;
+        this.forumPostReplyRepository = forumPostReplyRepository;
     }
 
     public List<ForumPost> getAllPosts() {
@@ -337,5 +342,11 @@ public class ForumPostService {
         }
 
         return new Response<>(200, "Lấy danh sách bài viết nổi bật thành công", posts);
+    }
+
+    public List<ForumPostReply> getRepliesByPostId(Long postId) {
+        ForumPost post = forumPostRepository.findById(postId)
+                .orElseThrow(() -> new NotFoundException("Post not found"));
+        return forumPostReplyRepository.findByForumPostAndIsDeletedFalse(post);
     }
 }

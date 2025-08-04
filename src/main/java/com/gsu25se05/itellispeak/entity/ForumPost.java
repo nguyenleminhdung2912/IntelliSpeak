@@ -58,4 +58,7 @@ public class ForumPost {
 
     @Column(name = "is_deleted")
     private Boolean isDeleted;
+
+    @OneToMany(mappedBy = "forumPost", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ForumPostReply> replies = new ArrayList<>();
 }
