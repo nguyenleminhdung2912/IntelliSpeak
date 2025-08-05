@@ -2,12 +2,8 @@ package com.gsu25se05.itellispeak.controller;
 
 
 import com.gsu25se05.itellispeak.dto.Response;
-import com.gsu25se05.itellispeak.dto.category.UpdateCategoryRequest;
 import com.gsu25se05.itellispeak.dto.category.UpdateCategoryResponse;
-import com.gsu25se05.itellispeak.dto.forum.CreateRequestForumPostDTO;
-import com.gsu25se05.itellispeak.dto.forum.CreateResponseForumDTO;
-import com.gsu25se05.itellispeak.dto.forum.UpdateRequestPostDTO;
-import com.gsu25se05.itellispeak.dto.forum.UpdateResponsePostDTO;
+import com.gsu25se05.itellispeak.dto.forum.*;
 import com.gsu25se05.itellispeak.entity.*;
 import com.gsu25se05.itellispeak.exception.auth.NotFoundException;
 import com.gsu25se05.itellispeak.repository.ForumPostRepository;
@@ -148,8 +144,8 @@ public class ForumPostController {
     }
 
     @GetMapping("/{postId}/replies")
-    public ResponseEntity<Response<List<ForumPostReply>>> getReplies(@PathVariable Long postId) {
-        List<ForumPostReply> replies = forumPostService.getRepliesByPostId(postId);
+    public ResponseEntity<Response<List<ForumPostReplyWithUserDTO>>> getReplies(@PathVariable Long postId) {
+        List<ForumPostReplyWithUserDTO> replies = forumPostService.getRepliesWithUserByPostId(postId);
         return ResponseEntity.ok(new Response<>(200, "Success", replies));
     }
 

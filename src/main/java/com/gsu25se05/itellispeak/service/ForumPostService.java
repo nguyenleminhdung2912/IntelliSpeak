@@ -349,4 +349,28 @@ public class ForumPostService {
                 .orElseThrow(() -> new NotFoundException("Post not found"));
         return forumPostReplyRepository.findByForumPostAndIsDeletedFalse(post);
     }
+
+    public List<ForumPostReplyWithUserDTO> getRepliesWithUserByPostId(Long postId) {
+        ForumPost post = forumPostRepository.findById(postId)
+                .orElseThrow(() -> new NotFoundException("Post not found"));
+        List<ForumPostReply> replies = forumPostReplyRepository.findByForumPostAndIsDeletedFalse(post);
+        return replies.stream().map(reply -> {
+            User user = reply.getUser();
+            ForumPostReplyWithUserDTO.UserInfo userInfo = new ForumPostReplyWithUserDTO.UserInfo(
+                user.getFirstName(),
+                user.getLastName(),
+                user.getAvatar()
+            );
+            return new ForumPostReplyWithUserDTO(
+                reply.getId(),
+                reply.getTitle(),
+                reply.getContent(),
+                reply.getStatus(),
+                reply.getCreateAt(),
+                reply.getUpdateAt(),
+                reply.getIsDeleted(),
+                userInfo
+            );
+        }).collect(Collectors.toList());
+    }
 }
