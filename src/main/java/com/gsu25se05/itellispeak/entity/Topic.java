@@ -25,6 +25,9 @@ public class Topic {
     @Column
     private String description;
 
+    @Column(length = 3000)
+    private String longDescription;
+
     @Column(nullable = false)
     private LocalDateTime createAt;
 
