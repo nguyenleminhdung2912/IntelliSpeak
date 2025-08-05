@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface InterviewSessionRepository extends JpaRepository<InterviewSession, Long> {
-    List<InterviewSession> findByTopic_TopicId(Long topicId);
+    List<InterviewSession> findByTopic_TopicIdAndIsDeletedFalse(Long topicId);
 }
