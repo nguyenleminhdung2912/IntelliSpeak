@@ -2,11 +2,13 @@ package com.gsu25se05.itellispeak.controller;
 
 
 import com.gsu25se05.itellispeak.dto.Response;
+import com.gsu25se05.itellispeak.dto.interview_session.InterviewByTopicDTO;
 import com.gsu25se05.itellispeak.dto.interview_session.InterviewSessionDTO;
 import com.gsu25se05.itellispeak.dto.interview_session.QuestionSelectionRequestDTO;
 import com.gsu25se05.itellispeak.dto.interview_session.SessionWithQuestionsDTO;
 import com.gsu25se05.itellispeak.entity.InterviewSession;
 import com.gsu25se05.itellispeak.entity.Question;
+import com.gsu25se05.itellispeak.entity.Topic;
 import com.gsu25se05.itellispeak.service.InterviewSessionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -72,8 +74,8 @@ public class InterviewSessionController {
 
     @GetMapping("/{topic-id}")
     @Operation(summary = "Lấy danh sách các buổi phỏng vấn dựa trên ID chủ đề, chỉ trả về tiêu đề, mô tả và thời lượng")
-    public ResponseEntity<Response<Iterable<InterviewSessionDTO>>> getInterviewSessionByTopicId(@PathVariable("topic-id") Long topicId) {
-        Iterable<InterviewSessionDTO> sessions = interviewSessionService.getInterviewSessionByTopicId(topicId);
+    public ResponseEntity<Response<InterviewByTopicDTO>> getInterviewSessionByTopicId(@PathVariable("topic-id") Long topicId) {
+        InterviewByTopicDTO sessions = interviewSessionService.getInterviewSessionByTopicId(topicId);
         return ResponseEntity.ok(new Response<>(200, "Interview sessions by topic id fetched", sessions));
     }
 }

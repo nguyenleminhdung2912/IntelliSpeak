@@ -41,6 +41,7 @@ public class TopicService {
         Topic topic = new Topic();
         topic.setTitle(topicRequest.getTitle());
         topic.setDescription(topicRequest.getDescription());
+        topic.setLongDescription(topicRequest.getLongDescription());
         topic.setCreateAt(LocalDateTime.now());
         topic.setUpdateAt(LocalDateTime.now());
         topic.setIsDeleted(false); // Mặc định khi tạo mới
@@ -52,6 +53,7 @@ public class TopicService {
         Topic existingTopic = getTopicById(id); // Dùng lại getTopicById để kiểm tra tồn tại và isDeleted
         existingTopic.setTitle(topicRequest.getTitle());
         existingTopic.setDescription(topicRequest.getDescription());
+        existingTopic.setLongDescription(topicRequest.getLongDescription());
         existingTopic.setUpdateAt(LocalDateTime.now());
         return topicRepository.save(existingTopic);
     }
