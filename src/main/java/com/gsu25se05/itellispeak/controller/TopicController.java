@@ -5,7 +5,6 @@ import com.gsu25se05.itellispeak.entity.Topic;
 import com.gsu25se05.itellispeak.service.TopicService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,6 +42,12 @@ public class TopicController {
     @PutMapping("/{id}")
     public ResponseEntity<Topic> updateTopic(@PathVariable Long id, @Valid @RequestBody TopicRequest topicRequest) {
         Topic updatedTopic = topicService.updateTopic(id, topicRequest);
+        return ResponseEntity.ok(updatedTopic);
+    }
+
+    @PutMapping("/thumbnail/{id}")
+    public ResponseEntity<Topic> updateTopicThumbnail(@PathVariable Long id, @RequestBody String thumbnailURL) {
+        Topic updatedTopic = topicService.updateTopicThumbnail(id, thumbnailURL);
         return ResponseEntity.ok(updatedTopic);
     }
 

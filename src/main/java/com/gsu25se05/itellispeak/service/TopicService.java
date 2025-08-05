@@ -63,4 +63,11 @@ public class TopicService {
         topicToDelete.setUpdateAt(LocalDateTime.now());
         topicRepository.save(topicToDelete);
     }
+
+    public Topic updateTopicThumbnail(Long id, String thumbnailURL) {
+        Topic existingTopic = getTopicById(id); // Dùng lại getTopicById để kiểm tra tồn tại và isDeleted
+        existingTopic.setThumbnail(thumbnailURL);
+        existingTopic.setUpdateAt(LocalDateTime.now());
+        return topicRepository.save(existingTopic);
+    }
 }

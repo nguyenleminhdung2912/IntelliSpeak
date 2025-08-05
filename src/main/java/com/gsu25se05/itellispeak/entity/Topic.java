@@ -28,6 +28,9 @@ public class Topic {
     @Column(nullable = false)
     private LocalDateTime createAt;
 
+    @Column(nullable = true)
+    private String thumbnail;
+
     @Column
     private LocalDateTime updateAt;
 
