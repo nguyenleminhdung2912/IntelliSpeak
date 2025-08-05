@@ -93,10 +93,15 @@ public class InterviewSessionService {
         InterviewSession session = interviewSessionRepository.findById(request.getInterviewSessionId())
                 .orElseThrow(() -> new RuntimeException("Session not found"));
 
+        // Set default values if not provided
+        int easyCount = request.getEasyCount() > 0 ? request.getEasyCount() : 4;
+        int mediumCount = request.getMediumCount() > 0 ? request.getMediumCount() : 4;
+        int hardCount = request.getHardCount() > 0 ? request.getHardCount() : 2;
+
         List<QuestionInfoDTO> result = new ArrayList<>();
-        result.addAll(randomQuestions(request, Difficulty.EASY, request.getEasyCount()));
-        result.addAll(randomQuestions(request, Difficulty.MEDIUM, request.getMediumCount()));
-        result.addAll(randomQuestions(request, Difficulty.HARD, request.getHardCount()));
+        result.addAll(randomQuestions(request, Difficulty.EASY, easyCount));
+        result.addAll(randomQuestions(request, Difficulty.MEDIUM, mediumCount));
+        result.addAll(randomQuestions(request, Difficulty.HARD, hardCount));
 
         SessionWithQuestionsDTO dto = new SessionWithQuestionsDTO();
         dto.setInterviewSessionId(session.getInterviewSessionId());
@@ -119,6 +124,13 @@ public class InterviewSessionService {
         return questions.stream()
                 .limit(count)
                 .map(questionMapper::toInfoDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<InterviewSessionDTO> getInterviewSessionByTopicId(Long topicId) {
+        List<InterviewSession> interviewSessionList = interviewSessionRepository.findByTopic_TopicIdAndIsDeletedFalse(topicId);
+        return interviewSessionList.stream()
+                .map(interviewSessionMapper::toDTO)
                 .collect(Collectors.toList());
     }
 }

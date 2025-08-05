@@ -15,7 +15,6 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-
 public class InterviewSessionDTO {
     private Long interviewSessionId;
     private String title;
