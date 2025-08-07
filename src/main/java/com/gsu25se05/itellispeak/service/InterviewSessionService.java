@@ -1,6 +1,8 @@
 package com.gsu25se05.itellispeak.service;
 
 import com.gsu25se05.itellispeak.dto.interview_session.*;
+import com.gsu25se05.itellispeak.dto.topic.TagSimpleDTO;
+import com.gsu25se05.itellispeak.dto.topic.TopicWithTagsDTO;
 import com.gsu25se05.itellispeak.entity.*;
 import com.gsu25se05.itellispeak.repository.InterviewSessionRepository;
 import com.gsu25se05.itellispeak.repository.QuestionRepository;
@@ -124,8 +126,6 @@ public class InterviewSessionService {
                 .collect(Collectors.toList());
     }
 
-    // src/main/java/com/gsu25se05/itellispeak/service/InterviewSessionService.java
-
     public InterviewByTopicDTO getInterviewSessionByTopicId(Long topicId) {
         Topic topic = topicRepository.findById(topicId)
                 .orElseThrow(() -> new RuntimeException("Topic not found"));
@@ -142,5 +142,17 @@ public class InterviewSessionService {
                 .longDescription(topic.getLongDescription())
                 .interviewSessionDTOs(sessionDTOs)
                 .build();
+    }
+
+    public List<TopicWithTagsDTO> getAllTopicsWithTags() {
+        List<Topic> topics = topicRepository.findAllByIsDeletedFalse();
+        return topics.stream().map(topic -> {
+            List<TagSimpleDTO> tagDTOs = topic.getTags() == null ? List.of() :
+                    topic.getTags().stream()
+                            .filter(tag -> !tag.getIsDeleted())
+                            .map(tag -> new TagSimpleDTO(tag.getTagId(), tag.getTitle()))
+                            .collect(Collectors.toList());
+            return new TopicWithTagsDTO(topic.getTopicId(), topic.getTitle(), tagDTOs);
+        }).collect(Collectors.toList());
     }
 }

@@ -1,7 +1,9 @@
 package com.gsu25se05.itellispeak.service;
 
 import com.gsu25se05.itellispeak.dto.interview_topic.TopicRequest;
+import com.gsu25se05.itellispeak.entity.Tag;
 import com.gsu25se05.itellispeak.entity.Topic;
+import com.gsu25se05.itellispeak.repository.TagRepository;
 import com.gsu25se05.itellispeak.repository.TopicRepository;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor // Tự động tạo constructor cho các final fields (thay cho @Autowired)
@@ -17,6 +20,8 @@ public class TopicService {
 
     private final TopicRepository topicRepository;
     private final AccountUtils accountUtils;
+    private final TagRepository tagRepository;
+
 
     public List<Topic> getAllTopics() {
 //        User user = accountUtils.getCurrentAccount();
@@ -42,6 +47,7 @@ public class TopicService {
         topic.setTitle(topicRequest.getTitle());
         topic.setDescription(topicRequest.getDescription());
         topic.setLongDescription(topicRequest.getLongDescription());
+        topic.setThumbnail(topicRequest.getThumbnail());
         topic.setCreateAt(LocalDateTime.now());
         topic.setUpdateAt(LocalDateTime.now());
         topic.setIsDeleted(false); // Mặc định khi tạo mới
@@ -54,6 +60,9 @@ public class TopicService {
         existingTopic.setTitle(topicRequest.getTitle());
         existingTopic.setDescription(topicRequest.getDescription());
         existingTopic.setLongDescription(topicRequest.getLongDescription());
+        if (topicRequest.getThumbnail() != "" || topicRequest.getThumbnail() != null) {
+            existingTopic.setThumbnail(topicRequest.getThumbnail());
+        }
         existingTopic.setUpdateAt(LocalDateTime.now());
         return topicRepository.save(existingTopic);
     }
@@ -71,5 +80,39 @@ public class TopicService {
         existingTopic.setThumbnail(thumbnailURL);
         existingTopic.setUpdateAt(LocalDateTime.now());
         return topicRepository.save(existingTopic);
+    }
+
+    // src/main/java/com/gsu25se05/itellispeak/service/TopicService.java
+
+    @Transactional
+    public Topic addTopicToTag(Long topicId, Long tagId) {
+        Topic topic = topicRepository.findById(topicId)
+                .orElseThrow(() -> new RuntimeException("Topic not found"));
+        Tag tag = tagRepository.findById(tagId)
+                .orElseThrow(() -> new RuntimeException("Tag not found"));
+        topic.getTags().add(tag);
+        tag.getTopics().add(topic);
+        topicRepository.save(topic);
+        // Optionally save tag as well if needed
+        return topic;
+    }
+
+    @Transactional
+    public Topic removeTopicFromTag(Long topicId, Long tagId) {
+        Topic topic = topicRepository.findById(topicId)
+                .orElseThrow(() -> new RuntimeException("Topic not found"));
+        Tag tag = tagRepository.findById(tagId)
+                .orElseThrow(() -> new RuntimeException("Tag not found"));
+        topic.getTags().remove(tag);
+        tag.getTopics().remove(topic);
+        topicRepository.save(topic);
+        // Optionally save tag as well if needed
+        return topic;
+    }
+
+    public Set<Tag> getTagsOfTopic(Long topicId) {
+        Topic topic = topicRepository.findById(topicId)
+                .orElseThrow(() -> new RuntimeException("Topic not found"));
+        return topic.getTags();
     }
 }

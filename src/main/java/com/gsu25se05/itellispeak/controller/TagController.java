@@ -6,6 +6,8 @@ import com.gsu25se05.itellispeak.dto.question.QuestionDTO;
 import com.gsu25se05.itellispeak.dto.question.TagDTO;
 import com.gsu25se05.itellispeak.dto.question.TagWithQuestionsDTO;
 import com.gsu25se05.itellispeak.entity.Question;
+import com.gsu25se05.itellispeak.entity.Tag;
+import com.gsu25se05.itellispeak.entity.Topic;
 import com.gsu25se05.itellispeak.service.TagService;
 import com.gsu25se05.itellispeak.utils.mapper.QuestionMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/tag")
@@ -103,6 +106,26 @@ public class TagController {
     public ResponseEntity<Response<List<TagWithQuestionsDTO>>> getAllTagsWithQuestions() {
         List<TagWithQuestionsDTO> result = tagService.getAllTagsWithQuestions();
         return ResponseEntity.ok(new Response<>(200, "Fetched tags with questions", result));
+    }
+
+    @PutMapping("/{tagId}/topics/{topicId}")
+    public ResponseEntity<TagDTO> addTopicToTag(@PathVariable Long tagId, @PathVariable Long topicId) {
+        Tag updated = tagService.addTagToTopic(tagId, topicId);
+        TagDTO dto = tagService.findById(tagId).orElse(null);
+        return ResponseEntity.ok(dto);
+    }
+
+    @DeleteMapping("/{tagId}/topics/{topicId}")
+    public ResponseEntity<TagDTO> removeTopicFromTag(@PathVariable Long tagId, @PathVariable Long topicId) {
+        Tag updated = tagService.removeTagFromTopic(tagId, topicId);
+        TagDTO dto = tagService.findById(tagId).orElse(null);
+        return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/{tagId}/topics")
+    public ResponseEntity<Set<Topic>> getTopicsOfTag(@PathVariable Long tagId) {
+        Set<Topic> topics = tagService.getTopicsByTag(tagId);
+        return ResponseEntity.ok(topics);
     }
 
 }

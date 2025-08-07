@@ -6,6 +6,7 @@ import com.gsu25se05.itellispeak.dto.interview_session.InterviewByTopicDTO;
 import com.gsu25se05.itellispeak.dto.interview_session.InterviewSessionDTO;
 import com.gsu25se05.itellispeak.dto.interview_session.QuestionSelectionRequestDTO;
 import com.gsu25se05.itellispeak.dto.interview_session.SessionWithQuestionsDTO;
+import com.gsu25se05.itellispeak.dto.topic.TopicWithTagsDTO;
 import com.gsu25se05.itellispeak.entity.InterviewSession;
 import com.gsu25se05.itellispeak.entity.Question;
 import com.gsu25se05.itellispeak.entity.Topic;
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -49,7 +51,6 @@ public class InterviewSessionController {
         return ResponseEntity.ok(new Response<>(200, "Questions added to session", session));
     }
 
-
     @GetMapping("/sessions/get-all")
     @Operation(summary = "Tạm thời bỏ đi, không dùng tới, chỉ cần admin dùng thôi")
     public ResponseEntity<Response<Iterable<InterviewSession>>> getAllSessions() {
@@ -78,4 +79,12 @@ public class InterviewSessionController {
         InterviewByTopicDTO sessions = interviewSessionService.getInterviewSessionByTopicId(topicId);
         return ResponseEntity.ok(new Response<>(200, "Interview sessions by topic id fetched", sessions));
     }
+
+    @GetMapping("/topics-with-tags")
+    @Operation(summary = "Get all topics with their tags")
+    public ResponseEntity<Response<List<TopicWithTagsDTO>>> getTopicsWithTags() {
+        List<TopicWithTagsDTO> data = interviewSessionService.getAllTopicsWithTags();
+        return ResponseEntity.ok(new Response<>(200, "Fetched topics with tags", data));
+    }
+
 }
