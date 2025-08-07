@@ -43,5 +43,14 @@ public class Tag {
     @ManyToMany(mappedBy = "tags")
     @JsonIgnore
     private Set<InterviewSession> interviewSessions;
+
+    @ManyToMany
+    @JoinTable(
+            name = "topic_tag",
+            joinColumns = @JoinColumn(name = "tag_id"),
+            inverseJoinColumns = @JoinColumn(name = "topic_id")
+    )
+    @JsonIgnore
+    private Set<Topic> topics;
 }
 

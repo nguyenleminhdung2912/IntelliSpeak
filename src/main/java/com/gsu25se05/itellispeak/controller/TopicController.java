@@ -1,6 +1,7 @@
 package com.gsu25se05.itellispeak.controller;
 
 import com.gsu25se05.itellispeak.dto.interview_topic.TopicRequest;
+import com.gsu25se05.itellispeak.entity.Tag;
 import com.gsu25se05.itellispeak.entity.Topic;
 import com.gsu25se05.itellispeak.service.TopicService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/topic")
@@ -55,5 +57,23 @@ public class TopicController {
     public ResponseEntity<Void> deleteTopic(@PathVariable Long id) {
         topicService.deleteTopic(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{topicId}/tags/{tagId}")
+    public ResponseEntity<Topic> addTagToTopic(@PathVariable Long topicId, @PathVariable Long tagId) {
+        Topic updated = topicService.addTopicToTag(topicId, tagId);
+        return ResponseEntity.ok(updated);
+    }
+
+    @DeleteMapping("/{topicId}/tags/{tagId}")
+    public ResponseEntity<Topic> removeTagFromTopic(@PathVariable Long topicId, @PathVariable Long tagId) {
+        Topic updated = topicService.removeTopicFromTag(topicId, tagId);
+        return ResponseEntity.ok(updated);
+    }
+
+    @GetMapping("/{topicId}/tags")
+    public ResponseEntity<Set<Tag>> getTagsOfTopic(@PathVariable Long topicId) {
+        Set<Tag> tags = topicService.getTagsOfTopic(topicId);
+        return ResponseEntity.ok(tags);
     }
 }

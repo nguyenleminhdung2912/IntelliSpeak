@@ -5,8 +5,10 @@ import com.gsu25se05.itellispeak.dto.question.TagDTO;
 import com.gsu25se05.itellispeak.dto.question.TagWithQuestionsDTO;
 import com.gsu25se05.itellispeak.entity.Question;
 import com.gsu25se05.itellispeak.entity.Tag;
+import com.gsu25se05.itellispeak.entity.Topic;
 import com.gsu25se05.itellispeak.repository.QuestionRepository;
 import com.gsu25se05.itellispeak.repository.TagRepository;
+import com.gsu25se05.itellispeak.repository.TopicRepository;
 import com.gsu25se05.itellispeak.utils.mapper.QuestionMapper;
 import com.gsu25se05.itellispeak.utils.mapper.TagMapper;
 import jakarta.transaction.Transactional;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,12 +25,15 @@ public class TagService {
     private final TagMapper tagMapper;
     private final QuestionMapper questionMapper;
     private final QuestionRepository questionRepository;
+    private final TopicRepository topicRepository;
 
-    public TagService(TagRepository tagRepository, TagMapper tagMapper, QuestionMapper questionMapper, QuestionRepository questionRepository) {
+
+    public TagService(TagRepository tagRepository, TagMapper tagMapper, QuestionMapper questionMapper, QuestionRepository questionRepository, TopicRepository topicRepository) {
         this.tagRepository = tagRepository;
         this.tagMapper = tagMapper;
         this.questionMapper = questionMapper;
         this.questionRepository = questionRepository;
+        this.topicRepository = topicRepository;
     }
 
     public TagDTO save(TagDTO dto) {
@@ -101,5 +107,45 @@ public class TagService {
                     return tagMapper.toTagWithQuestionsDTO(tag, questions);
                 })
                 .collect(Collectors.toList());
+    }
+
+    // src/main/java/com/gsu25se05/itellispeak/service/TagService.java
+
+    @Transactional
+    public Tag addTagToTopic(Long tagId, Long topicId) {
+        Tag tag = tagRepository.findById(tagId)
+                .orElseThrow(() -> new RuntimeException("Tag not found"));
+        Topic topic = topicRepository.findById(topicId)
+                .orElseThrow(() -> new RuntimeException("Topic not found"));
+        tag.getTopics().add(topic);
+        topic.getTags().add(tag);
+        tagRepository.save(tag);
+        // Optionally save topic as well if needed
+        return tag;
+    }
+
+    @Transactional
+    public Tag removeTagFromTopic(Long tagId, Long topicId) {
+        Tag tag = tagRepository.findById(tagId)
+                .orElseThrow(() -> new RuntimeException("Tag not found"));
+        Topic topic = topicRepository.findById(topicId)
+                .orElseThrow(() -> new RuntimeException("Topic not found"));
+        tag.getTopics().remove(topic);
+        topic.getTags().remove(tag);
+        tagRepository.save(tag);
+        // Optionally save topic as well if needed
+        return tag;
+    }
+
+    public Set<Tag> getTagsByTopic(Long topicId) {
+        Topic topic = topicRepository.findById(topicId)
+                .orElseThrow(() -> new RuntimeException("Topic not found"));
+        return topic.getTags();
+    }
+
+    public Set<Topic> getTopicsByTag(Long tagId) {
+        Tag tag = tagRepository.findById(tagId)
+                .orElseThrow(() -> new RuntimeException("Tag not found"));
+        return tag.getTopics();
     }
 }

@@ -2,7 +2,6 @@ package com.gsu25se05.itellispeak.controller;
 
 
 import com.gsu25se05.itellispeak.dto.Response;
-import com.gsu25se05.itellispeak.dto.category.UpdateCategoryResponse;
 import com.gsu25se05.itellispeak.dto.forum.*;
 import com.gsu25se05.itellispeak.entity.*;
 import com.gsu25se05.itellispeak.exception.auth.NotFoundException;
