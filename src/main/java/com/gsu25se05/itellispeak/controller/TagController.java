@@ -109,6 +109,7 @@ public class TagController {
     }
 
     @PutMapping("/{tagId}/topics/{topicId}")
+    @Operation(summary = "Thêm Topic vào Tag", description = "Thêm một Topic (theo topicId) vào Tag (theo tagId).")
     public ResponseEntity<TagDTO> addTopicToTag(@PathVariable Long tagId, @PathVariable Long topicId) {
         Tag updated = tagService.addTagToTopic(tagId, topicId);
         TagDTO dto = tagService.findById(tagId).orElse(null);
@@ -116,6 +117,7 @@ public class TagController {
     }
 
     @DeleteMapping("/{tagId}/topics/{topicId}")
+    @Operation(summary = "Xóa Topic khỏi Tag", description = "Xóa một Topic (theo topicId) khỏi Tag (theo tagId).")
     public ResponseEntity<TagDTO> removeTopicFromTag(@PathVariable Long tagId, @PathVariable Long topicId) {
         Tag updated = tagService.removeTagFromTopic(tagId, topicId);
         TagDTO dto = tagService.findById(tagId).orElse(null);
@@ -123,6 +125,7 @@ public class TagController {
     }
 
     @GetMapping("/{tagId}/topics")
+    @Operation(summary = "Lấy danh sách Topic của Tag", description = "Lấy tất cả các Topic thuộc về Tag (theo tagId).")
     public ResponseEntity<Set<Topic>> getTopicsOfTag(@PathVariable Long tagId) {
         Set<Topic> topics = tagService.getTopicsByTag(tagId);
         return ResponseEntity.ok(topics);
