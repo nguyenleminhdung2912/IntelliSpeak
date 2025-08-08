@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 public class QuestionDto {
 
-    private int questionId;
+    private Long questionId;
     private String title;
     private String content;
     private String suitableAnswer1;

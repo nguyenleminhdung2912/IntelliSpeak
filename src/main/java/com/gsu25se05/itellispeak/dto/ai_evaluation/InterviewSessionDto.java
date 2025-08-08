@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class InterviewSessionDto {
-    private int interviewSessionId;
+    private Long interviewSessionId;
     private String title;
     private String description;
     private int totalQuestion;
