@@ -1,5 +1,6 @@
 package com.gsu25se05.itellispeak.service;
 
+import com.gsu25se05.itellispeak.dto.admin.UserWithPackageDTO;
 import com.gsu25se05.itellispeak.dto.hr.HRAdminResponseDTO;
 import com.gsu25se05.itellispeak.entity.HR;
 import com.gsu25se05.itellispeak.entity.HRStatus;
@@ -95,5 +96,22 @@ public class AdminService {
                 .orElseThrow(() -> new AuthAppException(ErrorCode.ACCOUNT_NOT_FOUND));
         hr.setStatus(HRStatus.REJECTED);
         hrRepository.save(hr);
+    }
+
+    public List<UserWithPackageDTO> getAllUsersWithPackage() {
+        return userRepository.findAll().stream().map(user -> {
+            UserWithPackageDTO dto = new UserWithPackageDTO();
+            dto.setUserId(user.getUserId());
+            dto.setFirstName(user.getFirstName());
+            dto.setLastName(user.getLastName());
+            dto.setEmail(user.getEmail());
+            dto.setAvatar(user.getAvatar());
+            dto.setStatus(user.getStatus());
+            if (user.getAPackage() != null) {
+                dto.setPackageId(user.getAPackage().getPackageId());
+                dto.setPackageName(user.getAPackage().getPackageName());
+            }
+            return dto;
+        }).toList();
     }
 }

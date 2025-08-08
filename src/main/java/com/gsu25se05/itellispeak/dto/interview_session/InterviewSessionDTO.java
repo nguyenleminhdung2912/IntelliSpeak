@@ -19,6 +19,7 @@ public class InterviewSessionDTO {
     private Long interviewSessionId;
     private String title;
     private String description;
+    private String interviewSessionThumbnail;
     private Integer totalQuestion;
     private String difficulty;
     private Set<Long> questionIds;
