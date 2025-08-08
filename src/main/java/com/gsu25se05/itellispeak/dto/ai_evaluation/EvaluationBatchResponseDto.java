@@ -1,5 +1,6 @@
 package com.gsu25se05.itellispeak.dto.ai_evaluation;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,9 +13,11 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class EvaluationBatchResponseDto {
     private Long interviewHistoryId;
     private Long interviewSessionId;
+    private String interviewTitle;
     private Integer totalQuestion;
     private Double averageScore;
     private String aiOverallEvaluate;
