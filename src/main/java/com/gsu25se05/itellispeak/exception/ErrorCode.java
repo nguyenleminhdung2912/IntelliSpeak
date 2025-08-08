@@ -37,7 +37,7 @@ public enum ErrorCode {
     ACCOUNT_ACCESS_FORBIDDEN(1503, "Access to this account is forbidden", HttpStatus.FORBIDDEN),
     // Accounts | HR | CODE: 16XX
     HR_ALREADY_APPLIED(1600, "Bạn đã gửi yêu cầu trở thành HR trước đó", HttpStatus.CONFLICT),
-
+    HR_NOT_FOUND(1601, "Bạn chưa gửi yêu cầu trở thành HR", HttpStatus.NOT_FOUND),
     SUCCESS(200, "Success",HttpStatus.OK),
 
 //    TOPICS | CODE: 2XXX

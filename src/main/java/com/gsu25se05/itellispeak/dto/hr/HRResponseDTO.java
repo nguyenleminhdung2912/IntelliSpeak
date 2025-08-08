@@ -1,5 +1,6 @@
 package com.gsu25se05.itellispeak.dto.hr;
 
+import com.gsu25se05.itellispeak.entity.HRStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,4 +19,6 @@ public class HRResponseDTO {
     private String linkedinUrl;
     private String cvUrl;
     private LocalDateTime submittedAt;
+    private String hrStatus;
+
 }

@@ -25,4 +25,9 @@ public class HRController {
     public Response<HRResponseDTO> applyHR(@RequestBody @Valid HRRequestDTO request) {
         return hrService.applyHR(request);
     }
+
+    @GetMapping("/application/status")
+    public Response<HRResponseDTO> getApplicationStatus() {
+        return hrService.checkHRApplicationStatus();
+    }
 }
