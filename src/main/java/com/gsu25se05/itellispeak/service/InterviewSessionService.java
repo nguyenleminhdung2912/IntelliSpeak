@@ -90,33 +90,18 @@ public class InterviewSessionService {
 
     @Transactional(readOnly = true)
     public SessionWithQuestionsDTO getRandomQuestions(QuestionSelectionRequestDTO request) {
-        InterviewSession session = interviewSessionRepository.findById(request.getInterviewSessionId())
-                .orElseThrow(() -> new RuntimeException("Session not found"));
+        int easyCount, mediumCount, hardCount;
+        int total = request.getNumberOfQuestion();
 
-        int easyCount;
-        int mediumCount;
-        int hardCount;
-
-        // Set default values if not provided
-        if (request.getNumberOfQuestion() == 5) {
-            easyCount = 2;
-            mediumCount =  2;
-            hardCount =  1;
-        }
-        else if (request.getNumberOfQuestion() == 10) {
-            easyCount =  4;
-            mediumCount =  4;
-            hardCount = 2;
-        }
-        else if (request.getNumberOfQuestion() == 15) {
-            easyCount = 7;
-            mediumCount = 5;
-            hardCount =3;
-        }
-        else {
-            easyCount = 2;
-            mediumCount = 2;
-            hardCount = 1;
+        // Set ratio based on total
+        if (total == 5) {
+            easyCount = 2; mediumCount = 2; hardCount = 1;
+        } else if (total == 10) {
+            easyCount = 4; mediumCount = 4; hardCount = 2;
+        } else if (total == 15) {
+            easyCount = 7; mediumCount = 5; hardCount = 3;
+        } else {
+            easyCount = 2; mediumCount = 2; hardCount = 1;
         }
 
         List<QuestionInfoDTO> result = new ArrayList<>();
@@ -124,12 +109,14 @@ public class InterviewSessionService {
         result.addAll(randomQuestions(request, Difficulty.MEDIUM, mediumCount));
         result.addAll(randomQuestions(request, Difficulty.HARD, hardCount));
 
+        // You may want to shuffle the final result
+        Collections.shuffle(result);
+
         SessionWithQuestionsDTO dto = new SessionWithQuestionsDTO();
-        dto.setInterviewSessionId(session.getInterviewSessionId());
-        dto.setTitle(session.getTitle());
-        dto.setDescription(session.getDescription());
-        dto.setTotalQuestion(session.getTotalQuestion());
-        dto.setDurationEstimate(session.getDurationEstimate());
+        dto.setTitle(null); // Set if needed
+        dto.setDescription(null); // Set if needed
+        dto.setTotalQuestion(total);
+        dto.setDurationEstimate(null); // Set if needed
         dto.setQuestions(result);
         return dto;
     }
@@ -137,10 +124,11 @@ public class InterviewSessionService {
     @Transactional
     public List<QuestionInfoDTO> randomQuestions(QuestionSelectionRequestDTO request, Difficulty difficulty, int count) {
         if (count <= 0) return Collections.emptyList();
-        List<Question> questions = questionRepository.findBySessionAndDifficultyAndTags(
-                request.getInterviewSessionId(),
-                difficulty,
-                request.getTagIds() == null || request.getTagIds().isEmpty() ? null : request.getTagIds()
+
+        // Query questions by topic, tags, difficulty, and isDeleted = false
+        List<Question> questions = questionRepository.findByTagsAndDifficultyAndIsDeletedFalse(
+                request.getTagIds() == null || request.getTagIds().isEmpty() ? null : request.getTagIds(),
+                difficulty
         );
         Collections.shuffle(questions);
         return questions.stream()
@@ -198,5 +186,44 @@ public class InterviewSessionService {
             return "Có lỗi rồi bé ơi";
         }
         return "Lưu thumbnail thành công rồi nha";
+    }
+
+    @Transactional(readOnly = true)
+    public SessionWithQuestionsDTO getRandomQuestionsBySession(Long sessionId) {
+        InterviewSession session = interviewSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("InterviewSession not found"));
+        int total = session.getTotalQuestion();
+        int easyCount = Math.round(total * 5f / 10f);
+        int mediumCount = Math.round(total * 3f / 10f);
+        int hardCount = total - easyCount - mediumCount; // Ensure sum equals total
+
+        List<QuestionInfoDTO> result = new ArrayList<>();
+        result.addAll(randomQuestionsBySession(session, Difficulty.EASY, easyCount));
+        result.addAll(randomQuestionsBySession(session, Difficulty.MEDIUM, mediumCount));
+        result.addAll(randomQuestionsBySession(session, Difficulty.HARD, hardCount));
+        Collections.shuffle(result);
+
+        SessionWithQuestionsDTO dto = new SessionWithQuestionsDTO();
+        dto.setInterviewSessionId(sessionId);
+        dto.setTitle(session.getTitle());
+        dto.setDescription(session.getDescription());
+        dto.setTotalQuestion(total);
+        dto.setDurationEstimate(session.getDurationEstimate());
+        dto.setQuestions(result);
+        return dto;
+    }
+
+    @Transactional
+    public List<QuestionInfoDTO> randomQuestionsBySession(InterviewSession session, Difficulty difficulty, int count) {
+        if (count <= 0) return Collections.emptyList();
+        // Filter questions by difficulty and isDeleted = false
+        List<Question> questions = session.getQuestions().stream()
+                .filter(q -> q.getDifficulty() == difficulty && !q.getIs_deleted())
+                .collect(Collectors.toList());
+        Collections.shuffle(questions);
+        return questions.stream()
+                .limit(count)
+                .map(questionMapper::toInfoDTO)
+                .collect(Collectors.toList());
     }
 }

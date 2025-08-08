@@ -14,13 +14,11 @@ import java.util.Set;
 public interface QuestionRepository extends JpaRepository<Question, Long> {
     List<Question> findByTags_TitleContainingIgnoreCase(String tagTitle);
 
-    @Query("SELECT q FROM Question q JOIN q.interviewSessions s " +
-            "WHERE s.interviewSessionId = :sessionId " +
-            "AND q.difficulty = :difficulty " +
-            "AND (:tagIds IS NULL OR EXISTS (SELECT t FROM q.tags t WHERE t.tagId IN :tagIds))")
-    List<Question> findBySessionAndDifficultyAndTags(
-            @Param("sessionId") Long sessionId,
-            @Param("difficulty") Difficulty difficulty,
-            @Param("tagIds") Set<Long> tagIds
+    @Query("SELECT DISTINCT q FROM Question q JOIN q.tags t " +
+            "WHERE (:tagIds IS NULL OR t.tagId IN :tagIds) " +
+            "AND q.difficulty = :difficulty AND q.is_deleted = false")
+    List<Question> findByTagsAndDifficultyAndIsDeletedFalse(
+            @Param("tagIds") Set<Long> tagIds,
+            @Param("difficulty") Difficulty difficulty
     );
 }
