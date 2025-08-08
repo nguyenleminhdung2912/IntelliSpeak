@@ -1,11 +1,19 @@
 package com.gsu25se05.itellispeak.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "interview_history")
 public class InterviewHistory {
     @Id
@@ -35,7 +43,7 @@ public class InterviewHistory {
     @Column
     private LocalDateTime endedAt;
 
-    @OneToMany(mappedBy = "interviewHistory", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "interviewHistory", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<InterviewHistoryDetail> details;
 }
 

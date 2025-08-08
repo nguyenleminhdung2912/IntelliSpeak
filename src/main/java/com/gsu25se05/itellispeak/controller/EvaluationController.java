@@ -1,6 +1,9 @@
 package com.gsu25se05.itellispeak.controller;
 
+import com.gsu25se05.itellispeak.dto.ai_evaluation.EvaluationBatchResponseDto;
+import com.gsu25se05.itellispeak.dto.ai_evaluation.EvaluationRequestDto;
 import com.gsu25se05.itellispeak.dto.question.CompareRequestDTO;
+import com.gsu25se05.itellispeak.service.EvaluationService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
@@ -11,9 +14,21 @@ import org.springframework.web.client.RestTemplate;
 @RequestMapping("/answer_compare")
 @CrossOrigin("**")
 @SecurityRequirement(name = "api")
-public class AnswerCompareController {
+public class EvaluationController {
 
     private final RestTemplate restTemplate = new RestTemplate();
+
+    private final EvaluationService evaluationService;
+
+    public EvaluationController(EvaluationService evaluationService) {
+        this.evaluationService = evaluationService;
+    }
+
+    @PostMapping("/evaluate-batch")
+    public ResponseEntity<EvaluationBatchResponseDto> evaluateBatch(@RequestBody EvaluationRequestDto request) {
+        EvaluationBatchResponseDto results = evaluationService.evaluateBatch(request);
+        return ResponseEntity.ok(results);
+    }
 
     @PostMapping
     public ResponseEntity<?> compareAnswer(@RequestBody CompareRequestDTO request) {

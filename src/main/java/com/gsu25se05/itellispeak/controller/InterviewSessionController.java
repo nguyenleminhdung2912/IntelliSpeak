@@ -9,7 +9,6 @@ import com.gsu25se05.itellispeak.dto.interview_session.SessionWithQuestionsDTO;
 import com.gsu25se05.itellispeak.dto.topic.TopicWithTagsDTO;
 import com.gsu25se05.itellispeak.entity.InterviewSession;
 import com.gsu25se05.itellispeak.entity.Question;
-import com.gsu25se05.itellispeak.entity.Topic;
 import com.gsu25se05.itellispeak.service.InterviewSessionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -85,6 +84,13 @@ public class InterviewSessionController {
     public ResponseEntity<Response<List<TopicWithTagsDTO>>> getTopicsWithTags() {
         List<TopicWithTagsDTO> data = interviewSessionService.getAllTopicsWithTags();
         return ResponseEntity.ok(new Response<>(200, "Fetched topics with tags", data));
+    }
+
+    @PutMapping("/thumbnail/{id}")
+    @Operation(summary = "Đổi thumbnail nè")
+    public ResponseEntity<String> updateInterviewSessionThumbnail(@PathVariable Long id, @RequestBody String thumbnailURL) {
+        String result = interviewSessionService.updateInterviewSessionThumbnail(id, thumbnailURL);
+        return ResponseEntity.ok(result);
     }
 
 }

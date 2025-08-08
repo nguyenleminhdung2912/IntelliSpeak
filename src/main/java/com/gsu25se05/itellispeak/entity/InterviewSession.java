@@ -34,6 +34,9 @@ public class InterviewSession {
     @Column
     private String description;
 
+    @Column(name = "interview_session_thumbnail")
+    private String interviewSessionThumbnail;
+
     @Column(nullable = false)
     private Integer totalQuestion;
 
