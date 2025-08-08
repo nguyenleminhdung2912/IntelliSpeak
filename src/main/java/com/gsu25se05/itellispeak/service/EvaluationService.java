@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gsu25se05.itellispeak.dto.ai_evaluation.*;
 import com.gsu25se05.itellispeak.entity.*;
+import com.gsu25se05.itellispeak.exception.auth.NotLoginException;
 import com.gsu25se05.itellispeak.repository.InterviewHistoryDetailRepository;
 import com.gsu25se05.itellispeak.repository.InterviewHistoryRepository;
 import com.gsu25se05.itellispeak.repository.InterviewSessionRepository;
@@ -59,8 +60,8 @@ public class EvaluationService {
     @Transactional
     public EvaluationBatchResponseDto evaluateBatch(EvaluationRequestDto request) {
 
-        User user = accountUtils.getCurrentAccount();
-        if (user == null) throw new RuntimeException("Vui lòng đăng nhập để tiếp tục");
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
 
         EvaluationBatchResponseDto responseDto = new EvaluationBatchResponseDto();
         List<EvaluationResponseDto> results = new ArrayList<>();
@@ -68,10 +69,9 @@ public class EvaluationService {
         try {
             // Lấy thông tin buổi phỏng vấn
             InterviewSessionDto session = request.getInterviewSession();
-            Map<String, String> mergedAnswers = mergeUserAnswers(session.getQuestions(), request.getChatHistory());
 
-            // Tạo prompt với câu trả lời đã gộp
-            String prompt = buildPrompt(session, mergedAnswers);
+            // Tạo prompt với chatHistory
+            String prompt = buildPrompt(session, request.getChatHistory());
             logger.info("Prompt gửi tới Gemini: {}", prompt);
 
             // Tạo request body cho Gemini
@@ -119,7 +119,7 @@ public class EvaluationService {
             interviewHistory.setInterviewSession(interviewSessionEntity);
             interviewHistory.setTotalQuestion(session.getTotalQuestion());
             interviewHistory.setStartedAt(LocalDateTime.now());
-            interviewHistory.setUser(user);
+            interviewHistory.setUser(currentUser);
             interviewHistory = interviewHistoryRepository.save(interviewHistory); // Lưu trước để có ID
 
             // Tạo danh sách InterviewHistoryDetail
@@ -236,13 +236,11 @@ public class EvaluationService {
         if (level == null || level.trim().isEmpty()) {
             return 2.0; // Sai
         }
-        // Chuẩn hóa chuỗi: loại bỏ dấu tiếng Việt và chuyển thành uppercase
         String normalized = Normalizer.normalize(level, Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "") // Loại bỏ dấu
-                .replaceAll("[^\\p{ASCII}]", "") // Loại bỏ ký tự không phải ASCII
+                .replaceAll("\\p{M}", "")
+                .replaceAll("[^\\p{ASCII}]", "")
                 .toUpperCase()
                 .replace(" ", "_");
-        // Ánh xạ các giá trị từ Gemini
         switch (normalized) {
             case "DUNG":
             case "ĐUNG":
@@ -267,74 +265,12 @@ public class EvaluationService {
 
         return String.format(
                 "Tổng quan: Ứng viên đạt điểm 10/10 cho %d/%d câu hỏi, 7/10 cho %d câu, 4/10 cho %d câu, và 2/10 cho %d câu. " +
-                        "Đề xuất: Cần cải thiện kiến thức chuyên sâu về React, đặc biệt ở các câu hỏi độ khó trung bình và cao.",
+                        "Đề xuất: Cần cải thiện kiến thức chuyên sâu về HTML, CSS, JavaScript, đặc biệt ở các câu hỏi độ khó trung bình và cao.",
                 correctCount, results.size(), partialCount, nearCorrectCount, incorrectCount
         );
     }
 
-    private Map<String, String> mergeUserAnswers(List<QuestionDto> questions, List<ChatMessageDto> chatHistory) {
-        Map<String, String> mergedAnswers = new LinkedHashMap<>();
-        String currentQuestion = null;
-        List<String> answersForQuestion = new ArrayList<>();
-
-        // Khởi tạo mergedAnswers với tất cả câu hỏi, mặc định userAnswer rỗng
-        for (QuestionDto q : questions) {
-            mergedAnswers.put(q.getContent(), "");
-        }
-
-        // Duyệt chatHistory để gộp câu trả lời
-        for (ChatMessageDto message : chatHistory) {
-            if ("assistant".equals(message.getRole())) {
-                QuestionDto matchedQuestion = questions.stream()
-                        .filter(q -> message.getContent().contains(q.getContent()))
-                        .findFirst()
-                        .orElse(null);
-
-                if (matchedQuestion != null) {
-                    String matchedContent = matchedQuestion.getContent();
-
-                    // Nếu là câu hỏi mới -> lưu câu trả lời cũ
-                    if (!matchedContent.equals(currentQuestion)) {
-                        if (currentQuestion != null && !answersForQuestion.isEmpty()) {
-                            mergedAnswers.put(currentQuestion, String.join(" ", answersForQuestion));
-                            answersForQuestion.clear();
-                        }
-                        currentQuestion = matchedContent;
-                    }
-                }
-            } else if ("user".equals(message.getRole()) && currentQuestion != null) {
-                if (isValidAnswer(message.getContent())) {
-                    answersForQuestion.add(message.getContent());
-                }
-            }
-        }
-
-        // Lưu câu trả lời cuối cùng
-        if (currentQuestion != null && !answersForQuestion.isEmpty()) {
-            mergedAnswers.put(currentQuestion, String.join(" ", answersForQuestion));
-        }
-
-        return mergedAnswers;
-    }
-
-    private boolean isValidAnswer(String content) {
-        String normalized = content.toLowerCase();
-
-        return !(normalized.contains("lặp lại câu hỏi")
-                || normalized.contains("nhắc lại câu hỏi")
-                || normalized.contains("nhắc lại giúp")
-                || normalized.contains("câu hỏi là gì")
-                || normalized.contains("quên mất")
-                || normalized.contains("hỏi gì nhỉ")
-                || normalized.contains("gì đặc biệt nhỉ")
-                || normalized.contains("nói lại")
-                || normalized.contains("chưa rõ")
-                || normalized.contains("không nhớ")
-                || normalized.contains("bỏ qua")
-                || normalized.matches(".*(mình|tôi).*\\s*(không|chưa)?\\s*(biết|nhớ|rõ).*"));
-    }
-
-    private String buildPrompt(InterviewSessionDto session, Map<String, String> mergedAnswers) {
+    private String buildPrompt(InterviewSessionDto session, List<ChatMessageDto> chatHistory) {
         StringBuilder prompt = new StringBuilder();
 
         // Thêm thông tin buổi phỏng vấn
@@ -358,16 +294,17 @@ public class EvaluationService {
                     .append(String.format("  - Tags: %s\n", String.join(", ", q.getTags())));
         }
 
-        // Thêm câu trả lời đã gộp
-        prompt.append("\nCâu trả lời của người dùng:\n");
-        for (Map.Entry<String, String> entry : mergedAnswers.entrySet()) {
-            prompt.append(String.format("- Câu hỏi: %s\n", entry.getKey()))
-                    .append(String.format("  - Trả lời: %s\n", entry.getValue().isEmpty() ? "Không có câu trả lời" : entry.getValue()));
+        // Thêm lịch sử hội thoại
+        prompt.append("\nLịch sử hội thoại:\n");
+        for (ChatMessageDto message : chatHistory) {
+            prompt.append(String.format("- Vai trò: %s\n", message.getRole()))
+                    .append(String.format("  - Nội dung: %s\n", message.getContent()));
         }
 
         // Yêu cầu đánh giá
         prompt.append("\nYêu cầu:\n")
-                .append("1. Đánh giá từng câu hỏi trong 'Danh sách câu hỏi' dựa trên hai câu trả lời mẫu, sử dụng 'Câu trả lời của người dùng'. Nếu câu trả lời là 'Không có câu trả lời' hoặc rỗng, đánh giá là 'Sai' và cung cấp feedback phù hợp:\n")
+                .append("1. Phân tích 'Lịch sử hội thoại' để xác định câu trả lời của người dùng (vai trò 'user') cho từng câu hỏi trong 'Danh sách câu hỏi'. Gộp tất cả các câu trả lời liên quan (nếu có) cho mỗi câu hỏi, bỏ qua các tin nhắn không phải câu trả lời như yêu cầu gợi ý, 'bỏ qua', 'không biết', 'lặp lại câu hỏi', hoặc tương tự.\n")
+                .append("2. Đánh giá từng câu hỏi dựa trên hai câu trả lời mẫu, sử dụng câu trả lời của người dùng đã gộp. Nếu không có câu trả lời hợp lệ cho câu hỏi, ghi là 'Không có câu trả lời' và đánh giá là 'Sai'.\n")
                 .append("   - Mức độ chính xác: Sai, Gần đúng, Đúng một phần, Đúng.\n")
                 .append("   - Kiến thức:\n")
                 .append("     - Trả lời đúng hay chưa (đúng/sai/gần đúng/đúng một phần).\n")
@@ -378,12 +315,12 @@ public class EvaluationService {
                 .append("     - Trả lời có ngắn gọn và súc tích không (có dài dòng hoặc lan man không, hoặc 'Không đánh giá được' nếu không có câu trả lời).\n")
                 .append("     - Trả lời có sử dụng thuật ngữ chuyên môn phù hợp không (có dùng đúng từ ngữ kỹ thuật không, hoặc 'Không đánh giá được' nếu không có câu trả lời).\n")
                 .append("   - Kết luận: Tổng kết ngắn gọn về chất lượng câu trả lời và gợi ý tổng quát để cải thiện.\n")
-                .append("2. Trả về kết quả theo định dạng JSON hợp lệ (chỉ JSON, không Markdown, không giải thích):\n")
+                .append("3. Trả về kết quả theo định dạng JSON hợp lệ (chỉ JSON, không Markdown, không giải thích):\n")
                 .append("   [\n")
                 .append("     {\n")
                 .append("       \"questionId\": <ID>,\n")
                 .append("       \"question\": \"<Nội dung câu hỏi>\",\n")
-                .append("       \"userAnswer\": \"<Câu trả lời người dùng hoặc 'Không có câu trả lời' nếu rỗng>\",\n")
+                .append("       \"userAnswer\": \"<Câu trả lời người dùng hoặc 'Không có câu trả lời' nếu không có>\",\n")
                 .append("       \"level\": \"<Mức độ chính xác: Sai, Gần đúng, Đúng một phần, Đúng>\",\n")
                 .append("       \"feedback\": {\n")
                 .append("         \"knowledge\": {\n")
@@ -400,7 +337,7 @@ public class EvaluationService {
                 .append("       }\n")
                 .append("     }\n")
                 .append("   ]\n")
-                .append("3. Văn phong chuyên nghiệp, ngắn gọn, giống HR.\n");
+                .append("4. Văn phong chuyên nghiệp, ngắn gọn, giống HR.\n");
 
         return prompt.toString();
     }
