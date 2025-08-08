@@ -93,10 +93,31 @@ public class InterviewSessionService {
         InterviewSession session = interviewSessionRepository.findById(request.getInterviewSessionId())
                 .orElseThrow(() -> new RuntimeException("Session not found"));
 
+        int easyCount;
+        int mediumCount;
+        int hardCount;
+
         // Set default values if not provided
-        int easyCount = request.getEasyCount() > 0 ? request.getEasyCount() : 4;
-        int mediumCount = request.getMediumCount() > 0 ? request.getMediumCount() : 4;
-        int hardCount = request.getHardCount() > 0 ? request.getHardCount() : 2;
+        if (request.getNumberOfQuestion() == 5) {
+            easyCount = 2;
+            mediumCount =  2;
+            hardCount =  1;
+        }
+        else if (request.getNumberOfQuestion() == 10) {
+            easyCount =  4;
+            mediumCount =  4;
+            hardCount = 2;
+        }
+        else if (request.getNumberOfQuestion() == 15) {
+            easyCount = 7;
+            mediumCount = 5;
+            hardCount =3;
+        }
+        else {
+            easyCount = 2;
+            mediumCount = 2;
+            hardCount = 1;
+        }
 
         List<QuestionInfoDTO> result = new ArrayList<>();
         result.addAll(randomQuestions(request, Difficulty.EASY, easyCount));
