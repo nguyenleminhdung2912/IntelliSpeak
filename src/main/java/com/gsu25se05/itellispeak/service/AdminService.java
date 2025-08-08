@@ -62,10 +62,24 @@ public class AdminService {
 
     public List<HRAdminResponseDTO> getAllHRApplications() {
         return hrRepository.findAll().stream().map(hr -> {
+            String firstName = hr.getUser().getFirstName();
+            String lastName = hr.getUser().getLastName();
+            String email = hr.getUser().getEmail();
+
+            String fullName;
+            if (firstName == null || lastName == null || firstName.isBlank() || lastName.isBlank()) {
+
+                fullName = email != null && email.contains("@")
+                        ? email.substring(0, email.indexOf("@"))
+                        : "Unknown";
+            } else {
+                fullName = firstName + " " + lastName;
+            }
+
             return new HRAdminResponseDTO(
                     hr.getHrId(),
-                    hr.getUser().getFirstName() + " " + hr.getUser().getLastName(),
-                    hr.getUser().getEmail(),
+                    fullName,
+                    email,
                     hr.getCompany(),
                     hr.getPhone(),
                     hr.getCountry(),
@@ -77,6 +91,7 @@ public class AdminService {
             );
         }).toList();
     }
+
 
     public void approveHR(Long hrId) {
         HR hr = hrRepository.findById(hrId)

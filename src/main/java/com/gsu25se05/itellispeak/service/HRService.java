@@ -53,8 +53,35 @@ public class HRService {
                 saved.getExperienceYears(),
                 saved.getLinkedinUrl(),
                 saved.getCvUrl(),
-                saved.getSubmittedAt()
+                saved.getSubmittedAt(),
+                saved.getStatus().name()
         );
         return new Response<>(200, "Gửi đơn ứng tuyển HR thành công", responseDTO);
     }
+
+    public Response<HRResponseDTO> checkHRApplicationStatus() {
+        User user = accountUtils.getCurrentAccount();
+        if (user == null) {
+            return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
+        }
+
+        HR hrApplication = hrRepository.findByUser(user)
+                .orElseThrow(() -> new AuthAppException(ErrorCode.HR_NOT_FOUND));
+
+        HRResponseDTO responseDTO = new HRResponseDTO(
+                hrApplication.getHrId(),
+                hrApplication.getCompany(),
+                hrApplication.getPhone(),
+                hrApplication.getCountry(),
+                hrApplication.getExperienceYears(),
+                hrApplication.getLinkedinUrl(),
+                hrApplication.getCvUrl(),
+                hrApplication.getSubmittedAt(),
+                hrApplication.getStatus().name()
+        );
+
+        return new Response<>(200, "Lấy trạng thái đơn ứng tuyển HR thành công", responseDTO);
+    }
+
+
 }
