@@ -6,9 +6,7 @@ import java.util.Set;
 
 @Data
 public class QuestionSelectionRequestDTO {
-    private Long interviewSessionId;
-    private int easyCount;
-    private int mediumCount;
-    private int hardCount;
+    private int numberOfQuestion;
+    private Long topicId;
     private Set<Long> tagIds; // Optional, can be empty
 }

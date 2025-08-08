@@ -46,7 +46,7 @@ public class Question {
     private QuestionStatus questionStatus;
 
     @Column
-    private boolean is_deleted;
+    private Boolean is_deleted;
 
     @Column
     private String source;
