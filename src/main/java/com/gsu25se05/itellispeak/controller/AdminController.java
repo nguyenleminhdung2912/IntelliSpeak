@@ -1,6 +1,7 @@
 package com.gsu25se05.itellispeak.controller;
 
 import com.gsu25se05.itellispeak.dto.Response;
+import com.gsu25se05.itellispeak.dto.admin.UserWithPackageDTO;
 import com.gsu25se05.itellispeak.dto.hr.HRAdminResponseDTO;
 import com.gsu25se05.itellispeak.service.AdminService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -61,5 +62,12 @@ public class AdminController {
     public ResponseEntity<Response<String>> rejectHR(@PathVariable Long id) {
         adminService.rejectHR(id);
         return ResponseEntity.ok(new Response<>(200, "HR rejected successfully", null));
+    }
+
+    @Operation(summary = "Get all users with their package info")
+    @GetMapping("/users-with-package")
+    public ResponseEntity<Response<List<UserWithPackageDTO>>> getAllUsersWithPackage() {
+        List<UserWithPackageDTO> data = adminService.getAllUsersWithPackage();
+        return ResponseEntity.ok(new Response<>(200, "Fetched users with package", data));
     }
 }

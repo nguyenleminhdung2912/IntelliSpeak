@@ -12,8 +12,8 @@ public class AuthHandleException {
 
     @ExceptionHandler(NotLoginException.class)
     public ResponseEntity<Response> notLogin(Exception exception) {
-        Response response = new Response(203, exception.getMessage(), null);
-        return ResponseEntity.status(203).body(response);
+        Response response = new Response(401, exception.getMessage(), null);
+        return ResponseEntity.status(401).body(response);
     }
 
     @ExceptionHandler(AuthorizationDeniedException.class)

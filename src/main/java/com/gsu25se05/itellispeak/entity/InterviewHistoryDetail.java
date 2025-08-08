@@ -1,8 +1,16 @@
 package com.gsu25se05.itellispeak.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "interview_history_detail")
 public class InterviewHistoryDetail {
     @Id
@@ -20,7 +28,7 @@ public class InterviewHistoryDetail {
     @Column(columnDefinition = "TEXT")
     private String answeredContent;
 
-    @Column
+    @Column(nullable = false)
     private Double score;
 
     @Column(columnDefinition = "TEXT")
@@ -29,5 +37,11 @@ public class InterviewHistoryDetail {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Difficulty difficulty;
+
+    @Column(columnDefinition = "TEXT")
+    private String suitableAnswer1;
+
+    @Column(columnDefinition = "TEXT")
+    private String suitableAnswer2;
 }
 

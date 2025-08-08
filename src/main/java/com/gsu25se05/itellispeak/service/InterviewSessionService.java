@@ -13,6 +13,7 @@ import com.gsu25se05.itellispeak.utils.mapper.QuestionMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -112,7 +113,8 @@ public class InterviewSessionService {
         return dto;
     }
 
-    private List<QuestionInfoDTO> randomQuestions(QuestionSelectionRequestDTO request, Difficulty difficulty, int count) {
+    @Transactional
+    public List<QuestionInfoDTO> randomQuestions(QuestionSelectionRequestDTO request, Difficulty difficulty, int count) {
         if (count <= 0) return Collections.emptyList();
         List<Question> questions = questionRepository.findBySessionAndDifficultyAndTags(
                 request.getInterviewSessionId(),
@@ -126,6 +128,7 @@ public class InterviewSessionService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public InterviewByTopicDTO getInterviewSessionByTopicId(Long topicId) {
         Topic topic = topicRepository.findById(topicId)
                 .orElseThrow(() -> new RuntimeException("Topic not found"));
@@ -144,6 +147,7 @@ public class InterviewSessionService {
                 .build();
     }
 
+    @Transactional
     public List<TopicWithTagsDTO> getAllTopicsWithTags() {
         List<Topic> topics = topicRepository.findAllByIsDeletedFalse();
         return topics.stream().map(topic -> {
@@ -154,5 +158,24 @@ public class InterviewSessionService {
                             .collect(Collectors.toList());
             return new TopicWithTagsDTO(topic.getTopicId(), topic.getTitle(), tagDTOs);
         }).collect(Collectors.toList());
+    }
+
+    @Transactional
+    public String updateInterviewSessionThumbnail(Long id, String thumbnailURL) {
+        InterviewSession existingInterviewSession = interviewSessionRepository.findById(id).orElse(null);
+        if (existingInterviewSession != null) {
+            existingInterviewSession.setInterviewSessionThumbnail(thumbnailURL);
+        }
+        if (existingInterviewSession != null) {
+            existingInterviewSession.setUpdateAt(LocalDateTime.now());
+        }
+        try {
+            if (existingInterviewSession != null) {
+                interviewSessionRepository.save(existingInterviewSession);
+            }
+        } catch (Exception e) {
+            return "Có lỗi rồi bé ơi";
+        }
+        return "Lưu thumbnail thành công rồi nha";
     }
 }
