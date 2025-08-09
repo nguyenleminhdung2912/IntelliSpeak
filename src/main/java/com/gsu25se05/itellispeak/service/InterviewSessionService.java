@@ -61,7 +61,12 @@ public class InterviewSessionService {
         if (dto.getTopicId() != null) {
             topic = topicRepository.findById(dto.getTopicId()).orElse(null);
         }
+
         InterviewSession entity = interviewSessionMapper.toEntity(dto, questions, tags, topic);
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser != null) {
+            entity.setCreatedBy(currentUser);
+        }
         return interviewSessionRepository.save(entity);
     }
 
