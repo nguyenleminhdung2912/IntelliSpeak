@@ -56,6 +56,9 @@ public class InterviewSession {
     @Column(nullable = false)
     private Boolean isDeleted;
 
+    @Column(nullable = true) // Nullable để thêm tay vào CSDL
+    private String source; // Giá trị: SYSTEM, HR, RANDOM
+
     @OneToMany(mappedBy = "interviewSession", cascade = CascadeType.ALL)
     @JsonIgnore
     @JsonManagedReference
