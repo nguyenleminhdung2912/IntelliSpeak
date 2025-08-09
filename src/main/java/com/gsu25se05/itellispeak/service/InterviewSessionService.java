@@ -8,6 +8,7 @@ import com.gsu25se05.itellispeak.repository.InterviewSessionRepository;
 import com.gsu25se05.itellispeak.repository.QuestionRepository;
 import com.gsu25se05.itellispeak.repository.TagRepository;
 import com.gsu25se05.itellispeak.repository.TopicRepository;
+import com.gsu25se05.itellispeak.utils.AccountUtils;
 import com.gsu25se05.itellispeak.utils.mapper.InterviewSessionMapper;
 import com.gsu25se05.itellispeak.utils.mapper.QuestionMapper;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ public class InterviewSessionService {
     private final TagRepository tagRepository;
     private final TopicRepository topicRepository;
     private final QuestionMapper questionMapper;
+    private final AccountUtils accountUtils;
 
     public InterviewSessionService(
             InterviewSessionRepository interviewSessionRepository,
@@ -34,13 +36,15 @@ public class InterviewSessionService {
             InterviewSessionMapper interviewSessionMapper,
             TagRepository tagRepository,
             TopicRepository topicRepository,
-            QuestionMapper questionMapper) {
+            QuestionMapper questionMapper,
+            AccountUtils accountUtils) {
         this.interviewSessionRepository = interviewSessionRepository;
         this.questionRepository = questionRepository;
         this.interviewSessionMapper = interviewSessionMapper;
         this.tagRepository = tagRepository;
         this.topicRepository = topicRepository;
         this.questionMapper = questionMapper;
+        this.accountUtils = accountUtils;
     }
 
     @Transactional
@@ -57,7 +61,12 @@ public class InterviewSessionService {
         if (dto.getTopicId() != null) {
             topic = topicRepository.findById(dto.getTopicId()).orElse(null);
         }
+
         InterviewSession entity = interviewSessionMapper.toEntity(dto, questions, tags, topic);
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser != null) {
+            entity.setCreatedBy(currentUser);
+        }
         return interviewSessionRepository.save(entity);
     }
 
@@ -86,6 +95,37 @@ public class InterviewSessionService {
     public Iterable<InterviewSession> getAllInterviewSession() {
         return interviewSessionRepository.findAllBySourceNotOrSourceIsNull("RANDOM");
     }
+
+
+    public List<InterviewSession> getAllSessionsCreatedByHR() {
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            throw new IllegalStateException("Vui lòng đăng nhập để tiếp tục");
+        }
+
+        if (currentUser.getRole() != User.Role.HR && currentUser.getRole() != User.Role.ADMIN) {
+            throw new SecurityException("Chỉ HR hoặc ADMIN mới có quyền xem các phiên phỏng vấn do mình tạo");
+        }
+
+        return interviewSessionRepository.findByCreatedBy(currentUser);
+    }
+
+    public InterviewSession getSessionCreatedByHR(Long id) {
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            throw new IllegalStateException("Vui lòng đăng nhập để tiếp tục");
+        }
+
+        if (currentUser.getRole() != User.Role.HR && currentUser.getRole() != User.Role.ADMIN) {
+            throw new SecurityException("Chỉ HR hoặc ADMIN mới có quyền xem phiên phỏng vấn do mình tạo");
+        }
+
+        return interviewSessionRepository.findById(id)
+                .filter(s -> s.getCreatedBy() != null && s.getCreatedBy().equals(currentUser))
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Không tìm thấy Session với ID: " + id + " hoặc không thuộc quyền sở hữu"));
+    }
+
 
     @Transactional
     public SessionWithQuestionsDTO getRandomQuestions(QuestionSelectionRequestDTO request) {

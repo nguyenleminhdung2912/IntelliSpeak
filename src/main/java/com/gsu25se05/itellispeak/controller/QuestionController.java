@@ -36,4 +36,10 @@ public class QuestionController {
     public ResponseEntity<List<QuestionDTO>> getAll() {
         return ResponseEntity.ok(questionService.findAll());
     }
+
+    @GetMapping("/my-questions")
+    public ResponseEntity<?> getMyQuestions() {
+        return ResponseEntity.ok(questionService.getByCurrentUser());
+    }
+
 }

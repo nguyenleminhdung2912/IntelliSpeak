@@ -51,6 +51,11 @@ public class Question {
     @Column
     private String source;
 
+    @ManyToOne
+    @JoinColumn(name = "created_by", nullable = true)
+    private User createdBy;
+
+
     @ManyToMany
     @JoinTable(
             name = "question_tag",
