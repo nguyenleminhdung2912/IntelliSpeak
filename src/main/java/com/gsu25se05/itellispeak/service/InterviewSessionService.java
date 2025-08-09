@@ -13,7 +13,9 @@ import com.gsu25se05.itellispeak.utils.mapper.QuestionMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,7 +27,6 @@ public class InterviewSessionService {
     private final TagRepository tagRepository;
     private final TopicRepository topicRepository;
     private final QuestionMapper questionMapper;
-
 
     public InterviewSessionService(
             InterviewSessionRepository interviewSessionRepository,
@@ -75,20 +76,18 @@ public class InterviewSessionService {
         InterviewSession session = interviewSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("Interview Session with ID " + sessionId + " not found"));
 
-        // Filter out questions that already exist in the session to avoid duplicates
         Set<Question> existingQuestions = session.getQuestions();
-        questions.removeAll(existingQuestions); // Remove questions already present
-
-        session.getQuestions().addAll(questions); // Add only new questions
+        questions.removeAll(existingQuestions);
+        session.getQuestions().addAll(questions);
         return interviewSessionRepository.save(session);
     }
 
     @Transactional
     public Iterable<InterviewSession> getAllInterviewSession() {
-        return interviewSessionRepository.findAll();
+        return interviewSessionRepository.findAllBySourceNotOrSourceIsNull("RANDOM");
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public SessionWithQuestionsDTO getRandomQuestions(QuestionSelectionRequestDTO request) {
         int easyCount, mediumCount, hardCount;
         int total = request.getNumberOfQuestion();
@@ -108,15 +107,49 @@ public class InterviewSessionService {
         result.addAll(randomQuestions(request, Difficulty.EASY, easyCount));
         result.addAll(randomQuestions(request, Difficulty.MEDIUM, mediumCount));
         result.addAll(randomQuestions(request, Difficulty.HARD, hardCount));
-
-        // You may want to shuffle the final result
         Collections.shuffle(result);
 
+        // Tạo InterviewSession tạm thời
+        InterviewSession tempSession = new InterviewSession();
+        tempSession.setTitle("Buổi phỏng vấn ngẫu nhiên - " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")));
+        tempSession.setDescription("Tạo tự động từ getRandomQuestions");
+        tempSession.setTotalQuestion(total);
+        tempSession.setDifficulty(Difficulty.MEDIUM); // Có thể điều chỉnh logic
+        tempSession.setDurationEstimate(Duration.ofMinutes(total * 5L)); // Ước tính 5 phút/câu
+        tempSession.setCreateAt(LocalDateTime.now());
+        tempSession.setIsDeleted(false);
+        tempSession.setSource("RANDOM"); // Đặt nguồn là RANDOM
+
+        // Gán Topic nếu có topicId
+        if (request.getTopicId() != null) {
+            Topic topic = topicRepository.findById(request.getTopicId())
+                    .orElseThrow(() -> new RuntimeException("Topic not found"));
+            tempSession.setTopic(topic);
+        }
+
+        // Gán Tags nếu có
+        if (request.getTagIds() != null && !request.getTagIds().isEmpty()) {
+            Set<Tag> tags = new HashSet<>(tagRepository.findAllById(request.getTagIds()));
+            tempSession.setTags(tags);
+        }
+
+        // Gán Questions
+        Set<Question> questions = result.stream()
+                .map(dto -> questionRepository.findById(dto.getQuestionId())
+                        .orElseThrow(() -> new RuntimeException("Question not found")))
+                .collect(Collectors.toSet());
+        tempSession.setQuestions(questions);
+
+        // Lưu InterviewSession
+        tempSession = interviewSessionRepository.save(tempSession);
+
+        // Tạo DTO trả về
         SessionWithQuestionsDTO dto = new SessionWithQuestionsDTO();
-        dto.setTitle(null); // Set if needed
-        dto.setDescription(null); // Set if needed
+        dto.setInterviewSessionId(tempSession.getInterviewSessionId());
+        dto.setTitle(tempSession.getTitle());
+        dto.setDescription(tempSession.getDescription());
         dto.setTotalQuestion(total);
-        dto.setDurationEstimate(null); // Set if needed
+        dto.setDurationEstimate(tempSession.getDurationEstimate());
         dto.setQuestions(result);
         return dto;
     }
@@ -125,7 +158,6 @@ public class InterviewSessionService {
     public List<QuestionInfoDTO> randomQuestions(QuestionSelectionRequestDTO request, Difficulty difficulty, int count) {
         if (count <= 0) return Collections.emptyList();
 
-        // Query questions by topic, tags, difficulty, and isDeleted = false
         List<Question> questions = questionRepository.findByTagsAndDifficultyAndIsDeletedFalse(
                 request.getTagIds() == null || request.getTagIds().isEmpty() ? null : request.getTagIds(),
                 difficulty
@@ -174,18 +206,15 @@ public class InterviewSessionService {
         InterviewSession existingInterviewSession = interviewSessionRepository.findById(id).orElse(null);
         if (existingInterviewSession != null) {
             existingInterviewSession.setInterviewSessionThumbnail(thumbnailURL);
-        }
-        if (existingInterviewSession != null) {
             existingInterviewSession.setUpdateAt(LocalDateTime.now());
-        }
-        try {
-            if (existingInterviewSession != null) {
+            try {
                 interviewSessionRepository.save(existingInterviewSession);
+            } catch (Exception e) {
+                return "Có lỗi rồi bé ơi";
             }
-        } catch (Exception e) {
-            return "Có lỗi rồi bé ơi";
+            return "Lưu thumbnail thành công rồi nha";
         }
-        return "Lưu thumbnail thành công rồi nha";
+        return "Không tìm thấy InterviewSession";
     }
 
     @Transactional(readOnly = true)
@@ -195,7 +224,7 @@ public class InterviewSessionService {
         int total = session.getTotalQuestion();
         int easyCount = Math.round(total * 5f / 10f);
         int mediumCount = Math.round(total * 3f / 10f);
-        int hardCount = total - easyCount - mediumCount; // Ensure sum equals total
+        int hardCount = total - easyCount - mediumCount;
 
         List<QuestionInfoDTO> result = new ArrayList<>();
         result.addAll(randomQuestionsBySession(session, Difficulty.EASY, easyCount));
@@ -216,7 +245,6 @@ public class InterviewSessionService {
     @Transactional
     public List<QuestionInfoDTO> randomQuestionsBySession(InterviewSession session, Difficulty difficulty, int count) {
         if (count <= 0) return Collections.emptyList();
-        // Filter questions by difficulty and isDeleted = false
         List<Question> questions = session.getQuestions().stream()
                 .filter(q -> q.getDifficulty() == difficulty && !q.getIs_deleted())
                 .collect(Collectors.toList());
