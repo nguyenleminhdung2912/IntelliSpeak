@@ -106,4 +106,32 @@ public class InterviewSessionController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/my-sessions")
+    @Operation(summary = "Lấy tất cả session do HR hiện tại tạo")
+    public ResponseEntity<Response<List<InterviewSession>>> getMySessions() {
+        try {
+            List<InterviewSession> sessions = interviewSessionService.getAllSessionsCreatedByHR();
+            return ResponseEntity.ok(new Response<>(200, "Fetched sessions created by current HR", sessions));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(401).body(new Response<>(401, e.getMessage(), null));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(new Response<>(403, e.getMessage(), null));
+        }
+    }
+
+    @GetMapping("/my-sessions/{id}")
+    @Operation(summary = "Lấy session cụ thể do HR hiện tại tạo")
+    public ResponseEntity<Response<InterviewSession>> getMySessionById(@PathVariable Long id) {
+        try {
+            InterviewSession session = interviewSessionService.getSessionCreatedByHR(id);
+            return ResponseEntity.ok(new Response<>(200, "Fetched session created by current HR", session));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(401).body(new Response<>(401, e.getMessage(), null));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(new Response<>(403, e.getMessage(), null));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(404).body(new Response<>(404, e.getMessage(), null));
+        }
+    }
+
 }

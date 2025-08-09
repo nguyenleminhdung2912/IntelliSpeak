@@ -81,5 +81,9 @@ public class InterviewSession {
     )
     @JsonManagedReference
     private Set<Question> questions = new HashSet<>();
+
+    @ManyToOne
+    @JoinColumn(name = "created_by", nullable = true)
+    private User createdBy;
 }
 
