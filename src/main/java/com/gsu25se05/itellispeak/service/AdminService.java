@@ -9,6 +9,7 @@ import com.gsu25se05.itellispeak.entity.User;
 import com.gsu25se05.itellispeak.exception.ErrorCode;
 import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
 import com.gsu25se05.itellispeak.repository.HRRepository;
+import com.gsu25se05.itellispeak.repository.PackageRepository;
 import com.gsu25se05.itellispeak.repository.TransactionRepository;
 import com.gsu25se05.itellispeak.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -25,12 +26,14 @@ public class AdminService {
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
     private final HRRepository hrRepository;
+    private final PackageRepository packageRepository;
 
 
-    public AdminService(TransactionRepository transactionRepository, UserRepository userRepository, HRRepository hrRepository) {
+    public AdminService(TransactionRepository transactionRepository, UserRepository userRepository, HRRepository hrRepository, PackageRepository packageRepository) {
         this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
         this.hrRepository = hrRepository;
+        this.packageRepository = packageRepository;
     }
 
     public Double getMonthlyRevenue(int year, int month) {
@@ -159,6 +162,35 @@ public class AdminService {
                     .build();
         }).toList();
     }
+
+    public List<Map<String, Object>> getPackageSubscriptionStats(int year) {
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        // Lấy tất cả gói
+        var packages = packageRepository.findAll();
+
+        for (var p : packages) {
+            Map<String, Object> packageData = new HashMap<>();
+            packageData.put("name", p.getPackageName());
+
+            List<Long> monthlyCounts = new ArrayList<>();
+            for (int month = 1; month <= 12; month++) {
+                LocalDateTime start = YearMonth.of(year, month).atDay(1).atStartOfDay();
+                LocalDateTime end = YearMonth.of(year, month).atEndOfMonth().atTime(23, 59, 59);
+
+                Long count = userRepository.countByPackageIdAndCreateAtBetween(
+                        p.getPackageId(), start, end
+                );
+
+                monthlyCounts.add(count != null ? count : 0L);
+            }
+            packageData.put("data", monthlyCounts);
+
+            result.add(packageData);
+        }
+        return result;
+    }
+
 
 
 }
