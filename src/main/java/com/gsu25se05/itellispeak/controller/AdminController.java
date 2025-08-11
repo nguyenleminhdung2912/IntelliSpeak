@@ -78,4 +78,14 @@ public class AdminController {
         List<UserWithPackageDTO> data = adminService.getAllUsersWithPackage();
         return ResponseEntity.ok(new Response<>(200, "Fetched users with package", data));
     }
+
+    @Operation(summary = "Đếm người dùng đăng kí các gói")
+    @GetMapping("/package-stats")
+    public ResponseEntity<Response<List<Map<String, Object>>>> getPackageStats(
+            @RequestParam int year
+    ) {
+        List<Map<String, Object>> revenue = adminService.getPackageSubscriptionStats(year);
+        return ResponseEntity.ok(new Response<>(200, "Package subscription stats", revenue));
+    }
+
 }
