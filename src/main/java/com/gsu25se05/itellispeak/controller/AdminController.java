@@ -2,6 +2,7 @@ package com.gsu25se05.itellispeak.controller;
 
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.admin.UserWithPackageDTO;
+import com.gsu25se05.itellispeak.dto.auth.reponse.UserDTO;
 import com.gsu25se05.itellispeak.dto.hr.HRAdminResponseDTO;
 import com.gsu25se05.itellispeak.service.AdminService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,6 +42,13 @@ public class AdminController {
     public ResponseEntity<Response<List<Map<String, String>>>> getYearlyRevenue(@RequestParam int year) {
         List<Map<String, String>> revenue = adminService.getYearlyRevenueFormatted(year);
         return ResponseEntity.ok(new Response<>(200, "Yearly revenue fetched", revenue));
+    }
+
+    @Operation(summary = "Tất cả Users")
+    @GetMapping("/all-users")
+    public Response<List<UserDTO>> getAllUsers() {
+        List<UserDTO> data = adminService.getAllUsers();
+        return new Response<>(200, "Fetched all users successfully", data);
     }
 
     @Operation(summary = "Admin xem thông tin của HR để duyệt hay từ chối")
