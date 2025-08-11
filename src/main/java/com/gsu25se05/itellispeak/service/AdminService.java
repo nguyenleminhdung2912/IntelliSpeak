@@ -1,6 +1,7 @@
 package com.gsu25se05.itellispeak.service;
 
 import com.gsu25se05.itellispeak.dto.admin.UserWithPackageDTO;
+import com.gsu25se05.itellispeak.dto.auth.reponse.UserDTO;
 import com.gsu25se05.itellispeak.dto.hr.HRAdminResponseDTO;
 import com.gsu25se05.itellispeak.entity.HR;
 import com.gsu25se05.itellispeak.entity.HRStatus;
@@ -129,4 +130,35 @@ public class AdminService {
             return dto;
         }).toList();
     }
+
+    public List<UserDTO> getAllUsers() {
+        return userRepository.findAll().stream().map(user -> {
+            String email = user.getEmail();
+            String userName = email != null && email.contains("@") ? email.split("@")[0] : "";
+            return UserDTO.builder()
+                    .userId(user.getUserId())
+                    .firstName(user.getFirstName())
+                    .lastName(user.getLastName())
+                    .userName(userName)
+                    .email(user.getEmail())
+                    .role(user.getRole())
+                    .packageId(user.getAPackage() != null ? user.getAPackage().getPackageId() : null)
+                    .birthday(user.getBirthday())
+                    .avatar(user.getAvatar())
+                    .status(user.getStatus())
+                    .phone(user.getPhone())
+                    .bio(user.getBio())
+                    .website(user.getWebsite())
+                    .github(user.getGithub())
+                    .linkedin(user.getLinkedin())
+                    .facebook(user.getFacebook())
+                    .youtube(user.getYoutube())
+                    .createAt(user.getCreateAt())
+                    .updateAt(user.getUpdateAt())
+                    .isDeleted(user.getIsDeleted())
+                    .build();
+        }).toList();
+    }
+
+
 }
