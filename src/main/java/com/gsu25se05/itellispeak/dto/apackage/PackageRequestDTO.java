@@ -11,4 +11,7 @@ public class PackageRequestDTO {
     private String packageName;
     private String description;
     private Double price;
+    private Integer interviewCount;
+    private Integer cvAnalyzeCount;
+    private Integer jdAnalyzeCount;
 }

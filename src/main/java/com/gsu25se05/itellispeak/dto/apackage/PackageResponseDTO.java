@@ -14,6 +14,9 @@ public class PackageResponseDTO {
     private String packageName;
     private String description;
     private Double price;
+    private int interviewCount;
+    private int cvAnalyzeCount;
+    private int jdAnalyzeCount;
     private LocalDateTime createAt;
     private LocalDateTime updateAt;
 }
