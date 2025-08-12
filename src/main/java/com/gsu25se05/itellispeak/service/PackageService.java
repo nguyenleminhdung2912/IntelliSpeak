@@ -4,6 +4,7 @@ import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.apackage.PackageRequestDTO;
 import com.gsu25se05.itellispeak.dto.apackage.PackageResponseDTO;
 import com.gsu25se05.itellispeak.entity.User;
+import com.gsu25se05.itellispeak.exception.auth.NotLoginException;
 import com.gsu25se05.itellispeak.repository.PackageRepository;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,9 @@ public class PackageService {
                         pkg.getPackageName(),
                         pkg.getDescription(),
                         pkg.getPrice(),
+                        pkg.getInterviewCount(),
+                        pkg.getCvAnalyzeCount(),
+                        pkg.getJdAnalyzeCount(),
                         pkg.getCreateAt(),
                         pkg.getUpdateAt()
                 )).collect(Collectors.toList());
@@ -51,6 +55,9 @@ public class PackageService {
                 pkg.getPackageName(),
                 pkg.getDescription(),
                 pkg.getPrice(),
+                pkg.getInterviewCount(),
+                pkg.getCvAnalyzeCount(),
+                pkg.getJdAnalyzeCount(),
                 pkg.getCreateAt(),
                 pkg.getUpdateAt()
         );
@@ -61,16 +68,15 @@ public class PackageService {
     public Response<PackageResponseDTO> createPackage(PackageRequestDTO requestDTO) {
 
         User user = accountUtils.getCurrentAccount();
-        if (user == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
-
-        if (requestDTO.getPrice() < 2000) {
-            return new Response<>(400, "Giá phải từ 2000 trở lên", null);
-        }
+        if (user == null) throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
 
         Package newPackage = new Package();
         newPackage.setPackageName(requestDTO.getPackageName());
         newPackage.setDescription(requestDTO.getDescription());
         newPackage.setPrice(requestDTO.getPrice());
+        newPackage.setCvAnalyzeCount(requestDTO.getCvAnalyzeCount());
+        newPackage.setInterviewCount(requestDTO.getInterviewCount());
+        newPackage.setJdAnalyzeCount(requestDTO.getJdAnalyzeCount());
         newPackage.setCreateAt(LocalDateTime.now());
         newPackage.setUpdateAt(LocalDateTime.now());
         newPackage.setIsDeleted(false);
@@ -82,6 +88,9 @@ public class PackageService {
                 savedPackage.getPackageName(),
                 savedPackage.getDescription(),
                 savedPackage.getPrice(),
+                savedPackage.getInterviewCount(),
+                savedPackage.getCvAnalyzeCount(),
+                savedPackage.getJdAnalyzeCount(),
                 savedPackage.getCreateAt(),
                 savedPackage.getUpdateAt()
         );
@@ -112,6 +121,15 @@ public class PackageService {
         if (requestDTO.getPrice() != null) {
             existingPackage.setPrice(requestDTO.getPrice());
         }
+        if (requestDTO.getInterviewCount() != null) {
+            existingPackage.setInterviewCount(requestDTO.getInterviewCount());
+        }
+        if (requestDTO.getCvAnalyzeCount() != null) {
+            existingPackage.setCvAnalyzeCount(requestDTO.getCvAnalyzeCount());
+        }
+        if (requestDTO.getJdAnalyzeCount() != null) {
+            existingPackage.setJdAnalyzeCount(requestDTO.getJdAnalyzeCount());
+        }
 
         existingPackage.setUpdateAt(LocalDateTime.now());
 
@@ -122,6 +140,9 @@ public class PackageService {
                 updatedPackage.getPackageName(),
                 updatedPackage.getDescription(),
                 updatedPackage.getPrice(),
+                updatedPackage.getInterviewCount(),
+                updatedPackage.getCvAnalyzeCount(),
+                updatedPackage.getJdAnalyzeCount(),
                 updatedPackage.getCreateAt(),
                 updatedPackage.getUpdateAt()
         );
