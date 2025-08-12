@@ -51,6 +51,13 @@ public enum ErrorCode {
     INVALID_PRICE(2007, "Invalid price", HttpStatus.BAD_REQUEST),
     FILE_MAX_SIZE(2008, "Maximum file size exceeded", HttpStatus.REQUEST_HEADER_FIELDS_TOO_LARGE),
 
+// INTERVIEW | CODE: 3XXX
+    OUT_OF_INTERVIEW_COUNT(3001, "Bạn đã hết số lần tham gia phỏng vấn ảo", HttpStatus.FORBIDDEN),
+
+// CV & JD | CODE: 4XXX
+    OUT_OF_CV_ANALYZE_COUNT(4001, "Bạn đã hết số lần phân tích CV", HttpStatus.FORBIDDEN),
+    OUT_OF_JD_ANALYZE_COUNT(4002, "Bạn đã hết số lần phân tích JD", HttpStatus.FORBIDDEN),
+
 // BILLING | CODE 8XXX
     BILLING_NOT_EMPTY(7001, "Billing is not empty", HttpStatus.BAD_REQUEST),
     BILLING_NOT_FOUNT(7002, "Billing not found, please re-check", HttpStatus.NOT_FOUND),

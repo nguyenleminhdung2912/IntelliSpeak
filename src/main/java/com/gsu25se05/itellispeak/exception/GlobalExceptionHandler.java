@@ -4,6 +4,7 @@ package com.gsu25se05.itellispeak.exception;
 import com.gsu25se05.itellispeak.dto.ErrorResponse;
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.exception.auth.NotFoundException;
+import com.gsu25se05.itellispeak.exception.interview.OutOfInterviewCountException;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -72,6 +73,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleAuthenticationException(AuthenticationException ex) {
         String message = "Authentication failed. Please check your token!";
         return new ResponseEntity<>(message, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(OutOfInterviewCountException.class)
+    public ResponseEntity<Response> handleOutOfInterviewCountException(OutOfInterviewCountException exception) {
+        Response response = new Response(500, exception.getMessage(), null);
+        return ResponseEntity.status(500).body(response);
     }
 
 }

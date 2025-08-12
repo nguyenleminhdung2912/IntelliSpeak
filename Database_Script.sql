@@ -258,6 +258,14 @@ INSERT INTO interview_session_tag (interview_session_id, tag_id) VALUES
 (8, 2), (8, 4), (8, 5), -- Phỏng vấn MERN Stack: JavaScript, ReactJS, SQL
 (9, 1), (9, 5), (9, 6); -- Phỏng vấn nâng cao về Fullstack: Java, SQL, Cấu trúc dữ liệu
 
+-- Thêm Package
+INSERT INTO package(package_id, create_at, description, is_deleted, package_name, price, update_at, cv_analyze_count, interview_count, jd_analyze_count)
+VALUES
+    (1, NOW(), 'Gói chào mừng miễn phí cho người mới bắt đầu luyện phỏng vấn', false, 'Welcome', 0, NOW(), 10, 10, 5),
+    (2, NOW(), 'Gói luyện phỏng vấn cơ bản với số lượng câu hỏi và phân tích giới hạn', false, 'Beginner', 99000, NOW(), 25, 25, 15),
+    (3, NOW(), 'Gói luyện phỏng vấn chuyên sâu, không giới hạn câu hỏi và phân tích chi tiết', false, 'Professional', 299000, NOW(), 60, 60, 35);
+
+
 -- Đặt lại Sequence IDs
 SELECT setval('interview_session_interview_session_id_seq', (SELECT MAX(interview_session_id) FROM interview_session) + 1);
 SELECT setval('topic_topic_id_seq', (SELECT MAX(topic_id) FROM topic) + 1);

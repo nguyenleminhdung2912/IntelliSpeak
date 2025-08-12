@@ -15,11 +15,23 @@ public class Package {
     @Column(name = "package_id")
     private Long packageId;
 
+    @Column(name = "package_name")
     private String packageName;
 
+    @Column(name = "description")
     private String description;
 
+    @Column(name = "price")
     private Double price;
+
+    @Column(name = "interview_count")
+    private int interviewCount;
+
+    @Column(name = "cv_analyze_count")
+    private int cvAnalyzeCount;
+
+    @Column(name = "jd_analyze_count")
+    private int jdAnalyzeCount;
 
     @Column(name = "create_at")
     private LocalDateTime createAt;

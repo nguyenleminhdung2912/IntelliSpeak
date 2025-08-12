@@ -6,6 +6,9 @@ import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.cv.CVAnalysisResponseDTO;
 import com.gsu25se05.itellispeak.dto.cv.GetAllCvDTO;
 import com.gsu25se05.itellispeak.entity.*;
+import com.gsu25se05.itellispeak.exception.ErrorCode;
+import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
+import com.gsu25se05.itellispeak.exception.auth.NotLoginException;
 import com.gsu25se05.itellispeak.repository.*;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
 import com.gsu25se05.itellispeak.utils.CloudinaryUtils;
@@ -34,6 +37,8 @@ public class CVService {
     private final MemberCVRepository memberCVRepository;
     private final AccountUtils accountUtils;
     private final CloudinaryUtils cloudinaryUtils;
+    private final UserRepository userRepository;
+    private final UserUsageRepository userUsageRepository;
 
     public CVService(
             @Value("${genai.api.key}") String apiKey,
@@ -43,8 +48,8 @@ public class CVService {
             CVExtractedInfoRepository cvExtractedInfoRepository,
             MemberCVRepository memberCVRepository,
             AccountUtils accountUtils,
-            CloudinaryUtils cloudinaryUtils
-    ) {
+            CloudinaryUtils cloudinaryUtils,
+            UserRepository userRepository, UserUsageRepository userUsageRepository) {
         this.webClient = WebClient.builder()
                 .baseUrl(API_URL + "?key=" + apiKey)
                 .defaultHeader("Content-Type", "application/json")
@@ -56,6 +61,8 @@ public class CVService {
         this.memberCVRepository = memberCVRepository;
         this.accountUtils = accountUtils;
         this.cloudinaryUtils = cloudinaryUtils;
+        this.userRepository = userRepository;
+        this.userUsageRepository = userUsageRepository;
     }
 
     private String sanitizeText(String text) {
@@ -66,6 +73,16 @@ public class CVService {
     }
 
     public Response<CVAnalysisResponseDTO> analyzeAndSaveFromFile(String cvTitle, MultipartFile file) throws Exception {
+
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
+        }
+
+        if (currentUser.getUserUsage().getInterviewUsed() >= currentUser.getAPackage().getCvAnalyzeCount()) {
+            throw new AuthAppException(ErrorCode.OUT_OF_CV_ANALYZE_COUNT);
+        }
+
         String rawText = FileUtils.extractTextFromCV(file);
         String cleanText = sanitizeText(rawText);
 
@@ -82,17 +99,17 @@ public class CVService {
 
         for (MultipartFile img : imageFiles) {
             String url = cloudinaryUtils.uploadImage(img);
-            if (imageUrls.length() > 0) {
+            if (!imageUrls.isEmpty()) {
                 imageUrls.append(";");
             }
             imageUrls.append(url);
         }
 
-        return analyzeAndSaveEvaluation(cleanText, imageUrls.toString(), cvTitle);
+        return analyzeAndSaveEvaluation(cleanText, imageUrls.toString(), cvTitle, currentUser);
     }
 
     @Transactional
-    public Response<CVAnalysisResponseDTO> analyzeAndSaveEvaluation(String cvText, String imageURLs, String cvTitle) throws Exception {
+    public Response<CVAnalysisResponseDTO> analyzeAndSaveEvaluation(String cvText, String imageURLs, String cvTitle, User user) throws Exception {
         String prompt = preparePrompt(cvText);
         String response = callGemini(prompt);
         String cleaned = cleanJson(response);
@@ -100,9 +117,6 @@ public class CVService {
 
         JsonNode feedbackNode = root.get("feedback");
         JsonNode infoNode = root.get("extractedInfo");
-
-        User user = accountUtils.getCurrentAccount();
-        if (user == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
 
         // 1. Vô hiệu hoá các CV cũ
         memberCVRepository.deactivateOldCVsByUser(user);
@@ -180,6 +194,11 @@ public class CVService {
         }
 
         CVAnalysisResponseDTO dto = new CVAnalysisResponseDTO(getCV(cvEvaluate.getId()).getData(), cvExtractedInfoRepository.save(extracted));
+
+        user.getUserUsage().setCvAnalyzeUsed(user.getUserUsage().getCvAnalyzeUsed() + 1);
+        userRepository.save(user);
+        userUsageRepository.save(user.getUserUsage());
+
         return new Response<>(200, "Phân tích thành công", dto);
     }
 

@@ -8,11 +8,14 @@ import com.gsu25se05.itellispeak.email.EmailDetail;
 import com.gsu25se05.itellispeak.email.EmailService;
 import com.gsu25se05.itellispeak.entity.User;
 //import com.gsu25se05.itellispeak.entity.Wallet;
+import com.gsu25se05.itellispeak.entity.UserUsage;
 import com.gsu25se05.itellispeak.exception.ErrorCode;
 import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
 import com.gsu25se05.itellispeak.jwt.JWTService;
+import com.gsu25se05.itellispeak.repository.PackageRepository;
 import com.gsu25se05.itellispeak.repository.UserRepository;
 //import com.gsu25se05.itellispeak.repository.WalletRepository;
+import com.gsu25se05.itellispeak.repository.UserUsageRepository;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -59,6 +62,12 @@ public class AuthService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PackageRepository packageRepository;
+
+    @Autowired
+    private UserUsageRepository userUsageRepository;
 
 //    @Autowired
 //    private WalletRepository walletRepository;
@@ -279,12 +288,18 @@ public class AuthService implements UserDetailsService {
             account.setIsDeleted(false);
             account.setRole(User.Role.USER);
             account.setCreateAt(LocalDateTime.now());
-            userRepository.save(account);
+            account.setAPackage(packageRepository.findById(1L).orElse(null));
+            User savedUser = userRepository.save(account);
 
-//            Wallet wallet = new Wallet();
-//            wallet.setTotal(0D);
-//            wallet.setUser(account);
-//            walletRepository.save(wallet);
+            // Tạo bản ghi UserUsage mặc định
+            UserUsage usage = new UserUsage();
+            usage.setUser(savedUser);
+            usage.setCvAnalyzeUsed(0);
+            usage.setJdAnalyzeUsed(0);
+            usage.setInterviewUsed(0);
+            usage.setUpdateAt(LocalDateTime.now());
+
+            userUsageRepository.save(usage);
 
             String responseMessage = "Đăng ký thành công, vui lòng kiểm tra email để xác minh";
             RegisterResponseDTO response = new RegisterResponseDTO(responseMessage, null, 201, registerRequestDTO.getEmail());
