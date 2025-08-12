@@ -9,10 +9,14 @@ import com.gsu25se05.itellispeak.dto.jd.GetAllJdDTO;
 import com.gsu25se05.itellispeak.entity.JD;
 import com.gsu25se05.itellispeak.entity.JDEvaluate;
 import com.gsu25se05.itellispeak.entity.User;
+import com.gsu25se05.itellispeak.exception.ErrorCode;
+import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
 import com.gsu25se05.itellispeak.exception.auth.NotFoundException;
+import com.gsu25se05.itellispeak.exception.auth.NotLoginException;
 import com.gsu25se05.itellispeak.repository.JDEvaluateRepository;
 import com.gsu25se05.itellispeak.repository.JDRepository;
 import com.gsu25se05.itellispeak.repository.UserRepository;
+import com.gsu25se05.itellispeak.repository.UserUsageRepository;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
 import com.gsu25se05.itellispeak.utils.CloudinaryUtils;
 import com.gsu25se05.itellispeak.utils.FileUtils;
@@ -37,8 +41,9 @@ public class JDService {
     private final UserRepository userRepository;
     private final JDEvaluateRepository jdEvaluateRepository;
     private final CloudinaryUtils cloudinaryUtils;
+    private final UserUsageRepository userUsageRepository;
 
-    public JDService(JDRepository jdRepository, @Value("${genai.api.key}") String apiKey, AccountUtils accountUtils, UserRepository userRepository, JDEvaluateRepository jdEvaluateRepository, CloudinaryUtils cloudinaryUtils) {
+    public JDService(JDRepository jdRepository, @Value("${genai.api.key}") String apiKey, AccountUtils accountUtils, UserRepository userRepository, JDEvaluateRepository jdEvaluateRepository, CloudinaryUtils cloudinaryUtils, UserUsageRepository userUsageRepository) {
         this.jdRepository = jdRepository;
         this.webClient = WebClient.builder()
                 .baseUrl(API_URL + "?key=" + apiKey)
@@ -48,10 +53,19 @@ public class JDService {
         this.userRepository = userRepository;
         this.jdEvaluateRepository = jdEvaluateRepository;
         this.cloudinaryUtils = cloudinaryUtils;
+        this.userUsageRepository = userUsageRepository;
     }
 
     public JD analyzeAndSaveJD(MultipartFile file) throws Exception {
         User user = accountUtils.getCurrentAccount();
+        if (user == null) {
+            throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
+        }
+
+        if (user.getUserUsage().getInterviewUsed() >= user.getAPackage().getJdAnalyzeCount()) {
+            throw new AuthAppException(ErrorCode.OUT_OF_JD_ANALYZE_COUNT);
+        }
+
         String text = FileUtils.extractTextFromCV(file);
 
         String prompt;
@@ -100,10 +114,6 @@ public class JDService {
             throw new IllegalArgumentException("AI trả về kết quả không hợp lệ JSON:\n" + responseText);
         }
 
-        if (user == null) {
-            throw new NotFoundException("Không tìm thấy người dùng đăng nhập");
-        }
-
         JD jd = new JD();
 
         //Save image to cloudinary
@@ -119,7 +129,7 @@ public class JDService {
 
         for (MultipartFile img : imageFiles) {
             String url = cloudinaryUtils.uploadImage(img);
-            if (imageUrls.length() > 0) {
+            if (!imageUrls.isEmpty()) {
                 imageUrls.append(";");
             }
             imageUrls.append(url);
@@ -156,6 +166,10 @@ public class JDService {
                 jdEvaluateRepository.save(evaluate); // giờ thì không lỗi nữa
             }
         }
+
+        user.getUserUsage().setJdAnalyzeUsed(user.getUserUsage().getJdAnalyzeUsed() + 1);
+        userRepository.save(user);
+        userUsageRepository.save(user.getUserUsage());
         return savedJD;
     }
 

@@ -46,8 +46,11 @@ public class AdminService {
 
     public Map<String, Long> getPlanCounts() {
         Map<String, Long> result = new HashMap<>();
-//        result.put("PROFESSIONAL", userRepository.countByPlanType(PlanType.PROFESSIONAL));
-//        result.put("BUSINESS", userRepository.countByPlanType(PlanType.BUSINESS));
+        var packages = packageRepository.findByIsDeletedFalse();
+        for (var p : packages) {
+            Long count = userRepository.countUsersByPackage(p);
+            result.put(p.getPackageName(), count != null ? count : 0L);
+        }
         return result;
     }
 

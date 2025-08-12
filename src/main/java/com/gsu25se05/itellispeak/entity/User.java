@@ -53,6 +53,10 @@ public class User implements UserDetails {
     @Column
     private LocalDate birthday;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @JsonIgnore
+    private UserUsage userUsage;
+
     @Column(length = 255)
     private String avatar;
 
@@ -153,25 +157,6 @@ public class User implements UserDetails {
 
     @OneToOne(mappedBy = "user")
     private HR hr;
-
-
-//    public User(UUID userId, String firstName, String lastName, String email, String password, Role role, String paymentPlan, LocalDate birthday, String avatar, String status, LocalDateTime createAt, LocalDateTime updateAt, Boolean isDeleted, String tokens, String refreshToken) {
-//        this.userId = userId;
-//        this.firstName = firstName;
-//        this.lastName = lastName;
-//        this.email = email;
-//        this.password = password;
-//        this.role = role;
-//        this.paymentPlan = paymentPlan;
-//        this.birthday = birthday;
-//        this.avatar = avatar;
-//        this.status = status;
-//        this.createAt = createAt;
-//        this.updateAt = updateAt;
-//        this.isDeleted = isDeleted;
-//        this.tokens = tokens;
-//        this.refreshToken = refreshToken;
-//    }
 
     public enum Role {
         USER, HR, ADMIN

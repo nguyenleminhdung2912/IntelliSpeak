@@ -4,10 +4,10 @@ import com.gsu25se05.itellispeak.dto.interview_session.*;
 import com.gsu25se05.itellispeak.dto.topic.TagSimpleDTO;
 import com.gsu25se05.itellispeak.dto.topic.TopicWithTagsDTO;
 import com.gsu25se05.itellispeak.entity.*;
-import com.gsu25se05.itellispeak.repository.InterviewSessionRepository;
-import com.gsu25se05.itellispeak.repository.QuestionRepository;
-import com.gsu25se05.itellispeak.repository.TagRepository;
-import com.gsu25se05.itellispeak.repository.TopicRepository;
+import com.gsu25se05.itellispeak.exception.ErrorCode;
+import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
+import com.gsu25se05.itellispeak.exception.auth.NotLoginException;
+import com.gsu25se05.itellispeak.repository.*;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
 import com.gsu25se05.itellispeak.utils.mapper.InterviewSessionMapper;
 import com.gsu25se05.itellispeak.utils.mapper.QuestionMapper;
@@ -29,6 +29,8 @@ public class InterviewSessionService {
     private final TopicRepository topicRepository;
     private final QuestionMapper questionMapper;
     private final AccountUtils accountUtils;
+    private final UserUsageRepository userUsageRepository;
+    private final UserRepository userRepository;
 
     public InterviewSessionService(
             InterviewSessionRepository interviewSessionRepository,
@@ -37,7 +39,7 @@ public class InterviewSessionService {
             TagRepository tagRepository,
             TopicRepository topicRepository,
             QuestionMapper questionMapper,
-            AccountUtils accountUtils) {
+            AccountUtils accountUtils, UserUsageRepository userUsageRepository, UserRepository userRepository) {
         this.interviewSessionRepository = interviewSessionRepository;
         this.questionRepository = questionRepository;
         this.interviewSessionMapper = interviewSessionMapper;
@@ -45,6 +47,8 @@ public class InterviewSessionService {
         this.topicRepository = topicRepository;
         this.questionMapper = questionMapper;
         this.accountUtils = accountUtils;
+        this.userUsageRepository = userUsageRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional
@@ -129,18 +133,36 @@ public class InterviewSessionService {
 
     @Transactional
     public SessionWithQuestionsDTO getRandomQuestions(QuestionSelectionRequestDTO request) {
+
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
+        }
+
+        if (currentUser.getUserUsage().getInterviewUsed() >= currentUser.getAPackage().getInterviewCount()) {
+            throw new AuthAppException(ErrorCode.OUT_OF_INTERVIEW_COUNT);
+        }
+
         int easyCount, mediumCount, hardCount;
         int total = request.getNumberOfQuestion();
 
         // Set ratio based on total
         if (total == 5) {
-            easyCount = 2; mediumCount = 2; hardCount = 1;
+            easyCount = 2;
+            mediumCount = 2;
+            hardCount = 1;
         } else if (total == 10) {
-            easyCount = 4; mediumCount = 4; hardCount = 2;
+            easyCount = 4;
+            mediumCount = 4;
+            hardCount = 2;
         } else if (total == 15) {
-            easyCount = 7; mediumCount = 5; hardCount = 3;
+            easyCount = 7;
+            mediumCount = 5;
+            hardCount = 3;
         } else {
-            easyCount = 2; mediumCount = 2; hardCount = 1;
+            easyCount = 2;
+            mediumCount = 2;
+            hardCount = 1;
         }
 
         List<QuestionInfoDTO> result = new ArrayList<>();
@@ -191,6 +213,10 @@ public class InterviewSessionService {
         dto.setTotalQuestion(total);
         dto.setDurationEstimate(tempSession.getDurationEstimate());
         dto.setQuestions(result);
+
+        currentUser.getUserUsage().setInterviewUsed(currentUser.getUserUsage().getInterviewUsed() + 1);
+        userRepository.save(currentUser);
+        userUsageRepository.save(currentUser.getUserUsage());
         return dto;
     }
 
@@ -259,6 +285,16 @@ public class InterviewSessionService {
 
     @Transactional(readOnly = true)
     public SessionWithQuestionsDTO getRandomQuestionsBySession(Long sessionId) {
+
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
+        }
+
+        if (currentUser.getUserUsage().getInterviewUsed() >= currentUser.getAPackage().getInterviewCount()) {
+            throw new AuthAppException(ErrorCode.OUT_OF_INTERVIEW_COUNT);
+        }
+
         InterviewSession session = interviewSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("InterviewSession not found"));
         int total = session.getTotalQuestion();
@@ -279,6 +315,11 @@ public class InterviewSessionService {
         dto.setTotalQuestion(total);
         dto.setDurationEstimate(session.getDurationEstimate());
         dto.setQuestions(result);
+
+        currentUser.getUserUsage().setInterviewUsed(currentUser.getUserUsage().getInterviewUsed() + 1);
+        userRepository.save(currentUser);
+        userUsageRepository.save(currentUser.getUserUsage());
+
         return dto;
     }
 

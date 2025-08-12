@@ -12,17 +12,17 @@ import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<User, UUID>, JpaSpecificationExecutor<User> {
     Optional<User> findByEmail(String email);
-    Optional<User> findByUserId(UUID uuid);
-//    long countByPlanType(PlanType planType);
 
     @Query("""
-    SELECT COUNT(u) 
-    FROM User u 
-    WHERE u.aPackage.packageId = :packageId 
-      AND u.createAt BETWEEN :start AND :end
-""")
+                SELECT COUNT(u) 
+                FROM User u 
+                WHERE u.aPackage.packageId = :packageId 
+                  AND u.createAt BETWEEN :start AND :end
+            """)
     Long countByPackageIdAndCreateAtBetween(@Param("packageId") Long packageId,
                                             @Param("start") LocalDateTime start,
                                             @Param("end") LocalDateTime end);
 
+    @Query("SELECT COUNT(u) FROM User u WHERE u.aPackage = :aPackage AND u.isDeleted = false")
+    long countUsersByPackage(@Param("aPackage") com.gsu25se05.itellispeak.entity.Package aPackage);
 }
