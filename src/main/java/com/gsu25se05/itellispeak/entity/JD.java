@@ -1,0 +1,65 @@
+package com.gsu25se05.itellispeak.entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Entity
+@Table(name = "jd")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Setter
+@Getter
+@Builder
+public class JD {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "jd_id")
+    private Long jdId;
+
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @Column(name = "link_to_jd")
+    private String linkToJd;
+
+    // === Thêm mới ===
+    @Column(name = "job_title")
+    private String jobTitle;
+
+    @Column(name = "summary", columnDefinition = "TEXT")
+    private String summary; // tóm tắt JD do AI tạo
+
+    @Column(name = "must_have_skills", columnDefinition = "TEXT")
+    private String mustHaveSkills;
+
+    @Column(name = "nice_to_have_skills", columnDefinition = "TEXT")
+    private String niceToHaveSkills;
+
+    @Column(name = "suitable_level")
+    private String suitableLevel; // fresher, junior, mid, etc.
+
+    @Column(name = "recommended_learning", columnDefinition = "TEXT")
+    private String recommendedLearning;
+
+    @Column(name = "create_at")
+    private LocalDateTime createAt;
+
+    @Column(name = "update_at")
+    private LocalDateTime updateAt;
+
+    @Column(name = "is_deleted")
+    private boolean isDeleted = false;
+
+    @OneToMany(mappedBy = "jd", cascade = CascadeType.REFRESH, orphanRemoval = true)
+    private List<JDEvaluate> jdEvaluates = new ArrayList<>();
+}
+
+

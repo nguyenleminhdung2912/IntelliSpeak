@@ -1,15 +1,19 @@
 package com.gsu25se05.itellispeak.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "users")
@@ -17,21 +21,22 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "user_id")
     private UUID userId;
 
-    @Column(name = "first_name", nullable = false, length = 50)
+    @Column(name = "first_name", length = 50)
     private String firstName;
 
-    @Column(name = "last_name", nullable = false, length = 50)
+    @Column(name = "last_name", length = 50)
     private String lastName;
 
     @Column(nullable = false, unique = true, length = 100)
     private String email;
 
+    @JsonIgnore
     @Column(nullable = false)
     private String password;
 
@@ -39,18 +44,45 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
-    @Column(name = "payment_plan", length = 50, nullable = true)
-    private String paymentPlan;
+    @OneToOne
+    @JoinColumn(name = "package_id", referencedColumnName = "package_id")
+    @JsonIgnore
+    private Package aPackage;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     @Column
     private LocalDate birthday;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @JsonIgnore
+    private UserUsage userUsage;
 
     @Column(length = 255)
     private String avatar;
 
     @Column(length = 20)
     private String status;
+
+    @Column(length = 1000)
+    private String bio;
+
+    @Column(name = "phone")
+    private String phone;
+
+    @Column(name = "website")
+    private String website;
+
+    @Column(name = "github")
+    private String github;
+
+    @Column(name = "linkedin")
+    private String linkedin;
+
+    @Column(name = "facebook")
+    private String facebook;
+
+    @Column(name = "youtube")
+    private String youtube;
 
     @Column(name = "create_at")
     private LocalDateTime createAt;
@@ -60,6 +92,71 @@ public class User {
 
     @Column(name = "is_deleted")
     private Boolean isDeleted;
+
+    public User(String email) {
+        this.email = email;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        Set<SimpleGrantedAuthority> authorities = new HashSet<>();
+        authorities.add(new SimpleGrantedAuthority(this.role.name()));
+        return authorities;
+    }
+
+    @JsonIgnore
+    @Transient
+    @Override
+    public String getUsername() {
+        return this.email;
+    }
+
+    @JsonIgnore
+    @Transient
+    @Override
+    public boolean isAccountNonExpired() {
+        return UserDetails.super.isAccountNonExpired();
+    }
+
+    @JsonIgnore
+    @Transient
+    @Override
+    public boolean isAccountNonLocked() {
+        return UserDetails.super.isAccountNonLocked();
+    }
+
+    @JsonIgnore
+    @Transient
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return UserDetails.super.isCredentialsNonExpired();
+    }
+
+    @JsonIgnore
+    @Transient
+    @Override
+    public boolean isEnabled() {
+        return UserDetails.super.isEnabled();
+    }
+
+    @Transient
+    private String tokens;
+
+    @Transient
+    private String refreshToken;
+
+    @OneToMany(mappedBy = "user")
+    private List<MemberCV> cvs;
+
+    @OneToMany(mappedBy = "user")
+    private List<JD> jobDescriptions;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<InterviewHistory> interviewHistories;
+
+    @OneToOne(mappedBy = "user")
+    private HR hr;
 
     public enum Role {
         USER, HR, ADMIN
