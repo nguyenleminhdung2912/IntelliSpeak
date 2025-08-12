@@ -2,6 +2,7 @@ package com.gsu25se05.itellispeak.controller;
 
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.admin.UserWithPackageDTO;
+import com.gsu25se05.itellispeak.dto.auth.reponse.UserDTO;
 import com.gsu25se05.itellispeak.dto.hr.HRAdminResponseDTO;
 import com.gsu25se05.itellispeak.service.AdminService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,6 +44,13 @@ public class AdminController {
         return ResponseEntity.ok(new Response<>(200, "Yearly revenue fetched", revenue));
     }
 
+    @Operation(summary = "Tất cả Users")
+    @GetMapping("/all-users")
+    public Response<List<UserDTO>> getAllUsers() {
+        List<UserDTO> data = adminService.getAllUsers();
+        return new Response<>(200, "Fetched all users successfully", data);
+    }
+
     @Operation(summary = "Admin xem thông tin của HR để duyệt hay từ chối")
     @GetMapping("/hr-applications")
     public Response<List<HRAdminResponseDTO>> getHRApplications() {
@@ -70,4 +78,14 @@ public class AdminController {
         List<UserWithPackageDTO> data = adminService.getAllUsersWithPackage();
         return ResponseEntity.ok(new Response<>(200, "Fetched users with package", data));
     }
+
+    @Operation(summary = "Đếm người dùng đăng kí các gói")
+    @GetMapping("/package-stats")
+    public ResponseEntity<Response<List<Map<String, Object>>>> getPackageStats(
+            @RequestParam int year
+    ) {
+        List<Map<String, Object>> revenue = adminService.getPackageSubscriptionStats(year);
+        return ResponseEntity.ok(new Response<>(200, "Package subscription stats", revenue));
+    }
+
 }
