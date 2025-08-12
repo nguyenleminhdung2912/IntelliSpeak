@@ -108,10 +108,6 @@ public class PackageService {
             return new Response<>(404, "Không tìm thấy gói", null);
         }
 
-        if (requestDTO.getPrice() != null && requestDTO.getPrice() < 2000) {
-            return new Response<>(400, "Giá phải từ 2000 trở lên", null);
-        }
-
         if (requestDTO.getPackageName() != null) {
             existingPackage.setPackageName(requestDTO.getPackageName());
         }
