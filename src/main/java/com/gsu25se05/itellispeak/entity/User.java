@@ -54,6 +54,7 @@ public class User implements UserDetails {
     private LocalDate birthday;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @JsonIgnore
     private UserUsage userUsage;
 
     @Column(length = 255)
