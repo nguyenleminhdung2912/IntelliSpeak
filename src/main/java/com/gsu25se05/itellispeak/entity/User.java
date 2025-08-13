@@ -44,7 +44,7 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private Role role;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "package_id", referencedColumnName = "package_id")
     @JsonIgnore
     private Package aPackage;
