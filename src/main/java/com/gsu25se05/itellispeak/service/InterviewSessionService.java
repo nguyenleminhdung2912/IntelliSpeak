@@ -1,5 +1,6 @@
 package com.gsu25se05.itellispeak.service;
 
+import com.gsu25se05.itellispeak.dto.ai_evaluation.EvaluationBatchResponseDto;
 import com.gsu25se05.itellispeak.dto.interview_session.*;
 import com.gsu25se05.itellispeak.dto.topic.TagSimpleDTO;
 import com.gsu25se05.itellispeak.dto.topic.TopicWithTagsDTO;
@@ -9,6 +10,7 @@ import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
 import com.gsu25se05.itellispeak.exception.auth.NotLoginException;
 import com.gsu25se05.itellispeak.repository.*;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
+import com.gsu25se05.itellispeak.utils.mapper.InterviewHistoryMapper;
 import com.gsu25se05.itellispeak.utils.mapper.InterviewSessionMapper;
 import com.gsu25se05.itellispeak.utils.mapper.QuestionMapper;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,7 @@ public class InterviewSessionService {
     private final AccountUtils accountUtils;
     private final UserUsageRepository userUsageRepository;
     private final UserRepository userRepository;
+    private final InterviewHistoryMapper interviewHistoryMapper;
 
     public InterviewSessionService(
             InterviewSessionRepository interviewSessionRepository,
@@ -39,7 +42,7 @@ public class InterviewSessionService {
             TagRepository tagRepository,
             TopicRepository topicRepository,
             QuestionMapper questionMapper,
-            AccountUtils accountUtils, UserUsageRepository userUsageRepository, UserRepository userRepository) {
+            AccountUtils accountUtils, UserUsageRepository userUsageRepository, UserRepository userRepository, InterviewHistoryMapper interviewHistoryMapper) {
         this.interviewSessionRepository = interviewSessionRepository;
         this.questionRepository = questionRepository;
         this.interviewSessionMapper = interviewSessionMapper;
@@ -49,6 +52,7 @@ public class InterviewSessionService {
         this.accountUtils = accountUtils;
         this.userUsageRepository = userUsageRepository;
         this.userRepository = userRepository;
+        this.interviewHistoryMapper = interviewHistoryMapper;
     }
 
     @Transactional
@@ -181,6 +185,7 @@ public class InterviewSessionService {
         tempSession.setCreateAt(LocalDateTime.now());
         tempSession.setIsDeleted(false);
         tempSession.setSource("RANDOM"); // Đặt nguồn là RANDOM
+        tempSession.setCreatedBy(currentUser);
 
         // Gán Topic nếu có topicId
         if (request.getTopicId() != null) {
@@ -333,6 +338,18 @@ public class InterviewSessionService {
         return questions.stream()
                 .limit(count)
                 .map(questionMapper::toInfoDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<EvaluationBatchResponseDto> getAllRandomGeneratedQuestionsSession() {
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
+        }
+
+        List<InterviewSession> interviewSessionList = interviewSessionRepository.findByCreatedBy(currentUser);
+        return interviewSessionList.stream()
+                .map(interviewSessionMapper::toEvaluationBatchResponseForGetAllDto)
                 .collect(Collectors.toList());
     }
 }

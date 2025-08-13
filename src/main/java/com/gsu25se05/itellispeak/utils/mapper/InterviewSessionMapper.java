@@ -1,6 +1,7 @@
 package com.gsu25se05.itellispeak.utils.mapper;
 
 
+import com.gsu25se05.itellispeak.dto.ai_evaluation.EvaluationBatchResponseDto;
 import com.gsu25se05.itellispeak.dto.interview_session.InterviewSessionDTO;
 import com.gsu25se05.itellispeak.entity.*;
 import org.springframework.stereotype.Component;
@@ -39,5 +40,19 @@ public class InterviewSessionMapper {
         entity.setUpdateAt(LocalDateTime.now());
         entity.setIsDeleted(false);
         return entity;
+    }
+
+    public EvaluationBatchResponseDto toEvaluationBatchResponseForGetAllDto(InterviewSession history) {
+        EvaluationBatchResponseDto responseDto = new EvaluationBatchResponseDto();
+        responseDto.setInterviewHistoryId(null);
+        responseDto.setInterviewSessionId(history.getInterviewSessionId());
+        responseDto.setInterviewTitle(history.getTitle());
+        responseDto.setTotalQuestion(history.getTotalQuestion());
+        responseDto.setAverageScore(null);
+        responseDto.setAiOverallEvaluate(null);
+        responseDto.setStartedAt(null);
+        responseDto.setEndedAt(null);
+
+        return responseDto;
     }
 }

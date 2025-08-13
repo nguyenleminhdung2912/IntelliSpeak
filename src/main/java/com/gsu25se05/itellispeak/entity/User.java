@@ -155,6 +155,10 @@ public class User implements UserDetails {
     @JsonIgnore
     private List<InterviewHistory> interviewHistories;
 
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<InterviewSession> createdInterviewSessions = new ArrayList<>();
+
     @OneToOne(mappedBy = "user")
     private HR hr;
 
