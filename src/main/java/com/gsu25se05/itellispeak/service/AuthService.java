@@ -6,12 +6,16 @@ import com.gsu25se05.itellispeak.dto.auth.reponse.*;
 import com.gsu25se05.itellispeak.dto.auth.request.*;
 import com.gsu25se05.itellispeak.email.EmailDetail;
 import com.gsu25se05.itellispeak.email.EmailService;
+import com.gsu25se05.itellispeak.entity.InterviewHistory;
+import com.gsu25se05.itellispeak.entity.InterviewHistoryDetail;
 import com.gsu25se05.itellispeak.entity.User;
 //import com.gsu25se05.itellispeak.entity.Wallet;
 import com.gsu25se05.itellispeak.entity.UserUsage;
 import com.gsu25se05.itellispeak.exception.ErrorCode;
 import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
+import com.gsu25se05.itellispeak.exception.auth.NotLoginException;
 import com.gsu25se05.itellispeak.jwt.JWTService;
+import com.gsu25se05.itellispeak.repository.InterviewHistoryRepository;
 import com.gsu25se05.itellispeak.repository.PackageRepository;
 import com.gsu25se05.itellispeak.repository.UserRepository;
 //import com.gsu25se05.itellispeak.repository.WalletRepository;
@@ -36,6 +40,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -68,6 +73,8 @@ public class AuthService implements UserDetailsService {
 
     @Autowired
     private UserUsageRepository userUsageRepository;
+    @Autowired
+    private InterviewHistoryRepository interviewHistoryRepository;
 
 //    @Autowired
 //    private WalletRepository walletRepository;
@@ -111,7 +118,80 @@ public class AuthService implements UserDetailsService {
 
     public Response<UserProfileDTO> getCurrentUserProfile() {
         User user = accountUtils.getCurrentAccount();
-        if (user == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
+        if (user == null) throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
+
+        // Fetch interview histories
+        List<InterviewHistory> histories = interviewHistoryRepository.findByUser(user);
+
+        // Calculate weekly counts
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfWeek = now.with(java.time.DayOfWeek.MONDAY).toLocalDate().atStartOfDay();
+        LocalDateTime startOfLastWeek = startOfWeek.minusWeeks(1);
+        LocalDateTime endOfLastWeek = startOfWeek.minusSeconds(1);
+
+        long currentWeekCount = histories.stream()
+                .filter(h -> h.getStartedAt() != null && !h.getStartedAt().isBefore(startOfWeek))
+                .count();
+
+        long lastWeekCount = histories.stream()
+                .filter(h -> h.getStartedAt() != null && h.getStartedAt().isAfter(startOfLastWeek) && h.getStartedAt().isBefore(endOfLastWeek))
+                .count();
+
+        // Calculate average score
+        double avgScore = histories.stream()
+                .filter(h -> h.getAverageScore() != null)
+                .mapToDouble(InterviewHistory::getAverageScore)
+                .average()
+                .orElse(0.0);
+
+        String scoreEvaluate = avgScore >= 8 ? "Bạn đang làm rất tốt"
+                : avgScore >= 5 ? "Bạn cần cải thiện thêm"
+                : "Bạn nên luyện tập nhiều hơn";
+
+        // Get all InterviewHistoryDetails for current user's histories
+        List<InterviewHistoryDetail> allDetails = histories.stream()
+                .flatMap(h -> h.getDetails() != null ? h.getDetails().stream() : java.util.stream.Stream.empty())
+                .toList();
+
+        // Filter details for current week
+        List<InterviewHistoryDetail> currentWeekDetails = allDetails.stream()
+                .filter(d -> d.getInterviewHistory().getStartedAt() != null &&
+                        !d.getInterviewHistory().getStartedAt().isBefore(startOfWeek))
+                .toList();
+
+        // Filter details for last week
+        List<InterviewHistoryDetail> lastWeekDetails = allDetails.stream()
+                .filter(d -> d.getInterviewHistory().getStartedAt() != null &&
+                        d.getInterviewHistory().getStartedAt().isAfter(startOfLastWeek) &&
+                        d.getInterviewHistory().getStartedAt().isBefore(endOfLastWeek))
+                .toList();
+
+        // Count answered questions (answeredContent != "Không có câu trả lời")
+        long currentWeekAnswered = currentWeekDetails.stream()
+                .filter(d -> d.getAnsweredContent() != null && !d.getAnsweredContent().equals("Không có câu trả lời"))
+                .count();
+
+        long lastWeekAnswered = lastWeekDetails.stream()
+                .filter(d -> d.getAnsweredContent() != null && !d.getAnsweredContent().equals("Không có câu trả lời"))
+                .count();
+
+        // Calculate percentage change
+        String answeredQuestionCompared;
+        if (lastWeekAnswered == 0) {
+            answeredQuestionCompared = currentWeekAnswered > 0 ? "+100%" : "0%";
+        } else {
+            double percent = ((double) (currentWeekAnswered - lastWeekAnswered) / lastWeekAnswered) * 100;
+            answeredQuestionCompared = (percent >= 0 ? "+" : "") + String.format("%.0f", percent) + "%";
+        }
+
+        UserProfileStatisticDTO statistic = UserProfileStatisticDTO.builder()
+                .interviewWeeklyCount(currentWeekCount + " buổi")
+                .comparedToLastWeek((currentWeekCount >= lastWeekCount ? "+" : "-") + Math.abs(currentWeekCount - lastWeekCount) + " buổi trong tuần")
+                .averageInterviewScore(String.format("%.1f/10", avgScore))
+                .scoreEvaluate(scoreEvaluate)
+                .answeredQuestionCount(currentWeekAnswered + " câu")
+                .answeredQuestionComparedToLastWeek(answeredQuestionCompared + " so với tuần trước")
+                .build();
 
         String email = user.getEmail();
         String userName = email != null && email.contains("@") ? email.split("@")[0] : "";
@@ -130,13 +210,11 @@ public class AuthService implements UserDetailsService {
                 .linkedin(user.getLinkedin())
                 .facebook(user.getFacebook())
                 .youtube(user.getYoutube())
+                .statistic(List.of(statistic))
                 .build();
 
         return new Response<>(200, "Lấy thông tin hồ sơ thành công", profile);
     }
-
-
-
 
     public Response<UserDTO> updateProfile(UpdateProfileRequestDTO request) {
         User user = accountUtils.getCurrentAccount();
@@ -275,7 +353,7 @@ public class AuthService implements UserDetailsService {
             //Check if the email exist
             User tempAccount = findUserByEmail(registerRequestDTO.getEmail());
             if (tempAccount != null) {
-                    throw new AuthAppException(ErrorCode.EMAIL_WAIT_VERIFY);
+                throw new AuthAppException(ErrorCode.EMAIL_WAIT_VERIFY);
 
             }
 
@@ -382,11 +460,10 @@ public class AuthService implements UserDetailsService {
             return new ResponseEntity<>(forgotPasswordResponse, HttpStatus.OK);
         } catch (AuthAppException e) {
             ErrorCode errorCode = e.getErrorCode();
-            ForgotPasswordResponse forgotPasswordResponse = new ForgotPasswordResponse(    "Đặt lại mật khẩu thất bại", e.getMessage(), errorCode.getCode());
+            ForgotPasswordResponse forgotPasswordResponse = new ForgotPasswordResponse("Đặt lại mật khẩu thất bại", e.getMessage(), errorCode.getCode());
             return new ResponseEntity<>(forgotPasswordResponse, errorCode.getHttpStatus());
         }
     }
-
 
 
     public ResponseEntity<ResetPasswordResponse> resetPassword(ResetPasswordRequest resetPasswordRequest, String token) {

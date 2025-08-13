@@ -125,7 +125,7 @@ public class InterviewHistoryMapper {
         EvaluationBatchResponseDto responseDto = new EvaluationBatchResponseDto();
         responseDto.setInterviewHistoryId(history.getInterviewHistoryId());
         responseDto.setInterviewSessionId(history.getInterviewSession().getInterviewSessionId());
-        responseDto.setInterviewTitle(interviewSessionRepository.findById(history.getInterviewHistoryId()).get().getTitle());
+        responseDto.setInterviewTitle(history.getInterviewSession().getTitle());
         responseDto.setTotalQuestion(history.getTotalQuestion());
         responseDto.setAverageScore(history.getAverageScore());
         responseDto.setAiOverallEvaluate(history.getAiOverallEvaluate());

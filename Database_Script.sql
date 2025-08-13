@@ -271,3 +271,4 @@ SELECT setval('interview_session_interview_session_id_seq', (SELECT MAX(intervie
 SELECT setval('topic_topic_id_seq', (SELECT MAX(topic_id) FROM topic) + 1);
 SELECT setval('tag_tag_id_seq', (SELECT MAX(tag_id) FROM tag) + 1);
 SELECT setval('question_question_id_seq', (SELECT MAX(question_id) FROM question) + 1);
+SELECT setval('package_package_id_seq', (SELECT MAX(package_id) FROM package) + 1);
