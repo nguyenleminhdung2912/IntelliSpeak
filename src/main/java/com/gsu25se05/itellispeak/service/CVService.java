@@ -79,7 +79,7 @@ public class CVService {
             throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
         }
 
-        if (currentUser.getUserUsage().getInterviewUsed() >= currentUser.getAPackage().getCvAnalyzeCount()) {
+        if (currentUser.getUserUsage().getCvAnalyzeUsed() >= currentUser.getAPackage().getCvAnalyzeCount()) {
             throw new AuthAppException(ErrorCode.OUT_OF_CV_ANALYZE_COUNT);
         }
 

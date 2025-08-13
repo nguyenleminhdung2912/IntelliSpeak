@@ -62,7 +62,7 @@ public class JDService {
             throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
         }
 
-        if (user.getUserUsage().getInterviewUsed() >= user.getAPackage().getJdAnalyzeCount()) {
+        if (user.getUserUsage().getJdAnalyzeUsed() >= user.getAPackage().getJdAnalyzeCount()) {
             throw new AuthAppException(ErrorCode.OUT_OF_JD_ANALYZE_COUNT);
         }
 
