@@ -57,6 +57,11 @@ public class InterviewSessionService {
 
     @Transactional
     public InterviewSession save(InterviewSessionDTO dto) {
+
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
+        }
         Set<Question> questions = new HashSet<>();
         if (dto.getQuestionIds() != null && !dto.getQuestionIds().isEmpty()) {
             questions.addAll(questionRepository.findAllById(dto.getQuestionIds()));
@@ -71,10 +76,10 @@ public class InterviewSessionService {
         }
 
         InterviewSession entity = interviewSessionMapper.toEntity(dto, questions, tags, topic);
-        User currentUser = accountUtils.getCurrentAccount();
-        if (currentUser != null) {
-            entity.setCreatedBy(currentUser);
-        }
+
+        entity.setCreatedBy(currentUser);
+        entity.setSource("ADMIN");
+
         return interviewSessionRepository.save(entity);
     }
 
@@ -355,5 +360,33 @@ public class InterviewSessionService {
         return interviewSessionList.stream()
                 .map(interviewSessionMapper::toEvaluationBatchResponseForGetAllDto)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public InterviewSession saveFromHR(InterviewSessionDTO dto) {
+
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
+        }
+        Set<Question> questions = new HashSet<>();
+        if (dto.getQuestionIds() != null && !dto.getQuestionIds().isEmpty()) {
+            questions.addAll(questionRepository.findAllById(dto.getQuestionIds()));
+        }
+        Set<Tag> tags = new HashSet<>();
+        if (dto.getTagIds() != null && !dto.getTagIds().isEmpty()) {
+            tags.addAll(tagRepository.findAllById(dto.getTagIds()));
+        }
+        Topic topic = null;
+        if (dto.getTopicId() != null) {
+            topic = topicRepository.findById(dto.getTopicId()).orElse(null);
+        }
+
+        InterviewSession entity = interviewSessionMapper.toEntity(dto, questions, tags, topic);
+
+        entity.setCreatedBy(currentUser);
+        entity.setSource("HR");
+
+        return interviewSessionRepository.save(entity);
     }
 }
