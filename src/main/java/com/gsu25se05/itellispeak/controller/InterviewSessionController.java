@@ -2,6 +2,7 @@ package com.gsu25se05.itellispeak.controller;
 
 
 import com.gsu25se05.itellispeak.dto.Response;
+import com.gsu25se05.itellispeak.dto.ai_evaluation.EvaluationBatchResponseDto;
 import com.gsu25se05.itellispeak.dto.interview_session.InterviewByTopicDTO;
 import com.gsu25se05.itellispeak.dto.interview_session.InterviewSessionDTO;
 import com.gsu25se05.itellispeak.dto.interview_session.QuestionSelectionRequestDTO;
@@ -55,6 +56,18 @@ public class InterviewSessionController {
     public ResponseEntity<Response<Iterable<InterviewSession>>> getAllSessions() {
         Iterable<InterviewSession> sessions = interviewSessionService.getAllInterviewSession();
         return ResponseEntity.ok(new Response<>(200, "All interview sessions fetched", sessions));
+    }
+
+    @GetMapping("/get-random-generated-questions-session")
+    @Operation(summary = "Lấy danh sách các session random question mà người dùng đó đã tạo")
+    public ResponseEntity<Response<List<EvaluationBatchResponseDto>>> getRandomSession() {
+        try {
+            List<EvaluationBatchResponseDto> evaluationBatchResponseDtos = interviewSessionService.getAllRandomGeneratedQuestionsSession();
+            Response<List<EvaluationBatchResponseDto>> response = new Response<>(200, "Lấy danh sách các session random question mà người dùng đó đã tạo thành công", evaluationBatchResponseDtos);
+            return ResponseEntity.ok(response);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(401).body(null);
+        }
     }
 
     @PostMapping("/random-questions")
