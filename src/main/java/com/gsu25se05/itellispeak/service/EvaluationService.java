@@ -21,7 +21,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -258,15 +258,31 @@ public class EvaluationService {
     }
 
     private String generateOverallEvaluation(List<EvaluationResponseDto> results) {
-        long correctCount = results.stream().filter(r -> Double.parseDouble(r.getLevel()) == 10.0).count();
-        long partialCount = results.stream().filter(r -> Double.parseDouble(r.getLevel()) == 7.0).count();
-        long nearCorrectCount = results.stream().filter(r -> Double.parseDouble(r.getLevel()) == 4.0).count();
-        long incorrectCount = results.stream().filter(r -> Double.parseDouble(r.getLevel()) == 2.0).count();
+        if (results.isEmpty()) {
+            return "Ứng viên chưa trả lời câu hỏi nào, cần tham gia phỏng vấn đầy đủ để được đánh giá.";
+        }
 
+        double averageScore = results.stream()
+                .mapToDouble(r -> Double.parseDouble(r.getLevel()))
+                .average()
+                .orElse(0.0);
+
+        // Thu thập các điểm cần cải thiện
+        List<String> improvements = new ArrayList<>();
+        for (EvaluationResponseDto dto : results) {
+            FeedbackDto feedback = dto.getFeedback();
+            if (feedback != null && !feedback.getKnowledge().getImprovement().equals("Không có") && !feedback.getKnowledge().getImprovement().isEmpty()) {
+                improvements.add(feedback.getKnowledge().getImprovement());
+            }
+        }
+
+        String improvementSummary = improvements.isEmpty() ? "kiến thức chuyên môn" : String.join(", ", new LinkedHashSet<>(improvements));
+
+        // Xây dựng nhận xét ngắn gọn
+        String performance = averageScore >= 7.0 ? "tốt" : averageScore >= 4.0 ? "khá" : "chưa tốt";
         return String.format(
-                "Tổng quan: Ứng viên đạt điểm 10/10 cho %d/%d câu hỏi, 7/10 cho %d câu, 4/10 cho %d câu, và 2/10 cho %d câu. " +
-                        "Đề xuất: Cần cải thiện kiến thức chuyên sâu về HTML, CSS, JavaScript, đặc biệt ở các câu hỏi độ khó trung bình và cao.",
-                correctCount, results.size(), partialCount, nearCorrectCount, incorrectCount
+                "Trong buổi phỏng vấn này, ứng viên đã thể hiện %s, tuy nhiên cần cải thiện thêm về %s để nâng cao hiệu quả trả lời.",
+                performance, improvementSummary
         );
     }
 
