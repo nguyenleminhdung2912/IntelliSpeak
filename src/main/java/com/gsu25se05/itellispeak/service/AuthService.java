@@ -291,7 +291,7 @@ public class AuthService implements UserDetailsService {
             account.setAPackage(packageRepository.findById(1L).orElse(null));
             User savedUser = userRepository.save(account);
 
-            // Tạo bản ghi UserUsage mặc định
+            // Tạo UserUsage mặc định
             UserUsage usage = new UserUsage();
             usage.setUser(savedUser);
             usage.setCvAnalyzeUsed(0);

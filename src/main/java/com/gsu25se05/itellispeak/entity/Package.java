@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "package")
@@ -41,5 +43,8 @@ public class Package {
 
     @Column(name = "is_deleted")
     private Boolean isDeleted;
+
+    @OneToMany(mappedBy = "aPackage")
+    private List<User> users = new ArrayList<>();
 
 }
