@@ -177,8 +177,8 @@ public class InterviewSessionService {
 
         // Tạo InterviewSession tạm thời
         InterviewSession tempSession = new InterviewSession();
-        tempSession.setTitle("Buổi phỏng vấn ngẫu nhiên - " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")));
-        tempSession.setDescription("Tạo tự động từ getRandomQuestions");
+        tempSession.setTitle("Buổi phỏng vấn ngẫu nhiên");
+        tempSession.setDescription("Tạo tự động từ người dùng");
         tempSession.setTotalQuestion(total);
         tempSession.setDifficulty(Difficulty.MEDIUM); // Có thể điều chỉnh logic
         tempSession.setDurationEstimate(Duration.ofMinutes(total * 5L)); // Ước tính 5 phút/câu
