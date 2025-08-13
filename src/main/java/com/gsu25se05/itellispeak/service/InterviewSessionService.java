@@ -245,7 +245,11 @@ public class InterviewSessionService {
         Topic topic = topicRepository.findById(topicId)
                 .orElseThrow(() -> new RuntimeException("Topic not found"));
 
-        List<InterviewSession> interviewSessionList = interviewSessionRepository.findByTopic_TopicIdAndIsDeletedFalse(topicId);
+        List<InterviewSession> interviewSessionList = interviewSessionRepository.findByTopic_TopicIdAndIsDeletedFalse(topicId)
+                .stream()
+                .filter(session -> session
+                        .getSource() == null || "ADMIN".equals(session.getSource()))
+                .collect(Collectors.toList());
 
         List<InterviewSessionDTO> sessionDTOs = interviewSessionList.stream()
                 .map(interviewSessionMapper::toDTO)
