@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Component
+//@Component
 public class UserUsageInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final UserUsageRepository userUsageRepository;
