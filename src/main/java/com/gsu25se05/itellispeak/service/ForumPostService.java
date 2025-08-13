@@ -21,20 +21,18 @@ public class ForumPostService {
     private final UserRepository userRepository;
     private final ForumPostRepository forumPostRepository;
     private final ForumPostPictureRepository forumPostPictureRepository;
-    private final ForumCategoryRepository forumCategoryRepository;
     private final ForumTopicTypeRepository forumTopicTypeRepository;
     private final SavedPostRepository savedPostRepository;
     private final ForumPostReplyRepository forumPostReplyRepository;
 
     public ForumPostService(AccountUtils accountUtils, UserRepository userRepository, ForumPostRepository forumPostRepository,
-                            ForumPostPictureRepository forumPostPictureRepository, ForumCategoryRepository forumCategoryRepository,
+                            ForumPostPictureRepository forumPostPictureRepository,
                             ForumTopicTypeRepository forumTopicTypeRepository, SavedPostRepository savedPostRepository,
                             ForumPostReplyRepository forumPostReplyRepository) {
         this.accountUtils = accountUtils;
         this.userRepository = userRepository;
         this.forumPostRepository = forumPostRepository;
         this.forumPostPictureRepository = forumPostPictureRepository;
-        this.forumCategoryRepository = forumCategoryRepository;
         this.forumTopicTypeRepository = forumTopicTypeRepository;
         this.savedPostRepository = savedPostRepository;
         this.forumPostReplyRepository = forumPostReplyRepository;

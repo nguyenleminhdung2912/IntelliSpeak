@@ -25,13 +25,13 @@ public class Package {
     private Double price;
 
     @Column(name = "interview_count")
-    private int interviewCount;
+    private Integer interviewCount;
 
     @Column(name = "cv_analyze_count")
-    private int cvAnalyzeCount;
+    private Integer cvAnalyzeCount;
 
     @Column(name = "jd_analyze_count")
-    private int jdAnalyzeCount;
+    private Integer jdAnalyzeCount;
 
     @Column(name = "create_at")
     private LocalDateTime createAt;

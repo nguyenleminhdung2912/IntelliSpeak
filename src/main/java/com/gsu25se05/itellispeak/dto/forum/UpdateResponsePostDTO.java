@@ -1,6 +1,5 @@
 package com.gsu25se05.itellispeak.dto.forum;
 
-import com.gsu25se05.itellispeak.entity.ForumCategory;
 import com.gsu25se05.itellispeak.entity.ForumTopicType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

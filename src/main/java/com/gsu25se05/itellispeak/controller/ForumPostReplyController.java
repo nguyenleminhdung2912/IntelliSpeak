@@ -1,17 +1,11 @@
 package com.gsu25se05.itellispeak.controller;
 
 import com.gsu25se05.itellispeak.dto.Response;
-import com.gsu25se05.itellispeak.dto.category.CategoryRequest;
-import com.gsu25se05.itellispeak.dto.category.CategoryResponse;
-import com.gsu25se05.itellispeak.dto.forumtopic.UpdateForumTopicRequest;
-import com.gsu25se05.itellispeak.dto.forumtopic.UpdateForumTopicResponse;
 import com.gsu25se05.itellispeak.dto.reply.CreateReplyPostRequestDTO;
 import com.gsu25se05.itellispeak.dto.reply.CreateReplyPostResponseDTO;
 import com.gsu25se05.itellispeak.dto.reply.UpdateReplyPostRequestDTO;
 import com.gsu25se05.itellispeak.dto.reply.UpdateReplyPostResponseDTO;
-import com.gsu25se05.itellispeak.entity.ForumCategory;
 import com.gsu25se05.itellispeak.entity.ForumPostReply;
-import com.gsu25se05.itellispeak.entity.ForumTopicType;
 import com.gsu25se05.itellispeak.service.ForumPostReplyService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
