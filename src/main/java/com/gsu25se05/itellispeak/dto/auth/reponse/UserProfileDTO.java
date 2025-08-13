@@ -4,6 +4,8 @@ import com.gsu25se05.itellispeak.entity.User;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
 public class UserProfileDTO {
@@ -20,4 +22,5 @@ public class UserProfileDTO {
     private String linkedin;
     private String facebook;
     private String youtube;
+    private List<UserProfileStatisticDTO> statistic;
 }
