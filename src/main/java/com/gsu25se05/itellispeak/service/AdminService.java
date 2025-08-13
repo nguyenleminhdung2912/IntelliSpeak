@@ -1,18 +1,20 @@
 package com.gsu25se05.itellispeak.service;
 
+import com.gsu25se05.itellispeak.dto.admin.CreateUserDTO;
 import com.gsu25se05.itellispeak.dto.admin.UserWithPackageDTO;
 import com.gsu25se05.itellispeak.dto.auth.reponse.UserDTO;
 import com.gsu25se05.itellispeak.dto.hr.HRAdminResponseDTO;
 import com.gsu25se05.itellispeak.entity.HR;
 import com.gsu25se05.itellispeak.entity.HRStatus;
+import com.gsu25se05.itellispeak.entity.Package;
 import com.gsu25se05.itellispeak.entity.User;
+import com.gsu25se05.itellispeak.entity.UserUsage;
 import com.gsu25se05.itellispeak.exception.ErrorCode;
 import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
-import com.gsu25se05.itellispeak.repository.HRRepository;
-import com.gsu25se05.itellispeak.repository.PackageRepository;
-import com.gsu25se05.itellispeak.repository.TransactionRepository;
-import com.gsu25se05.itellispeak.repository.UserRepository;
+import com.gsu25se05.itellispeak.repository.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.YearMonth;
@@ -27,13 +29,17 @@ public class AdminService {
     private final UserRepository userRepository;
     private final HRRepository hrRepository;
     private final PackageRepository packageRepository;
+    private final UserUsageRepository userUsageRepository;
+    private final PasswordEncoder passwordEncoder;
 
 
-    public AdminService(TransactionRepository transactionRepository, UserRepository userRepository, HRRepository hrRepository, PackageRepository packageRepository) {
+    public AdminService(TransactionRepository transactionRepository, UserRepository userRepository, HRRepository hrRepository, PackageRepository packageRepository, UserUsageRepository userUsageRepository, PasswordEncoder passwordEncoder) {
         this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
         this.hrRepository = hrRepository;
         this.packageRepository = packageRepository;
+        this.userUsageRepository = userUsageRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public Double getMonthlyRevenue(int year, int month) {
@@ -170,7 +176,7 @@ public class AdminService {
         List<Map<String, Object>> result = new ArrayList<>();
 
         // Lấy tất cả gói
-        var packages = packageRepository.findAll();
+        var packages = packageRepository.findByIsDeletedFalse();
 
         for (var p : packages) {
             Map<String, Object> packageData = new HashMap<>();
@@ -194,6 +200,50 @@ public class AdminService {
         return result;
     }
 
+    @Transactional
+    public UserDTO createUser(CreateUserDTO dto) {
+        if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
+            throw new AuthAppException(ErrorCode.EMAIL_WAIT_VERIFY);
+        }
 
+        Package welcomePackage = packageRepository.findByPackageName("Welcome").orElse(null);
 
+        User user = User.builder()
+                .email(dto.getEmail())
+                .firstName(dto.getFirstName())
+                .lastName(dto.getLastName())
+                .password(passwordEncoder.encode(dto.getPassword()))
+                .role(dto.getRole())
+                .avatar("https://firebasestorage.googleapis.com/v0/b/mentor-booking-3d46a.appspot.com/o/76f15d2d-9f0b-4051-8177-812d5ee785a1.jpg?alt=media")
+                .isDeleted(false)
+                .status("VERIFIED")
+                .createAt(LocalDateTime.now())
+                .aPackage(welcomePackage)
+                .build();
+
+        User savedUser = userRepository.save(user);
+
+        UserUsage usage = UserUsage.builder()
+                .user(savedUser)
+                .cvAnalyzeUsed(0)
+                .jdAnalyzeUsed(0)
+                .interviewUsed(0)
+                .updateAt(LocalDateTime.now())
+                .build();
+        userUsageRepository.save(usage);
+
+        return UserDTO.builder()
+                .userId(savedUser.getUserId())
+                .firstName(savedUser.getFirstName())
+                .lastName(savedUser.getLastName())
+                .userName(savedUser.getEmail().split("@")[0])
+                .email(savedUser.getEmail())
+                .role(savedUser.getRole())
+                .avatar(savedUser.getAvatar())
+                .status(savedUser.getStatus())
+                .createAt(savedUser.getCreateAt())
+                .isDeleted(savedUser.getIsDeleted())
+                .packageId(welcomePackage.getPackageId())
+                .build();
+    }
 }

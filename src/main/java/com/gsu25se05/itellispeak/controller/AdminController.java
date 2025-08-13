@@ -87,5 +87,4 @@ public class AdminController {
         List<Map<String, Object>> revenue = adminService.getPackageSubscriptionStats(year);
         return ResponseEntity.ok(new Response<>(200, "Package subscription stats", revenue));
     }
-
 }
