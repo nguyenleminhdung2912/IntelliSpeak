@@ -222,6 +222,14 @@
             <version>10.4.1</version> <!-- Sử dụng phiên bản mới nhất, kiểm tra trên Maven Central -->
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
+            <version>1.10.0</version>
+        </dependency>
+
+
+
 
     </dependencies>
     <build>
