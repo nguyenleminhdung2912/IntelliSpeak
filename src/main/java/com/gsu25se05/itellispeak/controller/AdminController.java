@@ -1,6 +1,7 @@
 package com.gsu25se05.itellispeak.controller;
 
 import com.gsu25se05.itellispeak.dto.Response;
+import com.gsu25se05.itellispeak.dto.admin.CreateUserDTO;
 import com.gsu25se05.itellispeak.dto.admin.UserWithPackageDTO;
 import com.gsu25se05.itellispeak.dto.auth.reponse.UserDTO;
 import com.gsu25se05.itellispeak.dto.hr.HRAdminResponseDTO;
@@ -86,5 +87,12 @@ public class AdminController {
     ) {
         List<Map<String, Object>> revenue = adminService.getPackageSubscriptionStats(year);
         return ResponseEntity.ok(new Response<>(200, "Package subscription stats", revenue));
+    }
+
+    @Operation(summary = "Admin tạo người dùng")
+    @PostMapping("/create-user")
+    public ResponseEntity<Response<UserDTO>> createUser(@RequestBody CreateUserDTO dto) {
+        UserDTO data = adminService.createUser(dto);
+        return ResponseEntity.ok(new Response<>(200, "User created successfully", data));
     }
 }
