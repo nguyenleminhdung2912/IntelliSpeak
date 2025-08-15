@@ -2,15 +2,15 @@ package com.gsu25se05.itellispeak.dto.question;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.gsu25se05.itellispeak.entity.Tag;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.Set;
 
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class QuestionDTO {
     private Long questionId;

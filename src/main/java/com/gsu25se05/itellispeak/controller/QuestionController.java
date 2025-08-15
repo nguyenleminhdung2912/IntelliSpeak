@@ -1,12 +1,15 @@
 package com.gsu25se05.itellispeak.controller;
 
+import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.question.QuestionDTO;
 import com.gsu25se05.itellispeak.entity.Question;
 import com.gsu25se05.itellispeak.service.QuestionService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -41,5 +44,11 @@ public class QuestionController {
     public ResponseEntity<?> getMyQuestions() {
         return ResponseEntity.ok(questionService.getByCurrentUser());
     }
+
+    @PostMapping("/import-csv")
+    public Response<List<QuestionDTO>> importQuestionsFromCsv(@RequestParam("file") MultipartFile file) {
+        return questionService.importFromCsv(file);
+    }
+
 
 }
