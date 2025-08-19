@@ -118,8 +118,7 @@ public class AuthService implements UserDetailsService {
 
     public Response<UserProfileDTO> getCurrentUserProfile() {
         User user = accountUtils.getCurrentAccount();
-        if (user == null) throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
-
+        if (user == null) throw new NotLoginException("Please log in to continue");
         // Fetch interview histories
         List<InterviewHistory> histories = interviewHistoryRepository.findByUser(user);
 
@@ -144,9 +143,12 @@ public class AuthService implements UserDetailsService {
                 .average()
                 .orElse(0.0);
 
-        String scoreEvaluate = avgScore >= 8 ? "Bạn đang làm rất tốt"
-                : avgScore >= 5 ? "Bạn cần cải thiện thêm"
-                : "Bạn nên luyện tập nhiều hơn";
+        String scoreEvaluate = avgScore >= 8
+                ? "You are doing very well"
+                : avgScore >= 5
+                ? "You need to improve more"
+                : "You should practice more";
+
 
         // Get all InterviewHistoryDetails for current user's histories
         List<InterviewHistoryDetail> allDetails = histories.stream()
@@ -168,11 +170,11 @@ public class AuthService implements UserDetailsService {
 
         // Count answered questions (answeredContent != "Không có câu trả lời")
         long currentWeekAnswered = currentWeekDetails.stream()
-                .filter(d -> d.getAnsweredContent() != null && !d.getAnsweredContent().equals("Không có câu trả lời"))
+                .filter(d -> d.getAnsweredContent() != null && !d.getAnsweredContent().equals("No answer"))
                 .count();
 
         long lastWeekAnswered = lastWeekDetails.stream()
-                .filter(d -> d.getAnsweredContent() != null && !d.getAnsweredContent().equals("Không có câu trả lời"))
+                .filter(d -> d.getAnsweredContent() != null && !d.getAnsweredContent().equals("No answer"))
                 .count();
 
         // Calculate percentage change
@@ -185,12 +187,18 @@ public class AuthService implements UserDetailsService {
         }
 
         UserProfileStatisticDTO statistic = UserProfileStatisticDTO.builder()
-                .interviewWeeklyCount(currentWeekCount + " buổi")
-                .comparedToLastWeek((currentWeekCount >= lastWeekCount ? "+" : "-") + Math.abs(currentWeekCount - lastWeekCount) + " buổi trong tuần")
+                .interviewWeeklyCount(currentWeekCount + " sessions")
+                .comparedToLastWeek(
+                        (currentWeekCount >= lastWeekCount ? "+" : "-")
+                                + Math.abs(currentWeekCount - lastWeekCount)
+                                + " sessions this week compared to last week"
+                )
                 .averageInterviewScore(String.format("%.1f/10", avgScore))
                 .scoreEvaluate(scoreEvaluate)
-                .answeredQuestionCount(currentWeekAnswered + " câu")
-                .answeredQuestionComparedToLastWeek(answeredQuestionCompared + " so với tuần trước")
+                .answeredQuestionCount(currentWeekAnswered + " questions")
+                .answeredQuestionComparedToLastWeek(
+                        answeredQuestionCompared + " compared to last week"
+                )
                 .build();
 
         String email = user.getEmail();
@@ -213,12 +221,12 @@ public class AuthService implements UserDetailsService {
                 .statistic(List.of(statistic))
                 .build();
 
-        return new Response<>(200, "Lấy thông tin hồ sơ thành công", profile);
+        return new Response<>(200, "Profile information retrieved successfully", profile);
     }
 
     public Response<UserDTO> updateProfile(UpdateProfileRequestDTO request) {
         User user = accountUtils.getCurrentAccount();
-        if (user == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
+        if (user == null) return new Response<>(401, "Please log in to continue", null);
 
         if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
         if (request.getLastName() != null) user.setLastName(request.getLastName());
@@ -236,7 +244,7 @@ public class AuthService implements UserDetailsService {
 
         UserDTO userDTO = convertToUserDTO(user);
 
-        return new Response<>(200, "Cập nhật hồ sơ thành công", userDTO);
+        return new Response<>(200, "Profile updated successfully", userDTO);
 
     }
 
@@ -328,7 +336,7 @@ public class AuthService implements UserDetailsService {
 
             LoginResponseDTO loginResponseDTO = new LoginResponseDTO();
             loginResponseDTO.setCode(200);
-            loginResponseDTO.setMessage("Đăng nhập thành công");
+            loginResponseDTO.setMessage("Login successful");
             loginResponseDTO.setToken(token);
             loginResponseDTO.setRefreshToken(refreshToken);
             loginResponseDTO.setUser(userDTO);
@@ -379,14 +387,14 @@ public class AuthService implements UserDetailsService {
 
             userUsageRepository.save(usage);
 
-            String responseMessage = "Đăng ký thành công, vui lòng kiểm tra email để xác minh";
+            String responseMessage = "Registration successful, please check your email to verify";
             RegisterResponseDTO response = new RegisterResponseDTO(responseMessage, null, 201, registerRequestDTO.getEmail());
 
             //Send email here
             EmailDetail emailDetail = EmailDetail.builder()
                     .recipient(account.getEmail())
-                    .msgBody("Vui lòng xác minh tài khoản của bạn để tiếp tục.")
-                    .subject("Vui lòng xác minh tài khoản của bạn!")
+                    .msgBody("Please verify your account to continue.")
+                    .subject("Please verify your account!")
                     .name(account.getUsername())
                     .build();
             emailService.sendVerifyEmail(emailDetail);
@@ -416,7 +424,7 @@ public class AuthService implements UserDetailsService {
             userRepository.save(account);
             return true;
         } catch (Exception e) {
-            throw new TokenExpiredException("Token không hợp lệ hoặc đã hết hạn!", Instant.now());
+            throw new TokenExpiredException("Token is invalid or has expired!", Instant.now());
         }
     }
 
@@ -439,12 +447,13 @@ public class AuthService implements UserDetailsService {
             //SEND MAIL
             EmailDetail emailDetail = EmailDetail.builder()
                     .recipient(account.getEmail())
-                    .msgBody("Chào bạn " + account.getLastName() + ",\n\n" +
-                            "Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn. Để hoàn tất quá trình, vui lòng nhấn vào liên kết dưới đây:\n\n" +
-                            "<a href=\"https://circuit-project.vercel.app/forgotPassword?" + token + "\">Đặt lại mật khẩu</a>\n\n" +
-                            "Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này hoặc liên hệ bộ phận hỗ trợ nếu có bất kỳ thắc mắc nào.\n\n" +
-                            "Trân trọng,\nĐội ngũ hỗ trợ")
-                    .subject("Yêu cầu đặt lại mật khẩu - Hành động cần thiết")
+                    .msgBody("Hello " + account.getLastName() + ",\n\n" +
+                            "We have received a request to reset the password for your account. To complete the process, please click the link below:\n\n" +
+                            "<a href=\"https://circuit-project.vercel.app/forgotPassword?" + token + "\">Reset Password</a>\n\n" +
+                            "If you did not request a password reset, please ignore this email or contact our support team if you have any questions.\n\n" +
+                            "Best regards,\nSupport Team")
+                    .subject("Password Reset Request - Action Required")
+
 
                     .name(account.getLastName())
                     .build();
@@ -452,7 +461,7 @@ public class AuthService implements UserDetailsService {
 
             userRepository.save(account);
             ForgotPasswordResponse forgotPasswordResponse = new ForgotPasswordResponse(
-                    "Tạo mã đặt lại mật khẩu thành công. Vui lòng kiểm tra email của bạn.",
+                    "Password reset code created successfully. Please check your email.",
                     null,
                     200
             );
@@ -460,7 +469,8 @@ public class AuthService implements UserDetailsService {
             return new ResponseEntity<>(forgotPasswordResponse, HttpStatus.OK);
         } catch (AuthAppException e) {
             ErrorCode errorCode = e.getErrorCode();
-            ForgotPasswordResponse forgotPasswordResponse = new ForgotPasswordResponse("Đặt lại mật khẩu thất bại", e.getMessage(), errorCode.getCode());
+            ForgotPasswordResponse forgotPasswordResponse =
+                    new ForgotPasswordResponse("Password reset failed", e.getMessage(), errorCode.getCode());
             return new ResponseEntity<>(forgotPasswordResponse, errorCode.getHttpStatus());
         }
     }
@@ -485,7 +495,7 @@ public class AuthService implements UserDetailsService {
             }
 
             ResetPasswordResponse resetPasswordResponse = new ResetPasswordResponse(
-                    "Đặt lại mật khẩu thành công.",
+                    "Password reset successful.",
                     null,
                     200
             );
@@ -493,7 +503,8 @@ public class AuthService implements UserDetailsService {
             return new ResponseEntity<>(resetPasswordResponse, HttpStatus.CREATED);
         } catch (AuthAppException e) {
             ErrorCode errorCode = e.getErrorCode();
-            ResetPasswordResponse resetPasswordResponse = new ResetPasswordResponse("Đặt lại mật khẩu thất bại", e.getMessage(), errorCode.getCode());
+            ResetPasswordResponse resetPasswordResponse =
+                    new ResetPasswordResponse("Password reset failed", e.getMessage(), errorCode.getCode());
             return new ResponseEntity<>(resetPasswordResponse, errorCode.getHttpStatus());
         }
 
@@ -501,7 +512,8 @@ public class AuthService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByEmail(username).orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng"));
+        return userRepository.findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
 }

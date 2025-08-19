@@ -14,15 +14,16 @@ public class FileUtils {
     public static String extractTextFromCV(MultipartFile file) throws Exception {
         String filename = file.getOriginalFilename();
         if (filename == null) {
-            throw new IllegalArgumentException("Tên file không hợp lệ.");
+            throw new IllegalArgumentException("Invalid file name.");
         }
 
-        if (filename.toLowerCase().endsWith(".pdf")) {
+        String lower = filename.toLowerCase();
+        if (lower.endsWith(".pdf")) {
             return extractTextFromPdf(file.getInputStream());
-        } else if (filename.toLowerCase().endsWith(".docx")) {
+        } else if (lower.endsWith(".docx")) {
             return extractTextFromDocx(file.getInputStream());
         } else {
-            throw new IllegalArgumentException("Chỉ hỗ trợ file PDF hoặc DOCX.");
+            throw new IllegalArgumentException("Only PDF or DOCX files are supported.");
         }
     }
 

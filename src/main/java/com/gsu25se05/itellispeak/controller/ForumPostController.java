@@ -1,6 +1,5 @@
 package com.gsu25se05.itellispeak.controller;
 
-
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.forum.*;
 import com.gsu25se05.itellispeak.entity.*;
@@ -58,7 +57,6 @@ public class ForumPostController {
         );
     }
 
-
     @GetMapping()
     public ResponseEntity<Response<List<CreateResponseForumDTO>>> getAllForumPosts() {
         List<ForumPost> posts = forumPostRepository.findByIsDeletedFalse();
@@ -68,11 +66,10 @@ public class ForumPostController {
         return ResponseEntity.ok(new Response<>(200, "Success", response));
     }
 
-
     @GetMapping("/{id}")
     public ResponseEntity<Response<CreateResponseForumDTO>> getForumPostById(@PathVariable Long id) {
         ForumPost post = forumPostRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy bài viết với ID: " + id));
+                .orElseThrow(() -> new NotFoundException("No post found with ID: " + id));
         return ResponseEntity.ok(new Response<>(200, "Success", mapToDTO(post)));
     }
 
@@ -80,7 +77,6 @@ public class ForumPostController {
     public ResponseEntity<Response<List<CreateResponseForumDTO>>> getMyPosts() {
         return ResponseEntity.ok(forumPostService.getMyPosts());
     }
-
 
     @PostMapping
     public Response<CreateResponseForumDTO> createForumPost(@Valid @RequestBody CreateRequestForumPostDTO forumPostDTO) {
@@ -107,7 +103,7 @@ public class ForumPostController {
         return ResponseEntity.status(response.getCode()).body(response);
     }
 
-    @Operation(summary = "Sắp xếp bài viết có lượt comment từ cao xuống thấp")
+    @Operation(summary = "Sort posts by the highest number of comments")
     @GetMapping("/top-replied")
     public ResponseEntity<Response<List<ForumPost>>> getTopRepliedPosts(
             @RequestParam(defaultValue = "5") int limit) {
@@ -123,11 +119,11 @@ public class ForumPostController {
         User user = accountUtils.getCurrentAccount();
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null));
+                    .body(new Response<>(401, "Please login to continue", null));
         }
 
         ForumPost post = forumPostRepository.findById(postId)
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy bài viết"));
+                .orElseThrow(() -> new NotFoundException("No post found"));
 
         if (post.getLikeCount() == null) post.setLikeCount(0);
 
@@ -139,7 +135,7 @@ public class ForumPostController {
 
         forumPostRepository.save(post);
 
-        return ResponseEntity.ok(new Response<>(200, "Cập nhật like thành công", "Tổng số like: " + post.getLikeCount()));
+        return ResponseEntity.ok(new Response<>(200, "Like updated successfully", "Total likes: " + post.getLikeCount()));
     }
 
     @GetMapping("/{postId}/replies")

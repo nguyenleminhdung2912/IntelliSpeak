@@ -37,12 +37,12 @@ public class ForumPostReplyService {
 
     public ForumPostReply getReplyById(Long id) {
         return forumPostReplyRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy phản hồi với ID: " + id));
+                .orElseThrow(() -> new NotFoundException("Feedback not found with ID: " + id));
     }
 
     public Response<CreateReplyPostResponseDTO> createReply(@Valid CreateReplyPostRequestDTO replyRequestDTO) {
         User account = accountUtils.getCurrentAccount();
-        if (account == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
+        if (account == null) return new Response<>(401, "Please log in to continue", null);
 
 
         ForumPostReply forumPostReply = new ForumPostReply();
@@ -50,7 +50,7 @@ public class ForumPostReplyService {
         forumPostReply.setContent(replyRequestDTO.getContent());
         forumPostReply.setUser(account);
         ForumPost post = forumPostRepository.findById(replyRequestDTO.getPostId())
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy bài viết"));
+                .orElseThrow(() -> new NotFoundException("Post not found"));
         forumPostReply.setForumPost(post);
         forumPostReply.setCreateAt(LocalDateTime.now());
         forumPostReply.setIsDeleted(false);
@@ -58,7 +58,7 @@ public class ForumPostReplyService {
         try {
             forumPostReplyRepository.save(forumPostReply);
         } catch (Exception e) {
-            throw new CreateServiceException("Đã xảy ra lỗi khi tạo phản hồi bài viết, vui lòng thử lại...");
+            throw new CreateServiceException("An error occurred while creating the post reply, please try again...");
         }
 
         CreateReplyPostResponseDTO replyResponseDTO = new CreateReplyPostResponseDTO(
@@ -69,19 +69,19 @@ public class ForumPostReplyService {
                 forumPostReply.getCreateAt()
         );
 
-        return new Response<>(200, "Tạo phản hồi thành công!", replyResponseDTO);
+        return new Response<>(200, "Reply created successfully!", replyResponseDTO);
     }
 
     public Response<UpdateReplyPostResponseDTO> updateReply (Long id, @Valid UpdateReplyPostRequestDTO replyRequestDTO ) {
         User account = accountUtils.getCurrentAccount();
-        if (account == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
+        if (account == null) return new Response<>(401, "Please log in to continue", null);
 
         ForumPostReply reply = forumPostReplyRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Không tìm thấy phản hồi với ID: " + id));
+                .orElseThrow(() -> new NotFoundException("Reply not found with ID: " + id));
 
 
         if (!reply.getUser().equals(account)) {
-            return new Response<>(403, "Bạn không có quyền cập nhật phản hồi này", null);
+            return new Response<>(403, "You do not have permission to update this reply", null);
         }
 
         if (replyRequestDTO.getTitle() != null && !replyRequestDTO.getTitle().trim().isEmpty()) {
@@ -97,7 +97,7 @@ public class ForumPostReplyService {
         try {
             forumPostReplyRepository.save(reply);
         } catch (Exception e) {
-            throw new CreateServiceException("Đã xảy ra lỗi khi cập nhật bài phản hồi, vui lòng thử lại...");
+            throw new CreateServiceException("An error occurred while updating the reply, please try again...");
         }
 
         UpdateReplyPostResponseDTO replyResponseDTO = new UpdateReplyPostResponseDTO(
@@ -108,7 +108,7 @@ public class ForumPostReplyService {
                 reply.getUpdateAt()
         );
 
-        return new Response<>(200, "Cập nhật phản hồi thành công!", replyResponseDTO);
+        return new Response<>(200, "Reply updated successfully!", replyResponseDTO);
 
     }
 
@@ -116,18 +116,18 @@ public class ForumPostReplyService {
 
     public Response<String> deleteReply(Long id) {
         User account = accountUtils.getCurrentAccount();
-        if (account == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
+        if (account == null) return new Response<>(401, "Please log in to continue", null);
 
         ForumPostReply reply = getReplyById(id);
-        if (reply == null) return new Response<>(404, "Không tìm thấy phản hồi bài viết", null);
+        if (reply == null) return new Response<>(404, "Reply not found", null);
 
-        if (reply.getIsDeleted()) return new Response<>(400, "Phản hồi bài viết đã bị xóa trước đó", null);
+        if (reply.getIsDeleted()) return new Response<>(400, "Reply has already been deleted", null);
 
         reply.setIsDeleted(true);
         reply.setUpdateAt(LocalDateTime.now());
         forumPostReplyRepository.save(reply);
 
-        return new Response<>(200, "Xóa phản hồi bài viết thành công", "Phản hồi có ID " + id + " đã được xóa mềm.");
+        return new Response<>(200, "Reply deleted successfully", "Reply with ID " + id + " has been soft deleted.");
     }
 
 

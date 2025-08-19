@@ -60,7 +60,7 @@ public class InterviewSessionService {
 
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) {
-            throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
+            throw new NotLoginException("Please log in to continue");
         }
         Set<Question> questions = new HashSet<>();
         if (dto.getQuestionIds() != null && !dto.getQuestionIds().isEmpty()) {
@@ -113,11 +113,11 @@ public class InterviewSessionService {
     public List<InterviewSession> getAllSessionsCreatedByHR() {
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) {
-            throw new IllegalStateException("Vui lòng đăng nhập để tiếp tục");
+            throw new IllegalStateException("Please log in to continue");
         }
 
         if (currentUser.getRole() != User.Role.HR && currentUser.getRole() != User.Role.ADMIN) {
-            throw new SecurityException("Chỉ HR hoặc ADMIN mới có quyền xem các phiên phỏng vấn do mình tạo");
+            throw new SecurityException("Only HR or ADMIN are allowed to view the interview sessions they created");
         }
 
         return interviewSessionRepository.findByCreatedBy(currentUser);
@@ -126,17 +126,17 @@ public class InterviewSessionService {
     public InterviewSession getSessionCreatedByHR(Long id) {
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) {
-            throw new IllegalStateException("Vui lòng đăng nhập để tiếp tục");
+            throw new IllegalStateException("Please log in to continue");
         }
 
         if (currentUser.getRole() != User.Role.HR && currentUser.getRole() != User.Role.ADMIN) {
-            throw new SecurityException("Chỉ HR hoặc ADMIN mới có quyền xem phiên phỏng vấn do mình tạo");
+            throw new SecurityException("Only HR or ADMIN are allowed to view the interview sessions they created");
         }
 
         return interviewSessionRepository.findById(id)
                 .filter(s -> s.getCreatedBy() != null && s.getCreatedBy().equals(currentUser))
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Không tìm thấy Session với ID: " + id + " hoặc không thuộc quyền sở hữu"));
+                        "Session with ID: " + id + " not found or not owned by the current user"));
     }
 
 
@@ -145,7 +145,7 @@ public class InterviewSessionService {
 
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) {
-            throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
+            throw new NotLoginException("Please log in to continue");
         }
 
         if (currentUser.getUserUsage().getInterviewUsed() >= currentUser.getAPackage().getInterviewCount()) {
@@ -182,8 +182,8 @@ public class InterviewSessionService {
 
         // Tạo InterviewSession tạm thời
         InterviewSession tempSession = new InterviewSession();
-        tempSession.setTitle("Buổi phỏng vấn ngẫu nhiên");
-        tempSession.setDescription("Tạo tự động từ người dùng");
+        tempSession.setTitle("Random Interview Session");
+        tempSession.setDescription("Automatically generated from user");
         tempSession.setTotalQuestion(total);
         tempSession.setDifficulty(Difficulty.MEDIUM); // Có thể điều chỉnh logic
         tempSession.setDurationEstimate(Duration.ofMinutes(total * 5L)); // Ước tính 5 phút/câu
@@ -290,11 +290,11 @@ public class InterviewSessionService {
             try {
                 interviewSessionRepository.save(existingInterviewSession);
             } catch (Exception e) {
-                return "Có lỗi rồi bé ơi";
+                return "An error has occurred";
             }
-            return "Lưu thumbnail thành công rồi nha";
+            return "Thumbnail saved successfully";
         }
-        return "Không tìm thấy InterviewSession";
+        return "InterviewSession not found";
     }
 
     @Transactional(readOnly = true)
@@ -302,7 +302,7 @@ public class InterviewSessionService {
 
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) {
-            throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
+            throw new NotLoginException("Please log in to continue");
         }
 
         if (currentUser.getUserUsage().getInterviewUsed() >= currentUser.getAPackage().getInterviewCount()) {
@@ -353,7 +353,7 @@ public class InterviewSessionService {
     public List<EvaluationBatchResponseDto> getAllRandomGeneratedQuestionsSession() {
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) {
-            throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
+            throw new NotLoginException("Please log in to continue");
         }
 
         List<InterviewSession> interviewSessionList = interviewSessionRepository.findByCreatedBy(currentUser);
@@ -367,7 +367,7 @@ public class InterviewSessionService {
 
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) {
-            throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
+            throw new NotLoginException("Please log in to continue");
         }
         Set<Question> questions = new HashSet<>();
         if (dto.getQuestionIds() != null && !dto.getQuestionIds().isEmpty()) {

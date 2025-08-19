@@ -54,7 +54,7 @@ public class CVController {
 
             Response<List<GetAllCvDTO>> response = Response.<List<GetAllCvDTO>>builder()
                     .code(200)
-                    .message("Danh sách CV đã được lấy thành công")
+                    .message("List of CVs successfully retrieved!")
                     .data(result.getData())
                     .build();
 

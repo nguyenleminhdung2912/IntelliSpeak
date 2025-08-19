@@ -30,7 +30,7 @@ public class InterviewHistoryService {
     public List<EvaluationBatchResponseDto> getAllInterviewHistories() {
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) {
-            throw new IllegalStateException("Vui lòng đăng nhập để tiếp tục");
+            throw new IllegalStateException("Please log in to continue");
         }
 
         List<InterviewHistory> histories = interviewHistoryRepository.findByUser(currentUser);
@@ -42,12 +42,14 @@ public class InterviewHistoryService {
     public EvaluationBatchResponseDto getInterviewHistoryById(Long id) {
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) {
-            throw new IllegalStateException("Vui lòng đăng nhập để tiếp tục");
+            throw new IllegalStateException("Please log in to continue");
         }
 
         InterviewHistory history = interviewHistoryRepository.findById(id)
                 .filter(h -> h.getUser().equals(currentUser))
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy InterviewHistory với ID: " + id + " hoặc không thuộc về người dùng hiện tại"));
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "InterviewHistory not found with ID: " + id + " or does not belong to the current user"
+                ));
 
         return interviewHistoryMapper.toEvaluationBatchResponseDto(history);
     }
