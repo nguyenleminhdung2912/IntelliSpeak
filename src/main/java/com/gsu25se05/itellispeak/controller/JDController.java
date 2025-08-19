@@ -34,7 +34,7 @@ public class JDController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Lỗi hệ thống: " + e.getMessage()));
+                    .body(Map.of("error", "System error: " + e.getMessage()));
         }
     }
 
@@ -55,7 +55,7 @@ public class JDController {
 
             Response<List<GetAllJdDTO>> response = Response.<List<GetAllJdDTO>>builder()
                     .code(200)
-                    .message("Danh sách CV đã được lấy thành công")
+                    .message("The CV list has been retrieved successfully.")
                     .data(result.getData())
                     .build();
 

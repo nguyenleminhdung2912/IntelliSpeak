@@ -59,7 +59,7 @@ public class JDService {
     public JD analyzeAndSaveJD(MultipartFile file) throws Exception {
         User user = accountUtils.getCurrentAccount();
         if (user == null) {
-            throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
+            throw new NotLoginException("Please log in to continue");
         }
 
         if (user.getUserUsage().getJdAnalyzeUsed() >= user.getAPackage().getJdAnalyzeCount()) {
@@ -68,92 +68,111 @@ public class JDService {
 
         String text = FileUtils.extractTextFromCV(file);
 
-        String prompt;
-
-        if (text != null && !text.isEmpty()) {
-            prompt = String.format("""
-                    Hãy phân tích nội dung mô tả công việc dưới đây và trả kết quả dưới dạng JSON hợp lệ (chỉ JSON, không Markdown, không giải thích). Hãy chắc chắn rằng mọi thứ là tiếng Việt:
-                    
-                    {
-                      "jobTitle": "",
-                      "summary": "",
-                      "mustHaveSkills": "",
-                      "niceToHaveSkills": "",
-                      "suitableLevel": "",
-                      "recommendedLearning": "",
-                      "questions": [
-                        {
-                          "question": "",
-                          "suitableAnswer1": "",
-                          "suitableAnswer2": "",
-                          "skillNeeded": "",
-                          "difficultyLevel": "",  // dễ / khó / siêu khó
-                          "questionType": ""       // technical / behavior / logic...
-                        }
-                      ]
-                    }
-                    Nội dung JD: %s
-                    """, text);
-        } else {
-            throw new IllegalArgumentException("Phải nhập link hoặc nội dung JD");
+        if (text == null || text.isEmpty()) {
+            throw new IllegalArgumentException("A JD link or JD content is required");
         }
+
+        // IT-only prompt: yêu cầu phân loại trước, chỉ phân tích nếu là IT
+        String prompt = String.format("""
+            You are an expert in analyzing Job Descriptions (JDs) for the **IT/technology domain only**.
+
+            Your tasks:
+            1) Detect whether the JD belongs to IT (e.g., Software Engineer, Backend/Frontend/Full-stack, Mobile, DevOps/SRE, Cloud, Data/ML/AI, QA/Automation, Security, System/Network, Product/BA/PO in tech, Tech Lead/Architect, etc.).
+            2) If and only if the JD is IT-related, analyze it and return fields as specified below.
+
+            Output rules:
+            - Return **one valid JSON object only** (no Markdown, no explanations).
+            - If NON-IT, return:
+              {
+                "supported": false,
+                "detectedDomain": "<short domain>",
+                "message": "This service only supports IT job descriptions."
+              }
+            - If IT, return the fields at TOP LEVEL (plus supported/detectedDomain):
+              {
+                "supported": true,
+                "detectedDomain": "IT",
+                "jobTitle": "",
+                "summary": "",
+                "mustHaveSkills": "",
+                "niceToHaveSkills": "",
+                "suitableLevel": "",
+                "recommendedLearning": "",
+                "questions": [
+                  {
+                    "question": "",
+                    "suitableAnswer1": "",
+                    "suitableAnswer2": "",
+                    "skillNeeded": "",
+                    "difficultyLevel": "",   // easy / hard / very hard
+                    "questionType": ""       // technical / behavioral / logic / other
+                  }
+                ]
+              }
+
+            JD content:
+            %s
+            """, text);
 
         String responseText = callGemini(prompt);
 
-        // Giả định AI trả về JSON dạng string
-        JsonNode jsonNode;
+        // Parse AI JSON safely
+        JsonNode root;
         try {
-            // ✅ Làm sạch kết quả có thể có ```json hoặc ``` bao quanh
             String cleanedJson = responseText
                     .replaceAll("(?i)```json", "")
                     .replaceAll("(?i)```", "")
                     .trim();
-
-            jsonNode = objectMapper.readTree(cleanedJson);
+            root = objectMapper.readTree(cleanedJson);
         } catch (JsonProcessingException e) {
-            throw new IllegalArgumentException("AI trả về kết quả không hợp lệ JSON:\n" + responseText);
+            throw new IllegalArgumentException("AI returned an invalid JSON response:\n" + responseText);
         }
 
+        // Gate: chỉ cho phép IT
+        boolean supported = root.path("supported").asBoolean(false);
+        if (!supported) {
+            String detected = root.path("detectedDomain").asText("unknown");
+            String msg = root.path("message").asText("This service only supports IT job descriptions.");
+            throw new IllegalArgumentException(msg + " Detected domain: " + detected + ".");
+        }
+
+        // Từ đây chắc chắn là IT và có các field top-level
         JD jd = new JD();
 
-        //Save image to cloudinary
+        // Save images to Cloudinary
         String baseName = file.getOriginalFilename()
                 .replaceAll(".pdf", "")
                 .replaceAll("\\s+", "_");
 
-        // Convert PDF -> MultipartFile image(s) in memory
         List<MultipartFile> imageFiles = PdfToImageConverter.convertPdfToMultipartImages(file.getInputStream(), baseName);
 
-        // Upload lên Cloudinary
         StringBuilder imageUrls = new StringBuilder();
-
         for (MultipartFile img : imageFiles) {
             String url = cloudinaryUtils.uploadImage(img);
-            if (!imageUrls.isEmpty()) {
-                imageUrls.append(";");
-            }
+            if (!imageUrls.isEmpty()) imageUrls.append(";");
             imageUrls.append(url);
         }
 
         jd.setUser(user);
         jd.setLinkToJd(imageUrls.toString());
-        jd.setJobTitle(getJsonText(jsonNode, "jobTitle"));
-        jd.setSummary(getJsonText(jsonNode, "summary"));
-        jd.setMustHaveSkills(getJsonText(jsonNode, "mustHaveSkills"));
-        jd.setNiceToHaveSkills(getJsonText(jsonNode, "niceToHaveSkills"));
-        jd.setSuitableLevel(getJsonText(jsonNode, "suitableLevel"));
-        jd.setRecommendedLearning(getJsonText(jsonNode, "recommendedLearning"));
+        jd.setJobTitle(getJsonText(root, "jobTitle"));
+        jd.setSummary(getJsonText(root, "summary"));
+        jd.setMustHaveSkills(getJsonText(root, "mustHaveSkills"));
+        jd.setNiceToHaveSkills(getJsonText(root, "niceToHaveSkills"));
+        jd.setSuitableLevel(getJsonText(root, "suitableLevel"));
+        jd.setRecommendedLearning(getJsonText(root, "recommendedLearning"));
         jd.setCreateAt(LocalDateTime.now());
         jd.setUpdateAt(LocalDateTime.now());
         jd.setDeleted(false);
 
         JD savedJD = jdRepository.save(jd);
 
-        if (jsonNode.has("questions") && jsonNode.get("questions").isArray()) {
-            ArrayNode questions = (ArrayNode) jsonNode.get("questions");
-            for (JsonNode q : questions) {
+        // Questions (nếu có)
+        JsonNode qs = root.path("questions");
+        if (qs.isArray()) {
+            for (JsonNode q : qs) {
                 JDEvaluate evaluate = new JDEvaluate();
-                evaluate.setJd(savedJD); // dùng JD đã được lưu
+                evaluate.setJd(savedJD);
                 evaluate.setQuestion(getJsonText(q, "question"));
                 evaluate.setSuitableAnswer1(getJsonText(q, "suitableAnswer1"));
                 evaluate.setSuitableAnswer2(getJsonText(q, "suitableAnswer2"));
@@ -163,15 +182,18 @@ public class JDService {
                 evaluate.setCreateAt(LocalDateTime.now());
                 evaluate.setUpdateAt(LocalDateTime.now());
 
-                jdEvaluateRepository.save(evaluate); // giờ thì không lỗi nữa
+                jdEvaluateRepository.save(evaluate);
             }
         }
 
+        // Chỉ trừ lượt khi thực sự phân tích IT & lưu thành công
         user.getUserUsage().setJdAnalyzeUsed(user.getUserUsage().getJdAnalyzeUsed() + 1);
         userRepository.save(user);
         userUsageRepository.save(user.getUserUsage());
+
         return savedJD;
     }
+
 
     private String getJsonText(JsonNode node, String field) {
         return node.has(field) ? node.get(field).asText() : "";
@@ -192,23 +214,23 @@ public class JDService {
                     .block();
 
             JsonNode json = objectMapper.readTree(response);
-            // Đường dẫn tùy API response, ví dụ:
-            return json.at("/candidates/0/content/parts/0/text").asText("Không có phản hồi từ AI.");
+            // Adjust the path according to Gemini response
+            return json.at("/candidates/0/content/parts/0/text").asText("No response from AI.");
         } catch (Exception e) {
             e.printStackTrace();
-            return "Đã xảy ra lỗi khi gọi Gemini API.";
+            return "Error occurred while calling Gemini API.";
         }
     }
 
     public JD getJDById(Long id) {
         return jdRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy JD với ID: " + id));
+                .orElseThrow(() -> new NotFoundException("JD not found with ID: " + id));
     }
 
     public Response<List<GetAllJdDTO>> getAllJDsByUser() {
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null)
-            return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
+            return new Response<>(401, "Please log in to continue", null);
 
         List<JD> jds = jdRepository.findByUserAndIsDeletedFalse(currentUser);
 
@@ -222,7 +244,7 @@ public class JDService {
                         .build())
                 .toList();
 
-        return new Response<>(200, "Lấy danh sách JD thành công", dtos);
+        return new Response<>(200, "JD list retrieved successfully", dtos);
     }
 
 }

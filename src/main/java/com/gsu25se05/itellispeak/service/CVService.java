@@ -76,7 +76,7 @@ public class CVService {
 
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) {
-            throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
+            throw new NotLoginException("Please log in to continue");
         }
 
         if (currentUser.getUserUsage().getCvAnalyzeUsed() >= currentUser.getAPackage().getCvAnalyzeCount()) {
@@ -113,15 +113,38 @@ public class CVService {
         String prompt = preparePrompt(cvText);
         String response = callGemini(prompt);
         String cleaned = cleanJson(response);
-        JsonNode root = objectMapper.readTree(cleaned);
 
-        JsonNode feedbackNode = root.get("feedback");
-        JsonNode infoNode = root.get("extractedInfo");
+        JsonNode root;
+        try {
+            root = objectMapper.readTree(cleaned);
+        } catch (Exception ex) {
+            // AI không trả JSON hợp lệ
+            return new Response<>(502, "Invalid AI response format", null);
+        }
 
-        // 1. Vô hiệu hoá các CV cũ
+        // 1) Bắt buộc có trường supported (theo prompt IT-only)
+        boolean supported = root.path("supported").asBoolean(false);
+        if (!supported) {
+            String detectedDomain = root.path("detectedDomain").asText("unknown");
+            String msg = root.path("message").asText("This service only supports IT resumes.");
+            return new Response<>(422, String.format("%s Detected domain: %s.", msg, detectedDomain), null);
+        }
+
+        // 2) Kiểm tra đủ cấu trúc trước khi dùng
+        JsonNode feedbackNode = root.path("feedback");
+        if (feedbackNode.isMissingNode()) {
+            return new Response<>(502, "AI response missing 'feedback' object", null);
+        }
+
+        JsonNode infoNode = root.path("extractedInfo");
+        if (infoNode.isMissingNode()) {
+            return new Response<>(502, "AI response missing 'extractedInfo' object", null);
+        }
+
+        // Deactivate old CVs
         memberCVRepository.deactivateOldCVsByUser(user);
 
-        // 2. Tạo mới CV mới và đánh dấu là active
+        // Create active CV
         MemberCV memberCV = new MemberCV();
         memberCV.setLinkToCv(imageURLs);
         memberCV.setUser(user);
@@ -133,136 +156,147 @@ public class CVService {
         memberCVRepository.save(memberCV);
 
         // Save CVEvaluate
+        int overallScore = feedbackNode.path("overallScore").asInt(0);
         CVEvaluate cvEvaluate = new CVEvaluate();
         cvEvaluate.setMemberCV(memberCV);
-        cvEvaluate.setOverallScore(feedbackNode.get("overallScore").asInt());
+        cvEvaluate.setOverallScore(overallScore);
         cvEvaluate.setCreateAt(LocalDateTime.now());
         cvEvaluate.setUpdateAt(LocalDateTime.now());
         cvEvaluate.setDeleted(false);
         cvEvaluateRepository.save(cvEvaluate);
 
-        // Save each feedback category and tips
+        // Save categories & tips (an toàn)
         List<String> categories = List.of("ATS", "toneAndStyle", "content", "structure", "skills");
         for (String cat : categories) {
-            JsonNode catNode = feedbackNode.get(cat);
+            JsonNode catNode = feedbackNode.path(cat);
+            if (catNode.isMissingNode()) continue;
+
             CVFeedbackCategory category = new CVFeedbackCategory();
             category.setCvEvaluate(cvEvaluate);
             category.setCategoryName(cat);
-            category.setScore(catNode.get("score").asInt());
+            category.setScore(catNode.path("score").asInt(0));
             categoryRepository.save(category);
 
-            for (JsonNode tipNode : catNode.get("tips")) {
-                CVFeedbackTip tip = new CVFeedbackTip();
-                tip.setFeedbackCategory(category);
-                String rawType = tipNode.get("type").asText();
-                TipType tipType = TipType.fromString(rawType);
+            JsonNode tipsNode = catNode.path("tips");
+            if (tipsNode.isArray()) {
+                for (JsonNode tipNode : tipsNode) {
+                    CVFeedbackTip tip = new CVFeedbackTip();
+                    tip.setFeedbackCategory(category);
 
-                if (tipType == null) {
-                    // Log cảnh báo để debug
-                    System.err.println("❌ Invalid tip type from AI: " + rawType);
-                    continue; // skip tip
+                    String rawType = tipNode.path("type").asText("");
+                    TipType tipType = TipType.fromString(rawType);
+                    if (tipType == null) {
+                        System.err.println("❌ Invalid tip type from AI: " + rawType);
+                        continue;
+                    }
+
+                    tip.setType(tipType);
+                    tip.setTip(tipNode.path("tip").asText(""));
+                    tip.setExplanation(tipNode.path("explanation").asText(null));
+                    tipRepository.save(tip);
                 }
-
-                tip.setType(tipType);
-                tip.setTip(tipNode.get("tip").asText());
-                tip.setExplanation(tipNode.has("explanation") ? tipNode.get("explanation").asText() : null);
-                tipRepository.save(tip);
             }
         }
 
         // Save extracted info
         CVExtractedInfo extracted = new CVExtractedInfo();
         extracted.setMemberCV(memberCV);
-        extracted.setFullName(infoNode.get("fullName").asText());
-        extracted.setEmail(infoNode.get("email").asText());
-        extracted.setPhone(infoNode.get("phone").asText());
-        extracted.setTotalYearsExperience(infoNode.get("totalYearsExperience").asInt());
-        extracted.setEducationLevel(infoNode.get("educationLevel").asText());
-        extracted.setUniversity(infoNode.get("university").asText());
-        extracted.setSkills(objectMapper.writeValueAsString(infoNode.get("skills")));
-        extracted.setCertifications(infoNode.get("certifications").asText());
-        extracted.setCareerGoals(infoNode.get("careerGoals").asText());
-        extracted.setWorkExperience(infoNode.get("workExperience").asText());
+        extracted.setFullName(infoNode.path("fullName").asText(""));
+        extracted.setEmail(infoNode.path("email").asText(""));
+        extracted.setPhone(infoNode.path("phone").asText(""));
+        extracted.setTotalYearsExperience(infoNode.path("totalYearsExperience").asInt(0));
+        extracted.setEducationLevel(infoNode.path("educationLevel").asText(""));
+        extracted.setUniversity(infoNode.path("university").asText(""));
+        extracted.setSkills(objectMapper.writeValueAsString(infoNode.path("skills").isMissingNode() ? List.of() : infoNode.path("skills")));
+        extracted.setCertifications(infoNode.path("certifications").asText(""));
+        extracted.setCareerGoals(infoNode.path("careerGoals").asText(""));
+        extracted.setWorkExperience(infoNode.path("workExperience").asText(""));
         extracted.setCreateAt(LocalDateTime.now());
         extracted.setUpdateAt(LocalDateTime.now());
 
-        List<CVFeedbackCategory> returnCvEvaluate1 = getCV(cvEvaluate.getId()).getData().getCategories();
-        System.out.println("Thông tin categories 2");
-        for (CVFeedbackCategory category : returnCvEvaluate1)
-        {
-            System.out.println(category);
-        }
-
-        CVAnalysisResponseDTO dto = new CVAnalysisResponseDTO(getCV(cvEvaluate.getId()).getData(), cvExtractedInfoRepository.save(extracted));
+        CVAnalysisResponseDTO dto = new CVAnalysisResponseDTO(
+                getCV(cvEvaluate.getId()).getData(),
+                cvExtractedInfoRepository.save(extracted)
+        );
 
         user.getUserUsage().setCvAnalyzeUsed(user.getUserUsage().getCvAnalyzeUsed() + 1);
         userRepository.save(user);
         userUsageRepository.save(user.getUserUsage());
 
-        return new Response<>(200, "Phân tích thành công", dto);
+        return new Response<>(200, "Analysis successful", dto);
     }
+
 
     private String preparePrompt(String cvText) {
         return String.format("""
-                Bạn là một chuyên gia về hệ thống ATS (Applicant Tracking System) và phân tích CV.
-                Hãy đánh giá và cho điểm CV sau, đồng thời đưa ra gợi ý để cải thiện.
-                Hãy đánh giá chi tiết, trung thực. Nếu CV chưa tốt, hãy chấm điểm thấp và giải thích rõ lý do.
-                
-                Trả về dữ liệu ở định dạng JSON, **chỉ JSON**, không thêm giải thích nào khác.
-                Trong đó:
-                - `overallScore`: tổng điểm (tối đa 100).
-                - `type` trong `tips` chỉ được dùng 1 trong các giá trị: `"good"`, `"improve"`, `"warning"`, `"dangerous"`, `"neutral"`, `"note"`.
-                
-                Dưới đây là cấu trúc kết quả mẫu:
-                
-                {
-                  "feedback": {
-                    "overallScore": 85,
-                    "ATS": {
-                      "score": 90,
-                      "tips": [
-                        {
-                          "type": "good",
-                          "tip": "Sử dụng định dạng thân thiện với ATS.",
-                          "explanation": "CV có cấu trúc rõ ràng, giúp hệ thống ATS dễ đọc và phân tích."
-                        }
-                      ]
-                    },
-                    "toneAndStyle": {
-                      "score": 85,
-                      "tips": [...]
-                    },
-                    "content": {
-                      "score": 80,
-                      "tips": [...]
-                    },
-                    "structure": {
-                      "score": 75,
-                      "tips": [...]
-                    },
-                    "skills": {
-                      "score": 70,
-                      "tips": [...]
-                    }
+            You are an expert in ATS (Applicant Tracking System) and CV/Resume analysis for the **IT/technology domain only**.
+
+            ✅ Your task:
+            - Detect whether the CV belongs to the IT domain (e.g., Software Engineer, Backend/Frontend, Full-stack, Mobile, DevOps/SRE, Cloud, Data Engineer/Scientist/Analyst, ML/AI, QA/QC/Automation, Security, System/Network Admin, Product/BA/PO in tech, Tech Lead/Architect).
+            - If and only if the CV is IT-related, evaluate and score it and provide actionable tips.
+
+            ❌ If the CV is **not IT-related**, DO NOT evaluate. Instead, return a minimal JSON indicating that the domain is unsupported.
+
+            🔒 Output format rules:
+            - Return **JSON only** (no extra text).
+            - If unsupported (non-IT), return:
+              {
+                "supported": false,
+                "detectedDomain": "<short domain>",
+                "message": "This service only supports IT resumes."
+              }
+
+            - If supported (IT), return exactly this structure:
+              {
+                "supported": true,
+                "feedback": {
+                  "overallScore": <0-100>,
+                  "ATS": {
+                    "score": <0-100>,
+                    "tips": [
+                      { "type": "<good|improve|warning|dangerous|neutral|note>", "tip": "<short tip>", "explanation": "<short reason>" }
+                    ]
                   },
-                  "extractedInfo": {
-                    "fullName": "Nguyễn Văn A",
-                    "email": "example@gmail.com",
-                    "phone": "0123456789",
-                    "totalYearsExperience": 3,
-                    "educationLevel": "Đại học",
-                    "university": "Đại học FPT",
-                    "skills": ["Java", "Spring Boot"],
-                    "certifications": "Chứng chỉ AWS",
-                    "careerGoals": "Trở thành lập trình viên backend chuyên nghiệp.",
-                    "workExperience": "..."
+                  "toneAndStyle": {
+                    "score": <0-100>,
+                    "tips": [ ... ]
+                  },
+                  "content": {
+                    "score": <0-100>,
+                    "tips": [ ... ]
+                  },
+                  "structure": {
+                    "score": <0-100>,
+                    "tips": [ ... ]
+                  },
+                  "skills": {
+                    "score": <0-100>,
+                    "tips": [ ... ]
                   }
+                },
+                "extractedInfo": {
+                  "fullName": "<string>",
+                  "email": "<string>",
+                  "phone": "<string>",
+                  "totalYearsExperience": <int>,
+                  "educationLevel": "<string>",
+                  "university": "<string>",
+                  "skills": ["<skill1>", "<skill2>", "..."],
+                  "certifications": "<string>",
+                  "careerGoals": "<string>",
+                  "workExperience": "<string or brief bullets>"
                 }
-                
-                Dưới đây là nội dung CV:
-                %s
-                """, cvText);
+              }
+
+            Analysis guidance (when supported = true):
+            - Be detailed and candid; low-quality CVs should receive low scores with clear reasons.
+            - Use concise, actionable tips focused on IT hiring best practices and ATS passability.
+
+            Here is the CV content to analyze:
+            %s
+            """, cvText);
     }
+
 
 
     private String callGemini(String prompt) {
@@ -280,10 +314,10 @@ public class CVService {
                     .block();
 
             JsonNode json = objectMapper.readTree(response);
-            return json.at("/candidates/0/content/parts/0/text").asText("Không có phản hồi từ AI.");
+            return json.at("/candidates/0/content/parts/0/text").asText("No response from AI.");
         } catch (Exception e) {
             e.printStackTrace();
-            return "Lỗi khi gọi Gemini API.";
+            return "Error occurred while calling Gemini API.";
         }
     }
 
@@ -293,13 +327,13 @@ public class CVService {
 
     public Response<CVEvaluate> getCV(Long id) {
         CVEvaluate cvEvaluate = cvEvaluateRepository.findById(id).orElse(null);
-        return new Response<>(200, "Thành công", cvEvaluate);
+        return new Response<>(200, "Success", cvEvaluate);
     }
 
     public Response<List<GetAllCvDTO>> getAllCvDTOsByUser() {
 
         User currentUser = accountUtils.getCurrentAccount();
-        if (currentUser == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
+        if (currentUser == null) return new Response<>(401, "Please log in to continue", null);
 
         List<MemberCV> cvs = memberCVRepository.findByUserUserIdAndIsDeletedFalse(currentUser.getUserId());
 

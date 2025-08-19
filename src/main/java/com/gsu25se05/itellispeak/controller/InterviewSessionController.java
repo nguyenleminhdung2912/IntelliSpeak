@@ -63,7 +63,7 @@ public class InterviewSessionController {
     public ResponseEntity<Response<List<EvaluationBatchResponseDto>>> getRandomSession() {
         try {
             List<EvaluationBatchResponseDto> evaluationBatchResponseDtos = interviewSessionService.getAllRandomGeneratedQuestionsSession();
-            Response<List<EvaluationBatchResponseDto>> response = new Response<>(200, "Lấy danh sách các session random question mà người dùng đó đã tạo thành công", evaluationBatchResponseDtos);
+            Response<List<EvaluationBatchResponseDto>> response = new Response<>(200, "Get the list of random question sessions that the user has successfully created.", evaluationBatchResponseDtos);
             return ResponseEntity.ok(response);
         } catch (IllegalStateException e) {
             return ResponseEntity.status(401).body(null);

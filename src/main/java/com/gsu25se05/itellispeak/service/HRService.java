@@ -25,7 +25,9 @@ public class HRService {
 
     public Response<HRResponseDTO> applyHR(HRRequestDTO request) {
         User user = accountUtils.getCurrentAccount();
-        if (user == null) return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
+        if (user == null) {
+            return new Response<>(401, "Please log in to continue", null);
+        }
 
         // Kiểm tra nếu user đã gửi yêu cầu HR
         if (hrRepository.findByUser(user).isPresent()) {
@@ -56,13 +58,13 @@ public class HRService {
                 saved.getSubmittedAt(),
                 saved.getStatus().name()
         );
-        return new Response<>(200, "Gửi đơn ứng tuyển HR thành công", responseDTO);
+        return new Response<>(200, "HR application submitted successfully", responseDTO);
     }
 
     public Response<HRResponseDTO> checkHRApplicationStatus() {
         User user = accountUtils.getCurrentAccount();
         if (user == null) {
-            return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
+            return new Response<>(401, "Please log in to continue", null);
         }
 
         HR hrApplication = hrRepository.findByUser(user)
@@ -80,8 +82,6 @@ public class HRService {
                 hrApplication.getStatus().name()
         );
 
-        return new Response<>(200, "Lấy trạng thái đơn ứng tuyển HR thành công", responseDTO);
+        return new Response<>(200, "Get HR application status successfully", responseDTO);
     }
-
-
 }

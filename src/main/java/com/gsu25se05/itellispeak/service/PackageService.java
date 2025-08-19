@@ -40,14 +40,14 @@ public class PackageService {
                         pkg.getUpdateAt()
                 )).collect(Collectors.toList());
 
-        return new Response<>(200, "Lấy danh sách gói thành công", responseList);
+        return new Response<>(200, "Successfully retrieved package list", responseList);
     }
 
     public Response<PackageResponseDTO> getPackageById(Long id) {
         Package pkg = packageRepository.findByPackageIdAndIsDeletedFalse(id);
 
         if (pkg == null) {
-            return new Response<>(404, "Không tìm thấy gói", null);
+            return new Response<>(404, "Package not found", null);
         }
 
         PackageResponseDTO responseDTO = new PackageResponseDTO(
@@ -62,13 +62,13 @@ public class PackageService {
                 pkg.getUpdateAt()
         );
 
-        return new Response<>(200, "Tìm thấy gói", responseDTO);
+        return new Response<>(200, "Package found", responseDTO);
     }
 
     public Response<PackageResponseDTO> createPackage(PackageRequestDTO requestDTO) {
 
         User user = accountUtils.getCurrentAccount();
-        if (user == null) throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
+        if (user == null) throw new NotLoginException("Please log in to continue");
 
         Package newPackage = new Package();
         newPackage.setPackageName(requestDTO.getPackageName());
@@ -94,18 +94,18 @@ public class PackageService {
                 savedPackage.getCreateAt(),
                 savedPackage.getUpdateAt()
         );
-        return new Response<>(200, "Tạo gói thành công", responseDTO);
+        return new Response<>(200, "Package created successfully", responseDTO);
     }
 
     public Response<PackageResponseDTO> updatePackage(Long id, PackageRequestDTO requestDTO) {
         User user = accountUtils.getCurrentAccount();
         if (user == null) {
-            return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
+            return new Response<>(401, "Please log in to continue", null);
         }
 
         Package existingPackage = packageRepository.findByPackageIdAndIsDeletedFalse(id);
         if (existingPackage == null) {
-            return new Response<>(404, "Không tìm thấy gói", null);
+            return new Response<>(404, "Package not found", null);
         }
 
         if (requestDTO.getPackageName() != null) {
@@ -143,25 +143,25 @@ public class PackageService {
                 updatedPackage.getUpdateAt()
         );
 
-        return new Response<>(200, "Cập nhật gói thành công", responseDTO);
+        return new Response<>(200, "Package updated successfully", responseDTO);
     }
 
     public Response<Void> deletePackage(Long id) {
         User user = accountUtils.getCurrentAccount();
         if (user == null) {
-            return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
+            return new Response<>(401, "Please log in to continue", null);
         }
 
         Package existingPackage = packageRepository.findByPackageIdAndIsDeletedFalse(id);
         if (existingPackage == null) {
-            return new Response<>(404, "Không tìm thấy gói", null);
+            return new Response<>(404, "Package not found", null);
         }
 
         existingPackage.setIsDeleted(true);
         existingPackage.setUpdateAt(LocalDateTime.now());
         packageRepository.save(existingPackage);
 
-        return new Response<>(200, "Xóa gói thành công", null);
+        return new Response<>(200, "Package deleted successfully", null);
     }
 
 }
