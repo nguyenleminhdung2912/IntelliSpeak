@@ -27,4 +27,5 @@ public interface ForumPostRepository extends JpaRepository<ForumPost, Long> {
     """, nativeQuery = true)
     List<ForumPost> findTopPostsByReplyCount(@Param("limit") int limit);
 
+    List<ForumPost> findByForumTopicType_IdAndIsDeletedFalseOrderByCreateAtDesc(Long forumTopicTypeId);
 }

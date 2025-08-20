@@ -12,6 +12,4 @@ public interface PackageRepository extends JpaRepository<Package, Long> {
     List<Package> findByIsDeletedFalse();
     Package findByPackageIdAndIsDeletedFalse(Long packageId);
     Optional<Package> findByPackageName(String packageName);
-
-
 }

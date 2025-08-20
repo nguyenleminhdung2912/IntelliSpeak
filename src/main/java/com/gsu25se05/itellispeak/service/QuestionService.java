@@ -18,14 +18,12 @@ import org.apache.commons.csv.CSVRecord;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.StringReader;
 
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
-
 
 @Service
 public class QuestionService {
@@ -70,30 +68,30 @@ public class QuestionService {
     public Response<List<QuestionDTO>> getByCurrentUser() {
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) {
-            return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
+            return new Response<>(401, "Please log in to continue", null);
         }
 
         String roleName = currentUser.getRole().name();
         if (!"HR".equalsIgnoreCase(roleName) && !"ADMIN".equalsIgnoreCase(roleName)) {
-            return new Response<>(403, "Chỉ HR hoặc ADMIN mới có quyền xem danh sách câu hỏi", null);
+            return new Response<>(403, "Only HR or ADMIN users can view the question list", null);
         }
 
         List<QuestionDTO> questions = questionRepository.findByCreatedBy(currentUser).stream()
                 .map(questionMapper::toDTO)
                 .collect(Collectors.toList());
 
-        return new Response<>(200, "Lấy danh sách câu hỏi thành công", questions);
+        return new Response<>(200, "Successfully retrieved question list", questions);
     }
 
     public Response<List<QuestionDTO>> importFromCsv(MultipartFile file) {
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) {
-            return new Response<>(401, "Vui lòng đăng nhập để tiếp tục", null);
+            return new Response<>(401, "Please log in to continue", null);
         }
 
         String roleName = currentUser.getRole().name();
         if (!"HR".equalsIgnoreCase(roleName) && !"ADMIN".equalsIgnoreCase(roleName)) {
-            return new Response<>(403, "Chỉ HR hoặc ADMIN mới có quyền import câu hỏi", null);
+            return new Response<>(403, "Only HR or ADMIN users can import questions", null);
         }
 
         List<QuestionDTO> importedQuestions = new ArrayList<>();
@@ -103,7 +101,7 @@ public class QuestionService {
 
             List<String> lines = reader.lines().collect(Collectors.toList());
             if (lines.isEmpty()) {
-                return new Response<>(400, "File CSV trống", null);
+                return new Response<>(400, "CSV file is empty", null);
             }
 
             lines.set(0, lines.get(0).replace("\uFEFF", ""));
@@ -122,7 +120,7 @@ public class QuestionService {
                 List<String> requiredHeaders = List.of("title", "content", "difficulty", "suitableAnswer1", "suitableAnswer2", "tagIds");
                 for (String required : requiredHeaders) {
                     if (!headers.contains(required)) {
-                        return new Response<>(400, "File CSV thiếu cột bắt buộc: " + required, null);
+                        return new Response<>(400, "CSV file is missing required column: " + required, null);
                     }
                 }
 
@@ -147,22 +145,17 @@ public class QuestionService {
 
                         importedQuestions.add(save(dto));
                     } catch (Exception e) {
-                        return new Response<>(400, "Lỗi khi đọc dòng CSV: " + e.getMessage(), null);
+                        return new Response<>(400, "Error while reading CSV row: " + e.getMessage(), null);
                     }
                 }
             }
 
         } catch (IOException e) {
-            return new Response<>(500, "Không thể đọc file CSV: " + e.getMessage(), null);
+            return new Response<>(500, "Unable to read CSV file: " + e.getMessage(), null);
         } catch (IllegalArgumentException e) {
-            return new Response<>(400, "File CSV không đúng định dạng: " + e.getMessage(), null);
+            return new Response<>(400, "Invalid CSV format: " + e.getMessage(), null);
         }
 
-        return new Response<>(200, "Import CSV thành công", importedQuestions);
+        return new Response<>(200, "CSV import successful", importedQuestions);
     }
-
-
-
-
-
 }
