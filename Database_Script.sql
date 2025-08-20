@@ -1,273 +1,770 @@
--- Chèn dữ liệu vào bảng topic
-INSERT INTO topic (topic_id, title, description, long_description, create_at, update_at, is_deleted) 
-VALUES 
-(1, 'Giao diện người dùng', 'Các chủ đề liên quan đến phát triển phía client', 'Phát triển giao diện người dùng tập trung vào việc tạo ra giao diện và trải nghiệm người dùng cho ứng dụng web bằng các công nghệ như HTML, CSS, JavaScript và các framework như ReactJS.', NOW(), NULL, FALSE),
-(2, 'Hệ thống backend', 'Lập trình và kiến trúc phía server', 'Phát triển backend liên quan đến xây dựng logic phía server, API và tương tác với cơ sở dữ liệu bằng các công nghệ như Java, Spring Boot, Node.js và cơ sở dữ liệu SQL.', NOW(), NULL, FALSE),
-(3, 'Fullstack', 'Cả giao diện người dùng và hệ thống backend', 'Phát triển Fullstack bao gồm cả phát triển giao diện người dùng và hệ thống backend, yêu cầu thành thạo các framework phía client như ReactJS và công nghệ phía server như Spring Boot, SQL.', NOW(), NULL, FALSE);
+-- Insert data into the topic table
+INSERT INTO topic (topic_id, title, description, long_description, create_at, update_at, is_deleted)
+VALUES (1, 'User Interface', 'Topics related to client-side development',
+        'User interface development focuses on creating interfaces and user experiences for web applications using technologies like HTML, CSS, JavaScript, and frameworks such as ReactJS.',
+        NOW(), NULL, FALSE),
+       (2, 'Backend System', 'Server-side programming and architecture',
+        'Backend development involves building server-side logic, APIs, and database interactions using technologies like Java, Spring Boot, Node.js, and SQL databases.',
+        NOW(), NULL, FALSE),
+       (3, 'Fullstack', 'Both user interface and backend system',
+        'Fullstack development includes both user interface and backend development, requiring proficiency in client-side frameworks like ReactJS and server-side technologies like Spring Boot and SQL.',
+        NOW(), NULL, FALSE);
 
--- Chèn dữ liệu vào bảng tag
-INSERT INTO tag (tag_id, title, description, create_at, update_at, is_deleted) 
-VALUES 
-(1, 'Java', 'Ngôn ngữ lập trình', NOW(), NULL, FALSE),
-(2, 'JavaScript', 'Ngôn ngữ lập trình web', NOW(), NULL, FALSE),
-(3, 'Spring Boot', 'Framework backend của Java', NOW(), NULL, FALSE),
-(4, 'ReactJS', 'Thư viện JavaScript để xây dựng giao diện', NOW(), NULL, FALSE),
-(5, 'SQL', 'Ngôn ngữ truy vấn cơ sở dữ liệu', NOW(), NULL, FALSE),
-(6, 'Cấu trúc dữ liệu', 'Kiến thức cơ bản về tổ chức dữ liệu', NOW(), NULL, FALSE);
+-- Insert data into the tag table
+INSERT INTO tag (tag_id, title, description, create_at, update_at, is_deleted)
+VALUES (1, 'Java', 'Programming language', NOW(), NULL, FALSE),
+       (2, 'JavaScript', 'Web programming language', NOW(), NULL, FALSE),
+       (3, 'Spring Boot', 'Java backend framework', NOW(), NULL, FALSE),
+       (4, 'ReactJS', 'JavaScript library for building interfaces', NOW(), NULL, FALSE),
+       (5, 'SQL', 'Database query language', NOW(), NULL, FALSE),
+       (6, 'Data Structures', 'Fundamental knowledge of data organization', NOW(), NULL, FALSE);
 
--- Topic 1: Giao diện người dùng
-INSERT INTO topic_tag (topic_id, tag_id) VALUES
-(1, 2), -- JavaScript
-(1, 4); -- ReactJS
+-- Topic 1: User Interface
+INSERT INTO topic_tag (topic_id, tag_id)
+VALUES (1, 2), -- JavaScript
+       (1, 4);
+-- ReactJS
 
--- Topic 2: Hệ thống backend
-INSERT INTO topic_tag (topic_id, tag_id) VALUES
-(2, 1), -- Java
-(2, 3), -- Spring Boot
-(2, 5), -- SQL
-(2, 6); -- Cấu trúc dữ liệu
+-- Topic 2: Backend System
+INSERT INTO topic_tag (topic_id, tag_id)
+VALUES (2, 1), -- Java
+       (2, 3), -- Spring Boot
+       (2, 5), -- SQL
+       (2, 6);
+-- Data Structures
 
 -- Topic 3: Fullstack
-INSERT INTO topic_tag (topic_id, tag_id) VALUES
-(3, 1), -- Java
-(3, 2), -- JavaScript
-(3, 3), -- Spring Boot
-(3, 4), -- ReactJS
-(3, 5); -- SQL
+INSERT INTO topic_tag (topic_id, tag_id)
+VALUES (3, 1), -- Java
+       (3, 2), -- JavaScript
+       (3, 3), -- Spring Boot
+       (3, 4), -- ReactJS
+       (3, 5);
+-- SQL
 
--- Chèn dữ liệu vào bảng interview_session cho Giao diện người dùng
-INSERT INTO interview_session (interview_session_id, topic_id, title, description, total_question, difficulty, duration_estimate, create_at, update_at, is_deleted)
-VALUES 
-(1, 1, 'Phỏng vấn cơ bản về giao diện người dùng', 'Bao gồm các kiến thức cơ bản về HTML, CSS và JavaScript.', 10, 'EASY', 60, NOW(), NULL, FALSE),
-(2, 1, 'Phỏng vấn lập trình viên ReactJS', 'Tập trung vào ReactJS, quản lý trạng thái và phát triển giao diện.', 10, 'MEDIUM', 75, NOW(), NULL, FALSE),
-(3, 1, 'Phỏng vấn nâng cao về giao diện người dùng', 'Khám phá JavaScript nâng cao, tối ưu hiệu suất và khả năng truy cập.', 10, 'HARD', 90, NOW(), NULL, FALSE);
+-- Insert data into the interview_session table for User Interface
+INSERT INTO interview_session (interview_session_id, topic_id, title, description, total_question, difficulty,
+                               duration_estimate, create_at, update_at, is_deleted)
+VALUES (1, 1, 'Basic User Interface Interview', 'Covers fundamental knowledge of HTML, CSS, and JavaScript.', 10,
+        'EASY', 60, NOW(), NULL, FALSE),
+       (2, 1, 'ReactJS Developer Interview', 'Focuses on ReactJS, state management, and interface development.', 10,
+        'MEDIUM', 75, NOW(), NULL, FALSE),
+       (3, 1, 'Advanced User Interface Interview',
+        'Explores advanced JavaScript, performance optimization, and accessibility.', 10, 'HARD', 90, NOW(), NULL,
+        FALSE);
 
--- Chèn dữ liệu vào bảng interview_session cho Hệ thống backend
-INSERT INTO interview_session (interview_session_id, topic_id, title, description, total_question, difficulty, duration_estimate, create_at, update_at, is_deleted)
-VALUES 
-(4, 2, 'Phỏng vấn cơ bản về backend', 'Bao gồm các khái niệm phía server, REST API và thao tác cơ sở dữ liệu cơ bản.', 10, 'EASY', 60, NOW(), NULL, FALSE),
-(5, 2, 'Phỏng vấn lập trình viên Spring Boot', 'Tập trung vào Java, Spring Boot và dịch vụ RESTful.', 10, 'MEDIUM', 75, NOW(), NULL, FALSE),
-(6, 2, 'Phỏng vấn nâng cao về backend', 'Khám phá microservices, khả năng mở rộng và tối ưu cơ sở dữ liệu.', 10, 'HARD', 90, NOW(), NULL, FALSE);
+-- Insert data into the interview_session table for Backend System
+INSERT INTO interview_session (interview_session_id, topic_id, title, description, total_question, difficulty,
+                               duration_estimate, create_at, update_at, is_deleted)
+VALUES (4, 2, 'Basic Backend Interview', 'Covers server-side concepts, REST APIs, and basic database operations.', 10,
+        'EASY', 60, NOW(), NULL, FALSE),
+       (5, 2, 'Spring Boot Developer Interview', 'Focuses on Java, Spring Boot, and RESTful services.', 10, 'MEDIUM',
+        75, NOW(), NULL, FALSE),
+       (6, 2, 'Advanced Backend Interview', 'Explores microservices, scalability, and database optimization.', 10,
+        'HARD', 90, NOW(), NULL, FALSE);
 
--- Chèn dữ liệu vào bảng interview_session cho Fullstack
-INSERT INTO interview_session (interview_session_id, topic_id, title, description, total_question, difficulty, duration_estimate, create_at, update_at, is_deleted)
-VALUES 
-(7, 3, 'Phỏng vấn cơ bản về Fullstack', 'Bao gồm các khái niệm cơ bản về giao diện người dùng và backend.', 10, 'EASY', 60, NOW(), NULL, FALSE),
-(8, 3, 'Phỏng vấn MERN Stack', 'Tập trung vào MongoDB, Express.js, React và Node.js.', 10, 'MEDIUM', 75, NOW(), NULL, FALSE),
-(9, 3, 'Phỏng vấn nâng cao về Fullstack', 'Khám phá kiến trúc Fullstack, DevOps và khả năng mở rộng.', 10, 'HARD', 90, NOW(), NULL, FALSE);
+-- Insert data into the interview_session table for Fullstack
+INSERT INTO interview_session (interview_session_id, topic_id, title, description, total_question, difficulty,
+                               duration_estimate, create_at, update_at, is_deleted)
+VALUES (7, 3, 'Basic Fullstack Interview', 'Covers fundamental concepts of both user interface and backend.', 10,
+        'EASY', 60, NOW(), NULL, FALSE),
+       (8, 3, 'MERN Stack Interview', 'Focuses on MongoDB, Express.js, React, and Node.js.', 10, 'MEDIUM', 75, NOW(),
+        NULL, FALSE),
+       (9, 3, 'Advanced Fullstack Interview', 'Explores Fullstack architecture, DevOps, and scalability.', 10, 'HARD',
+        90, NOW(), NULL, FALSE);
 
--- Chèn câu hỏi cho Phỏng vấn cơ bản về giao diện người dùng (Session 1)
-INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status, is_deleted, source)
-VALUES 
-(1, 'HTML là gì?', 'Giải thích mục đích và cấu trúc cơ bản của HTML trong phát triển web.', 'HTML là viết tắt của HyperText Markup Language, dùng để tạo cấu trúc trang web bằng các thẻ như <div>, <p>, <a>, tổ chức nội dung như văn bản, hình ảnh và liên kết để trình duyệt hiển thị.', 'HTML là nền tảng của trang web, định nghĩa cấu trúc bằng các phần tử như tiêu đề, đoạn văn, danh sách, giúp trình duyệt hiển thị nội dung chính xác.', 'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(2, 'CSS là gì?', 'Mô tả vai trò của CSS trong phát triển web.', 'CSS (Cascading Style Sheets) dùng để định dạng giao diện trang web bằng các thuộc tính như màu sắc, phông chữ và bố cục cho các phần tử HTML.', 'CSS kiểm soát cách trình bày trực quan của các phần tử HTML, làm cho trang web trở nên hấp dẫn và responsive.', 'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(3, 'JavaScript là gì?', 'Giải thích JavaScript là gì và các ứng dụng chính của nó.', 'JavaScript là ngôn ngữ lập trình thêm tính tương tác cho trang web, như nội dung động và xử lý sự kiện.', 'JavaScript cho phép lập trình phía client, cập nhật nội dung động mà không cần tải lại trang.', 'EASY', 'APPROVED', FALSE, 'InterviewBit'),
-(4, 'Phần tử HTML ngữ nghĩa là gì?', 'Mô tả các phần tử HTML ngữ nghĩa và tầm quan trọng của chúng.', 'Phần tử HTML ngữ nghĩa như <header>, <footer>, <article> thể hiện ý nghĩa nội dung, cải thiện khả năng truy cập và SEO.', 'Chúng cung cấp ngữ cảnh cho trình duyệt và công cụ tìm kiếm, làm cho cấu trúc trang web ý nghĩa hơn và dễ điều hướng.', 'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(5, 'Mô hình hộp trong CSS là gì?', 'Giải thích mô hình hộp CSS và các thành phần của nó.', 'Mô hình hộp CSS thể hiện cấu trúc của một phần tử, bao gồm nội dung, padding, border và margin, ảnh hưởng đến kích thước và khoảng cách.', 'Nó định nghĩa cách các phần tử được hiển thị trên trang, với padding bên trong border và margin bên ngoài, ảnh hưởng đến tính toán bố cục.', 'MEDIUM', 'APPROVED', FALSE, 'Simplilearn'),
-(6, 'DOM là gì?', 'Mô tả Document Object Model và vai trò của nó trong phát triển web.', 'DOM là cấu trúc dạng cây biểu diễn các phần tử HTML, cho phép JavaScript thao tác nội dung trang web một cách động.', 'Nó đóng vai trò giao diện cho JavaScript để tương tác và sửa đổi cấu trúc, kiểu dáng, nội dung của trang web.', 'MEDIUM', 'APPROVED', FALSE, 'InterviewBit'),
-(7, 'Ủy quyền sự kiện là gì?', 'Giải thích khái niệm ủy quyền sự kiện trong JavaScript.', 'Ủy quyền sự kiện gắn một trình nghe sự kiện vào phần tử cha để xử lý sự kiện của các phần tử con, cải thiện hiệu suất.', 'Nó tận dụng sự kiện bubbling để bắt sự kiện từ phần tử con, giảm số lượng trình nghe sự kiện cần thiết.', 'MEDIUM', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(8, 'Closure trong JavaScript là gì?', 'Định nghĩa closure và đưa ra ví dụ sử dụng.', 'Closure là một hàm giữ quyền truy cập vào các biến trong phạm vi bên ngoài ngay cả khi hàm bên ngoài đã thực thi xong.', 'Ví dụ: Một hàm đếm giữ biến đếm qua nhiều lần gọi bằng cách sử dụng closure.', 'HARD', 'APPROVED', FALSE, 'InterviewBit'),
-(9, 'Thuộc tính z-index hoạt động như thế nào?', 'Giải thích cách thuộc tính z-index ảnh hưởng đến vị trí phần tử trong CSS.', 'Thuộc tính z-index kiểm soát thứ tự xếp chồng của các phần tử được định vị (relative, absolute, fixed). Giá trị cao hơn xuất hiện phía trước.', 'Nó chỉ hoạt động trên các phần tử có thuộc tính position, với giá trị âm đặt phần tử phía sau.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(10, 'Promise trong JavaScript là gì?', 'Mô tả promise và vai trò của nó trong xử lý bất đồng bộ.', 'Promise là một đối tượng biểu diễn sự hoàn thành hoặc thất bại của một thao tác bất đồng bộ, với các trạng thái như pending, fulfilled hoặc rejected.', 'Promise xử lý các tác vụ bất đồng bộ như gọi API, cho phép nối chuỗi với .then() và xử lý lỗi với .catch().', 'HARD', 'APPROVED', FALSE, 'InterviewBit');
+-- Insert questions for Basic User Interface Interview (Session 1)
+INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status,
+                      is_deleted, source)
+VALUES (1, 'What is HTML?', 'Explain the purpose and basic structure of HTML in web development.',
+        'HTML stands for HyperText Markup Language, used to create the structure of a webpage with tags like <div>, <p>, <a>, organizing content such as text, images, and links for browsers to display.',
+        'HTML is the foundation of webpages, defining structure with elements like headings, paragraphs, and lists, enabling browsers to display content accurately.',
+        'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
+       (2, 'What is CSS?', 'Describe the role of CSS in web development.',
+        'CSS (Cascading Style Sheets) is used to style the appearance of a webpage with properties like color, font, and layout for HTML elements.',
+        'CSS controls the visual presentation of HTML elements, making webpages visually appealing and responsive.',
+        'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
+       (3, 'What is JavaScript?', 'Explain what JavaScript is and its main applications.',
+        'JavaScript is a programming language that adds interactivity to webpages, such as dynamic content and event handling.',
+        'JavaScript enables client-side scripting, updating dynamic content without reloading the page.', 'EASY',
+        'APPROVED', FALSE, 'InterviewBit'),
+       (4, 'What are semantic HTML elements?', 'Describe semantic HTML elements and their importance.',
+        'Semantic HTML elements like <header>, <footer>, <article> convey the meaning of content, improving accessibility and SEO.',
+        'They provide context to browsers and search engines, making the webpage structure more meaningful and navigable.',
+        'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
+       (5, 'What is the CSS box model?', 'Explain the CSS box model and its components.',
+        'The CSS box model represents an element’s structure, including content, padding, border, and margin, affecting its size and spacing.',
+        'It defines how elements are displayed on a page, with padding inside the border and margin outside, influencing layout calculations.',
+        'MEDIUM', 'APPROVED', FALSE, 'Simplilearn'),
+       (6, 'What is the DOM?', 'Describe the Document Object Model and its role in web development.',
+        'The DOM is a tree-like structure representing HTML elements, allowing JavaScript to manipulate webpage content dynamically.',
+        'It acts as an interface for JavaScript to interact with and modify the structure, style, and content of a webpage.',
+        'MEDIUM', 'APPROVED', FALSE, 'InterviewBit'),
+       (7, 'What is event delegation?', 'Explain the concept of event delegation in JavaScript.',
+        'Event delegation attaches an event listener to a parent element to handle events for its child elements, improving performance.',
+        'It leverages event bubbling to capture events from child elements, reducing the number of event listeners needed.',
+        'MEDIUM', 'APPROVED', FALSE, 'GeeksForGeeks'),
+       (8, 'What is a closure in JavaScript?', 'Define a closure and provide an example of its use.',
+        'A closure is a function that retains access to variables from its outer scope even after the outer function has executed.',
+        'Example: A counter function retains a count variable across multiple calls using a closure.', 'HARD',
+        'APPROVED', FALSE, 'InterviewBit'),
+       (9, 'How does the z-index property work?',
+        'Explain how the z-index property affects element positioning in CSS.',
+        'The z-index property controls the stacking order of positioned elements (relative, absolute, fixed), with higher values appearing in front.',
+        'It only works on elements with a position property, with negative values placing elements behind.', 'HARD',
+        'APPROVED', FALSE, 'GeeksForGeeks'),
+       (10, 'What is a Promise in JavaScript?', 'Describe a Promise and its role in handling asynchronous operations.',
+        'A Promise is an object representing the completion or failure of an asynchronous operation, with states like pending, fulfilled, or rejected.',
+        'Promises handle asynchronous tasks like API calls, allowing chaining with .then() and error handling with .catch().',
+        'HARD', 'APPROVED', FALSE, 'InterviewBit');
 
--- Liên kết câu hỏi với Phỏng vấn cơ bản về giao diện người dùng (Session 1)
-INSERT INTO interview_session_question (interview_session_id, question_id) VALUES 
-(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), (1, 7), (1, 8), (1, 9), (1, 10);
+-- Link questions to Basic User Interface Interview (Session 1)
+INSERT INTO interview_session_question (interview_session_id, question_id)
+VALUES (1, 1),
+       (1, 2),
+       (1, 3),
+       (1, 4),
+       (1, 5),
+       (1, 6),
+       (1, 7),
+       (1, 8),
+       (1, 9),
+       (1, 10);
 
--- Chèn câu hỏi cho Phỏng vấn lập trình viên ReactJS (Session 2)
-INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status, is_deleted, source)
-VALUES 
-(11, 'React là gì?', 'Giải thích React là gì và các tính năng chính của nó.', 'React là thư viện JavaScript để xây dựng giao diện người dùng, sử dụng components, virtual DOM và cú pháp khai báo.', 'Nó cho phép tạo các components giao diện tái sử dụng và cập nhật DOM hiệu quả thông qua virtual DOM.', 'EASY', 'APPROVED', FALSE, 'Simplilearn'),
-(12, 'Component trong React là gì?', 'Mô tả components và vai trò của chúng trong ứng dụng React.', 'Components là các khối xây dựng tái sử dụng trong React, đại diện cho các phần của giao diện như nút hoặc biểu mẫu.', 'Chúng có thể là functional hoặc class-based, nhận props và quản lý trạng thái để hiển thị nội dung động.', 'EASY', 'APPROVED', FALSE, 'InterviewBit'),
-(13, 'Props trong React là gì?', 'Giải thích mục đích của props trong React.', 'Props (properties) là dữ liệu chỉ đọc được truyền từ component cha sang con để cấu hình hành vi hoặc giao diện.', 'Props cho phép components tái sử dụng bằng cách truyền dữ liệu động, như tên người dùng cho component hồ sơ.', 'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(14, 'Trạng thái trong React là gì?', 'Mô tả khái niệm trạng thái và cách nó khác với props.', 'Trạng thái là đối tượng có thể thay đổi trong component, chứa dữ liệu ảnh hưởng đến việc hiển thị, được quản lý nội bộ.', 'Thay đổi trạng thái kích hoạt hiển thị lại, trong khi props được truyền từ component cha và không thể thay đổi.', 'MEDIUM', 'APPROVED', FALSE, 'InterviewBit'),
-(15, 'React Hooks là gì?', 'Giải thích React Hooks và mục đích của chúng.', 'Hooks là các hàm như useState, useEffect cho phép components chức năng quản lý trạng thái và sự kiện vòng đời.', 'Chúng đơn giản hóa việc quản lý trạng thái và side effects, thay thế các phương thức vòng đời class-based.', 'MEDIUM', 'APPROVED', FALSE, 'Simplilearn'),
-(16, 'Virtual DOM là gì?', 'Mô tả virtual DOM và lợi ích của nó trong React.', 'Virtual DOM là bản sao nhẹ của DOM thực, được React sử dụng để tối ưu hóa cập nhật bằng cách giảm thao tác trực tiếp trên DOM.', 'Nó cải thiện hiệu suất bằng cách gộp các thay đổi và chỉ cập nhật các phần cần thiết của DOM thực.', 'MEDIUM', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(17, 'useEffect là gì?', 'Giải thích Hook useEffect và các trường hợp sử dụng phổ biến.', 'useEffect là Hook xử lý side effects, như lấy dữ liệu hoặc cập nhật DOM, sau khi component hiển thị.', 'Nó chạy sau mỗi lần hiển thị theo mặc định nhưng có thể được cấu hình để chạy có điều kiện với mảng phụ thuộc.', 'MEDIUM', 'APPROVED', FALSE, 'InterviewBit'),
-(18, 'Redux là gì?', 'Mô tả Redux và vai trò của nó trong quản lý trạng thái.', 'Redux là thư viện quản lý trạng thái toàn cục trong ứng dụng JavaScript, sử dụng store, actions và reducers.', 'Nó tập trung trạng thái, làm cho trạng thái dễ dự đoán và quản lý trong các ứng dụng React lớn.', 'HARD', 'APPROVED', FALSE, 'Simplilearn'),
-(19, 'Làm thế nào để tối ưu hiệu suất React?', 'Giải thích các kỹ thuật tối ưu hiệu suất trong ứng dụng React.', 'Các kỹ thuật bao gồm sử dụng memoization (React.memo), lazy loading components và tránh hiển thị lại không cần thiết với useCallback/useMemo.', 'Tối ưu hiệu suất liên quan đến giảm cập nhật trạng thái và sử dụng công cụ như React Profiler để tìm điểm nghẽn.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(20, 'Server-side rendering trong React là gì?', 'Mô tả server-side rendering và lợi ích của nó.', 'Server-side rendering (SSR) hiển thị components React trên server, gửi HTML đến client để tăng tốc độ tải ban đầu.', 'SSR cải thiện SEO và hiệu suất bằng cách cung cấp nội dung được hiển thị sẵn, đặc biệt cho ứng dụng nặng nội dung.', 'HARD', 'APPROVED', FALSE, 'InterviewBit');
+-- Insert questions for ReactJS Developer Interview (Session 2)
+INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status,
+                      is_deleted, source)
+VALUES (11, 'What is React?', 'Explain what React is and its key features.',
+        'React is a JavaScript library for building user interfaces, using components, virtual DOM, and declarative syntax.',
+        'It enables the creation of reusable UI components and efficiently updates the DOM via the virtual DOM.',
+        'EASY', 'APPROVED', FALSE, 'Simplilearn'),
+       (12, 'What is a component in React?', 'Describe components and their role in a React application.',
+        'Components are reusable building blocks in React, representing parts of the UI like buttons or forms.',
+        'They can be functional or class-based, receiving props and managing state to render dynamic content.', 'EASY',
+        'APPROVED', FALSE, 'InterviewBit'),
+       (13, 'What are props in React?', 'Explain the purpose of props in React.',
+        'Props (properties) are read-only data passed from parent to child components to configure behavior or appearance.',
+        'Props enable reusable components by passing dynamic data, like a username for a profile component.', 'EASY',
+        'APPROVED', FALSE, 'GeeksForGeeks'),
+       (14, 'What is state in React?', 'Describe the concept of state and how it differs from props.',
+        'State is a mutable object within a component, holding data that affects rendering, managed internally.',
+        'State changes trigger re-renders, while props are passed from parent components and are immutable.', 'MEDIUM',
+        'APPROVED', FALSE, 'InterviewBit'),
+       (15, 'What are React Hooks?', 'Explain React Hooks and their purpose.',
+        'Hooks are functions like useState and useEffect, allowing functional components to manage state and lifecycle events.',
+        'They simplify state management and side effects, replacing class-based lifecycle methods.', 'MEDIUM',
+        'APPROVED', FALSE, 'Simplilearn'),
+       (16, 'What is the virtual DOM?', 'Describe the virtual DOM and its benefits in React.',
+        'The virtual DOM is a lightweight copy of the real DOM, used by React to optimize updates by minimizing direct DOM manipulation.',
+        'It improves performance by batching changes and only updating necessary parts of the real DOM.', 'MEDIUM',
+        'APPROVED', FALSE, 'GeeksForGeeks'),
+       (17, 'What is useEffect?', 'Explain the useEffect Hook and its common use cases.',
+        'useEffect is a Hook that handles side effects, like fetching data or updating the DOM, after a component renders.',
+        'It runs after every render by default but can be configured to run conditionally with a dependency array.',
+        'MEDIUM', 'APPROVED', FALSE, 'InterviewBit'),
+       (18, 'What is Redux?', 'Describe Redux and its role in state management.',
+        'Redux is a library for managing global state in JavaScript applications, using a store, actions, and reducers.',
+        'It centralizes state, making it predictable and manageable in large React applications.', 'HARD', 'APPROVED',
+        FALSE, 'Simplilearn'),
+       (19, 'How to optimize performance in React?',
+        'Explain techniques for optimizing performance in React applications.',
+        'Techniques include using memoization (React.memo), lazy loading components, and avoiding unnecessary re-renders with useCallback/useMemo.',
+        'Performance optimization involves reducing state updates and using tools like React Profiler to identify bottlenecks.',
+        'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
+       (20, 'What is server-side rendering in React?', 'Describe server-side rendering and its benefits.',
+        'Server-side rendering (SSR) renders React components on the server, sending HTML to the client for faster initial load times.',
+        'SSR improves SEO and performance by delivering pre-rendered content, especially for content-heavy applications.',
+        'HARD', 'APPROVED', FALSE, 'InterviewBit');
 
--- Liên kết câu hỏi với Phỏng vấn lập trình viên ReactJS (Session 2)
-INSERT INTO interview_session_question (interview_session_id, question_id) VALUES 
-(2, 11), (2, 12), (2, 13), (2, 14), (2, 15), (2, 16), (2, 17), (2, 18), (2, 19), (2, 20);
+-- Link questions to ReactJS Developer Interview (Session 2)
+INSERT INTO interview_session_question (interview_session_id, question_id)
+VALUES (2, 11),
+       (2, 12),
+       (2, 13),
+       (2, 14),
+       (2, 15),
+       (2, 16),
+       (2, 17),
+       (2, 18),
+       (2, 19),
+       (2, 20);
 
--- Chèn câu hỏi cho Phỏng vấn nâng cao về giao diện người dùng (Session 3)
-INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status, is_deleted, source)
-VALUES 
-(21, 'Service worker là gì?', 'Giải thích vai trò của service worker trong ứng dụng web.', 'Service worker là các script chạy nền để hỗ trợ tính năng như hỗ trợ ngoại tuyến và thông báo đẩy.', 'Chúng hoạt động như proxy giữa ứng dụng và mạng, lưu trữ tài nguyên để tăng tốc độ tải và hỗ trợ ngoại tuyến.', 'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(22, 'Thiết kế responsive là gì?', 'Mô tả thiết kế responsive và cách triển khai.', 'Thiết kế responsive đảm bảo trang web thích ứng với các kích thước màn hình khác nhau bằng các kỹ thuật như lưới linh hoạt và media queries.', 'Nó sử dụng CSS media queries và bố cục linh hoạt để cung cấp trải nghiệm tối ưu trên các thiết bị.', 'EASY', 'APPROVED', FALSE, 'Simplilearn'),
-(23, 'Khả năng truy cập web là gì?', 'Giải thích khả năng truy cập web và tầm quan trọng của nó.', 'Khả năng truy cập đảm bảo nội dung web có thể sử dụng bởi người khuyết tật, tuân theo chuẩn như WCAG.', 'Nó bao gồm sử dụng HTML ngữ nghĩa, vai trò ARIA và điều hướng bàn phím để làm cho trang web dễ tiếp cận.', 'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(24, 'Vòng lặp sự kiện trong JavaScript là gì?', 'Mô tả cách vòng lặp sự kiện hoạt động trong JavaScript.', 'Vòng lặp sự kiện quản lý các thao tác bất đồng bộ bằng cách xử lý ngăn xếp lệnh và hàng đợi tác vụ, đảm bảo thực thi không chặn.', 'Nó liên tục kiểm tra ngăn xếp lệnh và đẩy các tác vụ từ hàng đợi khi ngăn xếp trống.', 'MEDIUM', 'APPROVED', FALSE, 'InterviewBit'),
-(25, 'Tree shaking là gì?', 'Giải thích tree shaking và vai trò của nó trong tối ưu JavaScript.', 'Tree shaking loại bỏ mã không sử dụng khỏi các gói JavaScript trong quá trình build, giảm kích thước tệp.', 'Nó dựa vào module ES6 và công cụ như Webpack để loại bỏ mã chết, cải thiện hiệu suất.', 'MEDIUM', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(26, 'Lazy loading là gì?', 'Mô tả lazy loading và lợi ích của nó trong phát triển web.', 'Lazy loading trì hoãn việc tải các tài nguyên không quan trọng (như hình ảnh) cho đến khi cần, cải thiện thời gian tải trang.', 'Nó tăng hiệu suất bằng cách giảm thời gian tải ban đầu và tiết kiệm băng thông.', 'MEDIUM', 'APPROVED', FALSE, 'Simplilearn'),
-(27, 'Rò rỉ bộ nhớ trong JavaScript là gì?', 'Giải thích rò rỉ bộ nhớ và cách ngăn chặn chúng.', 'Rò rỉ bộ nhớ xảy ra khi các đối tượng không sử dụng vẫn tồn tại trong bộ nhớ, gây ra vấn đề hiệu suất.', 'Ngăn chặn bằng cách tránh biến toàn cục, dọn dẹp trình nghe sự kiện và sử dụng công cụ như Chrome DevTools.', 'HARD', 'APPROVED', FALSE, 'InterviewBit'),
-(28, 'Webpack là gì?', 'Mô tả Webpack và vai trò của nó trong phát triển giao diện người dùng.', 'Webpack là một công cụ đóng gói module, tổng hợp các module JavaScript, tài nguyên và phụ thuộc thành một gói duy nhất.', 'Nó tối ưu hóa tài nguyên, hỗ trợ code splitting và tích hợp với các công cụ như Babel cho JavaScript hiện đại.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(29, 'Đường dẫn hiển thị quan trọng là gì?', 'Giải thích Đường dẫn hiển thị quan trọng và cách tối ưu nó.', 'Đường dẫn hiển thị quan trọng là chuỗi các bước trình duyệt thực hiện để hiển thị trang, bao gồm phân tích HTML và thực thi CSS/JS.', 'Tối ưu bằng cách giảm thiểu CSS/JS, inline CSS quan trọng và trì hoãn các script không quan trọng.', 'HARD', 'APPROVED', FALSE, 'Simplilearn'),
-(30, 'TypeScript là gì?', 'Mô tả TypeScript và lợi ích của nó trong phát triển giao diện người dùng.', 'TypeScript là một siêu tập hợp của JavaScript, thêm kiểu tĩnh, cải thiện độ tin cậy và khả năng bảo trì mã.', 'Nó phát hiện lỗi tại thời điểm biên dịch, nâng cao hỗ trợ IDE và cải thiện phát triển ứng dụng quy mô lớn.', 'HARD', 'APPROVED', FALSE, 'InterviewBit');
+-- Insert questions for Advanced User Interface Interview (Session 3)
+INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status,
+                      is_deleted, source)
+VALUES (21, 'What is a service worker?', 'Explain the role of a service worker in web applications.',
+        'Service workers are background scripts that enable features like offline support and push notifications.',
+        'They act as a proxy between the application and the network, caching resources for faster loading and offline functionality.',
+        'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
+       (22, 'What is responsive design?', 'Describe responsive design and how it is implemented.',
+        'Responsive design ensures a website adapts to different screen sizes using techniques like fluid grids and media queries.',
+        'It uses CSS media queries and flexible layouts to provide an optimal experience across devices.', 'EASY',
+        'APPROVED', FALSE, 'Simplilearn'),
+       (23, 'What is web accessibility?', 'Explain web accessibility and its importance.',
+        'Web accessibility ensures web content is usable by people with disabilities, following standards like WCAG.',
+        'It involves using semantic HTML, ARIA roles, and keyboard navigation to make websites inclusive.', 'EASY',
+        'APPROVED', FALSE, 'GeeksForGeeks'),
+       (24, 'What is the event loop in JavaScript?', 'Describe how the event loop works in JavaScript.',
+        'The event loop manages asynchronous operations by processing the call stack and task queue, ensuring non-blocking execution.',
+        'It continuously checks the call stack and pushes tasks from the queue when the stack is empty.', 'MEDIUM',
+        'APPROVED', FALSE, 'InterviewBit'),
+       (25, 'What is tree shaking?', 'Explain tree shaking and its role in JavaScript optimization.',
+        'Tree shaking eliminates unused code from JavaScript bundles during the build process, reducing file size.',
+        'It relies on ES6 modules and tools like Webpack to remove dead code, improving performance.', 'MEDIUM',
+        'APPROVED', FALSE, 'GeeksForGeeks'),
+       (26, 'What is lazy loading?', 'Describe lazy loading and its benefits in web development.',
+        'Lazy loading delays loading non-critical resources (like images) until needed, improving page load times.',
+        'It enhances performance by reducing initial load time and saving bandwidth.', 'MEDIUM', 'APPROVED', FALSE,
+        'Simplilearn'),
+       (27, 'What is a memory leak in JavaScript?', 'Explain memory leaks and how to prevent them.',
+        'Memory leaks occur when unused objects remain in memory, causing performance issues.',
+        'Prevent them by avoiding global variables, cleaning up event listeners, and using tools like Chrome DevTools.',
+        'HARD', 'APPROVED', FALSE, 'InterviewBit'),
+       (28, 'What is Webpack?', 'Describe Webpack and its role in user interface development.',
+        'Webpack is a module bundler that aggregates JavaScript modules, assets, and dependencies into a single bundle.',
+        'It optimizes assets, supports code splitting, and integrates with tools like Babel for modern JavaScript.',
+        'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
+       (29, 'What is the critical rendering path?', 'Explain the critical rendering path and how to optimize it.',
+        'The critical rendering path is the sequence of steps a browser takes to render a page, including parsing HTML and executing CSS/JS.',
+        'Optimize it by minimizing CSS/JS, inlining critical CSS, and deferring non-critical scripts.', 'HARD',
+        'APPROVED', FALSE, 'Simplilearn'),
+       (30, 'What is TypeScript?', 'Describe TypeScript and its benefits in user interface development.',
+        'TypeScript is a superset of JavaScript that adds static typing, improving code reliability and maintainability.',
+        'It catches errors at compile time, enhances IDE support, and improves large-scale application development.',
+        'HARD', 'APPROVED', FALSE, 'InterviewBit');
 
--- Liên kết câu hỏi với Phỏng vấn nâng cao về giao diện người dùng (Session 3)
-INSERT INTO interview_session_question (interview_session_id, question_id) VALUES 
-(3, 21), (3, 22), (3, 23), (3, 24), (3, 25), (3, 26), (3, 27), (3, 28), (3, 29), (3, 30);
+-- Link questions to Advanced User Interface Interview (Session 3)
+INSERT INTO interview_session_question (interview_session_id, question_id)
+VALUES (3, 21),
+       (3, 22),
+       (3, 23),
+       (3, 24),
+       (3, 25),
+       (3, 26),
+       (3, 27),
+       (3, 28),
+       (3, 29),
+       (3, 30);
 
--- Chèn câu hỏi cho Phỏng vấn cơ bản về backend (Session 4)
-INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status, is_deleted, source)
-VALUES 
-(31, 'REST API là gì?', 'Giải thích REST API là gì và các nguyên tắc chính của nó.', 'REST API là một phong cách kiến trúc để xây dựng API sử dụng các phương thức HTTP như GET, POST, DELETE, tuân theo các nguyên tắc như không trạng thái và URL dựa trên tài nguyên.', 'Nó sử dụng các giao thức HTTP tiêu chuẩn để thực hiện các thao tác CRUD trên các tài nguyên được xác định bởi URI.', 'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(32, 'Cơ sở dữ liệu là gì?', 'Mô tả vai trò của cơ sở dữ liệu trong phát triển web.', 'Cơ sở dữ liệu lưu trữ, truy xuất và quản lý dữ liệu, đóng vai trò kho lưu trữ phía backend cho ứng dụng.', 'Nó tương tác với logic backend để cung cấp dữ liệu cho giao diện người dùng, đảm bảo lưu trữ lâu dài.', 'EASY', 'APPROVED', FALSE, 'UseBraintrust'),
-(33, 'Middleware là gì?', 'Giải thích middleware trong bối cảnh phát triển backend.', 'Middleware là phần mềm xử lý yêu cầu và phản hồi giữa server và cơ sở dữ liệu, xử lý các tác vụ như xác thực.', 'Nó nằm giữa ứng dụng và dịch vụ, cho phép ghi log, xác thực và các thao tác khác.', 'EASY', 'APPROVED', FALSE, 'UseBraintrust'),
-(34, 'HTTP là gì?', 'Mô tả giao thức HTTP và các phương thức phổ biến của nó.', 'HTTP là giao thức truyền dữ liệu qua web, sử dụng các phương thức như GET, POST, PUT và DELETE.', 'Nó cho phép giao tiếp client-server, với các phương thức xác định hành động trên tài nguyên.', 'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(35, 'Khóa chính là gì?', 'Giải thích khái niệm khóa chính trong cơ sở dữ liệu.', 'Khóa chính là định danh duy nhất cho mỗi bản ghi trong bảng cơ sở dữ liệu, đảm bảo tính toàn vẹn dữ liệu.', 'Nó ngăn chặn các bản ghi trùng lặp và được sử dụng để tham chiếu bản ghi trong các bảng liên quan.', 'MEDIUM', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(36, 'SQL injection là gì?', 'Mô tả SQL injection và cách ngăn chặn nó.', 'SQL injection là một cuộc tấn công chèn mã SQL độc hại vào truy vấn, gây nguy cơ cho bảo mật cơ sở dữ liệu.', 'Ngăn chặn bằng cách sử dụng câu lệnh chuẩn bị, truy vấn tham số hóa và xác thực đầu vào.', 'MEDIUM', 'APPROVED', FALSE, 'InterviewBit'),
-(37, 'ORM là gì?', 'Giải thích Object-Relational Mapping và lợi ích của nó.', 'ORM ánh xạ bảng cơ sở dữ liệu sang các đối tượng trong mã, đơn giản hóa tương tác cơ sở dữ liệu bằng các công cụ như Hibernate.', 'Nó giảm mã lặp lại và làm cho các thao tác cơ sở dữ liệu trở nên trực quan hơn.', 'MEDIUM', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(38, 'JWT là gì?', 'Mô tả JSON Web Tokens và cách sử dụng trong xác thực.', 'JWT là cơ chế xác thực dựa trên token chứa dữ liệu người dùng mã hóa, dùng để xác minh danh tính.', 'Nó bao gồm header, payload và chữ ký, được server xác thực để bảo mật API.', 'HARD', 'APPROVED', FALSE, 'InterviewBit'),
-(39, 'Cân bằng tải là gì?', 'Giải thích cân bằng tải và vai trò của nó trong hệ thống backend.', 'Cân bằng tải phân phối lưu lượng truy cập đến trên nhiều server để cải thiện hiệu suất và độ tin cậy.', 'Nó ngăn chặn quá tải server, đảm bảo tính sẵn sàng cao và khả năng mở rộng.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(40, 'Caching là gì?', 'Mô tả caching và lợi ích của nó trong phát triển backend.', 'Caching lưu trữ dữ liệu truy cập thường xuyên trong bộ nhớ để giảm tải cơ sở dữ liệu và cải thiện thời gian phản hồi.', 'Các kỹ thuật như Redis hoặc Memcached tăng hiệu suất cho các truy vấn lặp lại.', 'HARD', 'APPROVED', FALSE, 'UseBraintrust');
+-- Insert questions for Basic Backend Interview (Session 4)
+INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status,
+                      is_deleted, source)
+VALUES (31, 'What is a REST API?', 'Explain what a REST API is and its key principles.',
+        'A REST API is an architectural style for building APIs using HTTP methods like GET, POST, DELETE, adhering to principles like statelessness and resource-based URLs.',
+        'It uses standard HTTP protocols to perform CRUD operations on resources identified by URIs.', 'EASY',
+        'APPROVED', FALSE, 'GeeksForGeeks'),
+       (32, 'What is a database?', 'Describe the role of a database in web development.',
+        'A database stores, retrieves, and manages data, serving as the backend storage for applications.',
+        'It interacts with backend logic to provide data to the user interface, ensuring persistent storage.', 'EASY',
+        'APPROVED', FALSE, 'UseBraintrust'),
+       (33, 'What is middleware?', 'Explain middleware in the context of backend development.',
+        'Middleware is software that processes requests and responses between the server and database, handling tasks like authentication.',
+        'It sits between the application and services, enabling logging, authentication, and other operations.', 'EASY',
+        'APPROVED', FALSE, 'UseBraintrust'),
+       (34, 'What is HTTP?', 'Describe the HTTP protocol and its common methods.',
+        'HTTP is a protocol for transferring data over the web, using methods like GET, POST, PUT, and DELETE.',
+        'It enables client-server communication, with methods defining actions on resources.', 'EASY', 'APPROVED',
+        FALSE, 'GeeksForGeeks'),
+       (35, 'What is a primary key?', 'Explain the concept of a primary key in databases.',
+        'A primary key is a unique identifier for each record in a database table, ensuring data integrity.',
+        'It prevents duplicate records and is used to reference records in related tables.', 'MEDIUM', 'APPROVED',
+        FALSE, 'GeeksForGeeks'),
+       (36, 'What is SQL injection?', 'Describe SQL injection and how to prevent it.',
+        'SQL injection is an attack that injects malicious SQL code into queries, compromising database security.',
+        'Prevent it using prepared statements, parameterized queries, and input validation.', 'MEDIUM', 'APPROVED',
+        FALSE, 'InterviewBit'),
+       (37, 'What is ORM?', 'Explain Object-Relational Mapping and its benefits.',
+        'ORM maps database tables to objects in code, simplifying database interactions with tools like Hibernate.',
+        'It reduces repetitive code and makes database operations more intuitive.', 'MEDIUM', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (38, 'What is JWT?', 'Describe JSON Web Tokens and their use in authentication.',
+        'JWT is a token-based authentication mechanism containing encoded user data, used to verify identity.',
+        'It consists of a header, payload, and signature, validated by the server to secure APIs.', 'HARD', 'APPROVED',
+        FALSE, 'InterviewBit'),
+       (39, 'What is load balancing?', 'Explain load balancing and its role in backend systems.',
+        'Load balancing distributes traffic across multiple servers to improve performance and reliability.',
+        'It prevents server overload, ensuring high availability and scalability.', 'HARD', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (40, 'What is caching?', 'Describe caching and its benefits in backend development.',
+        'Caching stores frequently accessed data in memory to reduce database load and improve response times.',
+        'Techniques like Redis or Memcached enhance performance for repeated queries.', 'HARD', 'APPROVED', FALSE,
+        'UseBraintrust');
 
--- Liên kết câu hỏi với Phỏng vấn cơ bản về backend (Session 4)
-INSERT INTO interview_session_question (interview_session_id, question_id) VALUES 
-(4, 31), (4, 32), (4, 33), (4, 34), (4, 35), (4, 36), (4, 37), (4, 38), (4, 39), (4, 40);
+-- Link questions to Basic Backend Interview (Session 4)
+INSERT INTO interview_session_question (interview_session_id, question_id)
+VALUES (4, 31),
+       (4, 32),
+       (4, 33),
+       (4, 34),
+       (4, 35),
+       (4, 36),
+       (4, 37),
+       (4, 38),
+       (4, 39),
+       (4, 40);
 
--- Chèn câu hỏi cho Phỏng vấn lập trình viên Spring Boot (Session 5)
-INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status, is_deleted, source)
-VALUES 
-(41, 'Spring Boot là gì?', 'Giải thích Spring Boot là gì và các tính năng chính của nó.', 'Spring Boot là framework Java đơn giản hóa phát triển Spring với tự động cấu hình và server nhúng.', 'Nó cung cấp starters, tự động cấu hình phụ thuộc và hỗ trợ phát triển ứng dụng nhanh.', 'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(42, 'Dependency injection là gì?', 'Mô tả dependency injection trong Spring Boot.', 'Dependency injection là một mẫu thiết kế nơi các phụ thuộc được tiêm vào đối tượng, được quản lý bởi container IoC của Spring.', 'Nó tách rời các thành phần, làm cho chúng dễ kiểm tra và bảo trì.', 'EASY', 'APPROVED', FALSE, 'InterviewBit'),
-(43, 'Spring Boot starters là gì?', 'Giải thích vai trò của starters trong Spring Boot.', 'Starters là các phụ thuộc được cấu hình sẵn, đơn giản hóa việc thiết lập dự án, như spring-boot-starter-web cho ứng dụng web.', 'Chúng giảm cấu hình thủ công bằng cách bao gồm các thư viện cần thiết.', 'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(44, 'Annotation @RestController là gì?', 'Mô tả annotation @RestController trong Spring Boot.', '@RestController đánh dấu một lớp là controller RESTful, xử lý yêu cầu HTTP và trả về phản hồi JSON.', 'Nó kết hợp @Controller và @ResponseBody để phát triển API đơn giản hơn.', 'MEDIUM', 'APPROVED', FALSE, 'InterviewBit'),
-(45, 'Spring Data JPA là gì?', 'Giải thích Spring Data JPA và lợi ích của nó.', 'Spring Data JPA đơn giản hóa truy cập cơ sở dữ liệu bằng cách cung cấp các giao diện repository cho thao tác CRUD.', 'Nó giảm mã lặp lại và tích hợp với Hibernate cho ORM.', 'MEDIUM', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(46, 'Actuator trong Spring Boot là gì?', 'Mô tả Actuator và cách sử dụng trong Spring Boot.', 'Actuator cung cấp các endpoint để giám sát và quản lý ứng dụng Spring Boot, như /health và /metrics.', 'Nó cung cấp thông tin về sức khỏe ứng dụng, số liệu và cấu hình.', 'MEDIUM', 'APPROVED', FALSE, 'InterviewBit'),
-(47, 'Spring Security là gì?', 'Giải thích Spring Security và vai trò của nó trong ứng dụng backend.', 'Spring Security là framework bảo mật ứng dụng Java, xử lý xác thực và phân quyền.', 'Nó hỗ trợ các tính năng như OAuth2, JWT và kiểm soát truy cập dựa trên vai trò.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(48, 'Làm thế nào để xử lý ngoại lệ trong Spring Boot?', 'Mô tả xử lý ngoại lệ trong Spring Boot.', 'Sử dụng @ControllerAdvice và @ExceptionHandler để xử lý ngoại lệ toàn cục, trả về phản hồi lỗi tùy chỉnh.', 'Spring Boot cung cấp xử lý lỗi mặc định, có thể tùy chỉnh qua properties hoặc trình xử lý tùy chỉnh.', 'HARD', 'APPROVED', FALSE, 'InterviewBit'),
-(49, 'Microservice là gì?', 'Giải thích microservices và cách triển khai trong Spring Boot.', 'Microservices là các dịch vụ nhỏ, độc lập giao tiếp qua API, được xây dựng bằng khả năng REST của Spring Boot.', 'Spring Boot hỗ trợ microservices với các tính năng như Eureka cho khám phá dịch vụ.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(50, 'Làm thế nào để tối ưu hiệu suất Spring Boot?', 'Mô tả các kỹ thuật tối ưu hiệu suất ứng dụng Spring Boot.', 'Sử dụng caching, tối ưu truy vấn cơ sở dữ liệu, kích hoạt lazy loading và phân tích hiệu suất với Actuator.', 'Các kỹ thuật bao gồm sử dụng connection pooling và giảm chi phí tạo bean.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks');
+-- Insert questions for Spring Boot Developer Interview (Session 5)
+INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status,
+                      is_deleted, source)
+VALUES (41, 'What is Spring Boot?', 'Explain what Spring Boot is and its key features.',
+        'Spring Boot is a Java framework that simplifies Spring development with auto-configuration and embedded servers.',
+        'It provides starters, auto-configures dependencies, and supports rapid application development.', 'EASY',
+        'APPROVED', FALSE, 'GeeksForGeeks'),
+       (42, 'What is dependency injection?', 'Describe dependency injection in Spring Boot.',
+        'Dependency injection is a design pattern where dependencies are injected into objects, managed by Spring’s IoC container.',
+        'It decouples components, making them easier to test and maintain.', 'EASY', 'APPROVED', FALSE, 'InterviewBit'),
+       (43, 'What are Spring Boot starters?', 'Explain the role of starters in Spring Boot.',
+        'Starters are pre-configured dependencies that simplify project setup, like spring-boot-starter-web for web applications.',
+        'They reduce manual configuration by including necessary libraries.', 'EASY', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (44, 'What is the @RestController annotation?', 'Describe the @RestController annotation in Spring Boot.',
+        '@RestController marks a class as a RESTful controller, handling HTTP requests and returning JSON responses.',
+        'It combines @Controller and @ResponseBody for simpler API development.', 'MEDIUM', 'APPROVED', FALSE,
+        'InterviewBit'),
+       (45, 'What is Spring Data JPA?', 'Explain Spring Data JPA and its benefits.',
+        'Spring Data JPA simplifies database access by providing repository interfaces for CRUD operations.',
+        'It reduces boilerplate code and integrates with Hibernate for ORM.', 'MEDIUM', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (46, 'What is Actuator in Spring Boot?', 'Describe Actuator and its use in Spring Boot.',
+        'Actuator provides endpoints for monitoring and managing Spring Boot applications, like /health and /metrics.',
+        'It offers insights into application health, metrics, and configuration.', 'MEDIUM', 'APPROVED', FALSE,
+        'InterviewBit'),
+       (47, 'What is Spring Security?', 'Explain Spring Security and its role in backend applications.',
+        'Spring Security is a framework for securing Java applications, handling authentication and authorization.',
+        'It supports features like OAuth2, JWT, and role-based access control.', 'HARD', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (48, 'How to handle exceptions in Spring Boot?', 'Describe exception handling in Spring Boot.',
+        'Use @ControllerAdvice and @ExceptionHandler to handle exceptions globally, returning custom error responses.',
+        'Spring Boot provides default error handling, customizable via properties or custom handlers.', 'HARD',
+        'APPROVED', FALSE, 'InterviewBit'),
+       (49, 'What are microservices?', 'Explain microservices and their implementation in Spring Boot.',
+        'Microservices are small, independent services communicating via APIs, built using Spring Boot’s REST capabilities.',
+        'Spring Boot supports microservices with features like Eureka for service discovery.', 'HARD', 'APPROVED',
+        FALSE, 'GeeksForGeeks'),
+       (50, 'How to optimize performance in Spring Boot?',
+        'Describe techniques for optimizing Spring Boot application performance.',
+        'Use caching, optimize database queries, enable lazy loading, and profile performance with Actuator.',
+        'Techniques include connection pooling and reducing bean creation overhead.', 'HARD', 'APPROVED', FALSE,
+        'GeeksForGeeks');
 
--- Liên kết câu hỏi với Phỏng vấn lập trình viên Spring Boot (Session 5)
-INSERT INTO interview_session_question (interview_session_id, question_id) VALUES 
-(5, 41), (5, 42), (5, 43), (5, 44), (5, 45), (5, 46), (5, 47), (5, 48), (5, 49), (5, 50);
+-- Link questions to Spring Boot Developer Interview (Session 5)
+INSERT INTO interview_session_question (interview_session_id, question_id)
+VALUES (5, 41),
+       (5, 42),
+       (5, 43),
+       (5, 44),
+       (5, 45),
+       (5, 46),
+       (5, 47),
+       (5, 48),
+       (5, 49),
+       (5, 50);
 
--- Chèn câu hỏi cho Phỏng vấn nâng cao về backend (Session 6)
-INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status, is_deleted, source)
-VALUES 
-(51, 'Giao dịch cơ sở dữ liệu là gì?', 'Giải thích giao dịch cơ sở dữ liệu và các thuộc tính của nó.', 'Giao dịch là một chuỗi thao tác được xử lý như một đơn vị, tuân theo thuộc tính ACID (Nguyên tử, Nhất quán, Cô lập, Bền vững).', 'Nó đảm bảo toàn vẹn dữ liệu bằng cách hoàn tác nếu bất kỳ thao tác nào thất bại, duy trì tính nhất quán của cơ sở dữ liệu.', 'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(52, 'Chuẩn hóa cơ sở dữ liệu là gì?', 'Mô tả chuẩn hóa cơ sở dữ liệu và mục đích của nó.', 'Chuẩn hóa tổ chức các bảng cơ sở dữ liệu để loại bỏ dư thừa và đảm bảo toàn vẹn dữ liệu.', 'Nó chia bảng thành các bảng nhỏ hơn dựa trên phụ thuộc hàm.', 'EASY', 'APPROVED', FALSE, 'InterviewBit'),
-(53, 'Chỉ mục trong cơ sở dữ liệu là gì?', 'Giải thích vai trò của chỉ mục trong cơ sở dữ liệu.', 'Chỉ mục là cấu trúc dữ liệu cải thiện hiệu suất truy vấn bằng cách cho phép truy xuất dữ liệu nhanh hơn.', 'Nó hoạt động như chỉ mục của sách, trỏ đến vị trí dữ liệu trong bảng.', 'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(54, 'GraphQL là gì?', 'Mô tả GraphQL và lợi ích của nó so với REST.', 'GraphQL là ngôn ngữ truy vấn cho API, cho phép client yêu cầu dữ liệu cụ thể, giảm việc lấy thừa hoặc thiếu dữ liệu.', 'Nó cung cấp một endpoint duy nhất và truy vấn linh hoạt, không giống REST với nhiều endpoint.', 'MEDIUM', 'APPROVED', FALSE, 'UseBraintrust'),
-(55, 'WebSockets là gì?', 'Giải thích WebSockets và cách sử dụng trong phát triển backend.', 'WebSockets cung cấp kênh giao tiếp hai chiều để trao đổi dữ liệu thời gian thực giữa client và server.', 'Chúng được dùng cho các ứng dụng như chat hoặc cập nhật trực tiếp, không giống mô hình yêu cầu-phản hồi của HTTP.', 'MEDIUM', 'APPROVED', FALSE, 'UseBraintrust'),
-(56, 'Sharding là gì?', 'Mô tả sharding cơ sở dữ liệu và lợi ích của nó.', 'Sharding chia nhỏ cơ sở dữ liệu thành các phần phân tán để cải thiện khả năng mở rộng và hiệu suất.', 'Nó phân phối dữ liệu trên nhiều server, giảm tải cho từng cơ sở dữ liệu.', 'MEDIUM', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(57, 'Hệ thống phân tán là gì?', 'Giải thích hệ thống phân tán và các thách thức của nó.', 'Hệ thống phân tán là tập hợp các máy tính độc lập làm việc cùng nhau để đạt mục tiêu chung.', 'Các thách thức bao gồm độ trễ mạng, khả năng chịu lỗi và tính nhất quán dữ liệu giữa các node.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(58, 'Tính nhất quán cuối cùng là gì?', 'Mô tả tính nhất quán cuối cùng trong cơ sở dữ liệu phân tán.', 'Tính nhất quán cuối cùng đảm bảo tất cả các node trong hệ thống phân tán cuối cùng phản ánh dữ liệu giống nhau sau khi cập nhật.', 'Nó hy sinh tính nhất quán tức thời để ưu tiên tính sẵn sàng và khả năng chịu phân vùng.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(59, 'Định lý CAP là gì?', 'Giải thích định lý CAP và ý nghĩa của nó đối với cơ sở dữ liệu.', 'Định lý CAP nói rằng hệ thống phân tán chỉ có thể đảm bảo hai trong ba yếu tố: Nhất quán, Sẵn sàng, Chịu phân vùng.', 'Nó hướng dẫn thiết kế cơ sở dữ liệu, cân bằng các lựa chọn cho các trường hợp sử dụng cụ thể.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(60, 'Circuit breaking là gì?', 'Mô tả circuit breaking trong microservices.', 'Circuit breaking ngăn chặn lỗi dây chuyền bằng cách dừng yêu cầu đến dịch vụ thất bại, cải thiện độ bền hệ thống.', 'Nó giám sát sức khỏe dịch vụ và mở mạch khi lỗi vượt ngưỡng.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks');
+-- Insert questions for Advanced Backend Interview (Session 6)
+INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status,
+                      is_deleted, source)
+VALUES (51, 'What is a database transaction?', 'Explain database transactions and their properties.',
+        'A transaction is a sequence of operations treated as a single unit, adhering to ACID properties (Atomicity, Consistency, Isolation, Durability).',
+        'It ensures data integrity by rolling back if any operation fails, maintaining database consistency.', 'EASY',
+        'APPROVED', FALSE, 'GeeksForGeeks'),
+       (52, 'What is database normalization?', 'Describe database normalization and its purpose.',
+        'Normalization organizes database tables to eliminate redundancy and ensure data integrity.',
+        'It divides tables into smaller ones based on functional dependencies.', 'EASY', 'APPROVED', FALSE,
+        'InterviewBit'),
+       (53, 'What is an index in a database?', 'Explain the role of indexes in databases.',
+        'An index is a data structure that improves query performance by enabling faster data retrieval.',
+        'It acts like a book’s index, pointing to data locations in a table.', 'EASY', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (54, 'What is GraphQL?', 'Describe GraphQL and its benefits over REST.',
+        'GraphQL is a query language for APIs, allowing clients to request specific data, reducing over- or under-fetching.',
+        'It provides a single endpoint and flexible queries, unlike REST with multiple endpoints.', 'MEDIUM',
+        'APPROVED', FALSE, 'UseBraintrust'),
+       (55, 'What are WebSockets?', 'Explain WebSockets and their use in backend development.',
+        'WebSockets provide a bidirectional communication channel for real-time data exchange between client and server.',
+        'They are used for applications like chat or live updates, unlike HTTP’s request-response model.', 'MEDIUM',
+        'APPROVED', FALSE, 'UseBraintrust'),
+       (56, 'What is sharding?', 'Describe database sharding and its benefits.',
+        'Sharding splits a database into smaller, distributed parts to improve scalability and performance.',
+        'It distributes data across multiple servers, reducing the load on individual databases.', 'MEDIUM', 'APPROVED',
+        FALSE, 'GeeksForGeeks'),
+       (57, 'What is a distributed system?', 'Explain distributed systems and their challenges.',
+        'A distributed system is a collection of independent computers working together to achieve a common goal.',
+        'Challenges include network latency, fault tolerance, and data consistency across nodes.', 'HARD', 'APPROVED',
+        FALSE, 'GeeksForGeeks'),
+       (58, 'What is eventual consistency?', 'Describe eventual consistency in distributed databases.',
+        'Eventual consistency ensures all nodes in a distributed system eventually reflect the same data after updates.',
+        'It sacrifices immediate consistency for availability and partition tolerance.', 'HARD', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (59, 'What is the CAP theorem?', 'Explain the CAP theorem and its implications for databases.',
+        'The CAP theorem states that a distributed system can only guarantee two of three properties: Consistency, Availability, Partition Tolerance.',
+        'It guides database design, balancing trade-offs for specific use cases.', 'HARD', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (60, 'What is circuit breaking?', 'Describe circuit breaking in microservices.',
+        'Circuit breaking prevents cascading failures by stopping requests to a failing service, improving system resilience.',
+        'It monitors service health and opens the circuit when errors exceed a threshold.', 'HARD', 'APPROVED', FALSE,
+        'GeeksForGeeks');
 
--- Liên kết câu hỏi với Phỏng vấn nâng cao về backend (Session 6)
-INSERT INTO interview_session_question (interview_session_id, question_id) VALUES 
-(6, 51), (6, 52), (6, 53), (6, 54), (6, 55), (6, 56), (6, 57), (6, 58), (6, 59), (6, 60);
+-- Link questions to Advanced Backend Interview (Session 6)
+INSERT INTO interview_session_question (interview_session_id, question_id)
+VALUES (6, 51),
+       (6, 52),
+       (6, 53),
+       (6, 54),
+       (6, 55),
+       (6, 56),
+       (6, 57),
+       (6, 58),
+       (6, 59),
+       (6, 60);
 
--- Chèn câu hỏi cho Phỏng vấn cơ bản về Fullstack (Session 7)
-INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status, is_deleted, source)
-VALUES 
-(61, 'Lập trình viên Fullstack là gì?', 'Định nghĩa vai trò của lập trình viên Fullstack.', 'Lập trình viên Fullstack làm việc trên cả phát triển giao diện người dùng (UI) và backend, xử lý toàn bộ ngăn xếp ứng dụng web.', 'Họ thành thạo các công nghệ như HTML, JavaScript và các framework backend như Spring Boot.', 'EASY', 'APPROVED', FALSE, 'UseBraintrust'),
-(62, 'API là gì?', 'Giải thích API là gì và vai trò của nó trong phát triển Fullstack.', 'API (Application Programming Interface) cho phép các hệ thống hoặc thành phần khác nhau giao tiếp, thường giữa giao diện người dùng và backend.', 'Nó xác định cấu trúc yêu cầu và phản hồi, như API REST hoặc GraphQL.', 'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(63, 'Kiểm soát phiên bản là gì?', 'Mô tả kiểm soát phiên bản và tầm quan trọng của nó trong phát triển.', 'Kiểm soát phiên bản theo dõi thay đổi mã, cho phép cộng tác và hoàn tác bằng các công cụ như Git.', 'Nó đảm bảo các nhóm có thể làm việc đồng thời và duy trì lịch sử mã.', 'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(64, 'AJAX là gì?', 'Giải thích AJAX và cách sử dụng trong ứng dụng Fullstack.', 'AJAX (Asynchronous JavaScript and XML) cho phép lấy dữ liệu bất đồng bộ mà không cần tải lại trang, cải thiện trải nghiệm người dùng.', 'Nó cho phép giao diện người dùng yêu cầu dữ liệu từ backend một cách động, như trong gợi ý tìm kiếm.', 'MEDIUM', 'APPROVED', FALSE, 'UseBraintrust'),
-(65, 'CORS là gì?', 'Mô tả CORS và vai trò của nó trong phát triển web.', 'CORS (Cross-Origin Resource Sharing) là cơ chế bảo mật kiểm soát chia sẻ tài nguyên giữa các domain khác nhau.', 'Nó cho phép hoặc hạn chế truy cập API từ giao diện người dùng được lưu trữ trên một nguồn gốc khác.', 'MEDIUM', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(66, 'Tệp package.json là gì?', 'Giải thích mục đích của tệp package.json trong dự án Node.js.', 'package.json xác định siêu dữ liệu, phụ thuộc và script của dự án Node.js cho các tác vụ như xây dựng hoặc chạy.', 'Nó đảm bảo cài đặt phụ thuộc nhất quán trên các môi trường.', 'MEDIUM', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(67, 'Xác thực trong ứng dụng web là gì?', 'Mô tả xác thực và các phương pháp phổ biến được sử dụng.', 'Xác thực xác minh danh tính người dùng, sử dụng các phương pháp như JWT, OAuth2 hoặc xác thực dựa trên phiên.', 'Nó đảm bảo chỉ người dùng được ủy quyền truy cập tài nguyên được bảo vệ trong ứng dụng.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(68, 'CDN là gì?', 'Giải thích Content Delivery Networks và lợi ích của chúng.', 'CDN phân phối nội dung qua các server toàn cầu để giảm độ trễ và cải thiện tốc độ tải trang.', 'Nó lưu trữ các tài nguyên tĩnh như hình ảnh và script, nâng cao hiệu suất.', 'HARD', 'APPROVED', FALSE, 'UseBraintrust'),
-(69, 'Docker là gì?', 'Mô tả Docker và cách sử dụng trong phát triển Fullstack.', 'Docker là nền tảng container hóa ứng dụng, đóng gói mã và phụ thuộc để triển khai nhất quán.', 'Nó đảm bảo ứng dụng chạy giống nhau trên môi trường phát triển và sản xuất.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(70, 'CI/CD là gì?', 'Giải thích Continuous Integration và Continuous Deployment.', 'CI/CD tự động hóa việc xây dựng, kiểm tra và triển khai mã, đảm bảo phát hành phần mềm nhanh và đáng tin cậy.', 'CI tập trung vào tích hợp mã thường xuyên, trong khi CD tự động hóa triển khai lên sản xuất.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks');
+-- Insert questions for Basic Fullstack Interview (Session 7)
+INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status,
+                      is_deleted, source)
+VALUES (61, 'What is a Fullstack developer?', 'Define the role of a Fullstack developer.',
+        'A Fullstack developer works on both user interface (UI) and backend development, handling the entire web application stack.',
+        'They are proficient in technologies like HTML, JavaScript, and backend frameworks like Spring Boot.', 'EASY',
+        'APPROVED', FALSE, 'UseBraintrust'),
+       (62, 'What is an API?', 'Explain what an API is and its role in Fullstack development.',
+        'An API (Application Programming Interface) allows different systems or components to communicate, often between the UI and backend.',
+        'It defines request and response structures, like REST or GraphQL APIs.', 'EASY', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (63, 'What is version control?', 'Describe version control and its importance in development.',
+        'Version control tracks code changes, enabling collaboration and rollbacks using tools like Git.',
+        'It ensures teams can work concurrently and maintain code history.', 'EASY', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (64, 'What is AJAX?', 'Explain AJAX and its use in Fullstack applications.',
+        'AJAX (Asynchronous JavaScript and XML) enables asynchronous data fetching without page reloads, improving user experience.',
+        'It allows the UI to dynamically request data from the backend, like in search suggestions.', 'MEDIUM',
+        'APPROVED', FALSE, 'UseBraintrust'),
+       (65, 'What is CORS?', 'Describe CORS and its role in web development.',
+        'CORS (Cross-Origin Resource Sharing) is a security mechanism controlling resource sharing between different domains.',
+        'It allows or restricts API access from a UI hosted on a different origin.', 'MEDIUM', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (66, 'What is the package.json file?', 'Explain the purpose of the package.json file in a Node.js project.',
+        'package.json defines project metadata, dependencies, and scripts for tasks like building or running.',
+        'It ensures consistent dependency installation across environments.', 'MEDIUM', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (67, 'What is authentication in web applications?', 'Describe authentication and common methods used.',
+        'Authentication verifies user identity, using methods like JWT, OAuth2, or session-based authentication.',
+        'It ensures only authorized users access protected resources in an application.', 'HARD', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (68, 'What is a CDN?', 'Explain Content Delivery Networks and their benefits.',
+        'A CDN distributes content via global servers to reduce latency and improve page load speeds.',
+        'It caches static assets like images and scripts, enhancing performance.', 'HARD', 'APPROVED', FALSE,
+        'UseBraintrust'),
+       (69, 'What is Docker?', 'Describe Docker and its use in Fullstack development.',
+        'Docker is a containerization platform that packages code and dependencies for consistent deployment.',
+        'It ensures applications run identically across development and production environments.', 'HARD', 'APPROVED',
+        FALSE, 'GeeksForGeeks'),
+       (70, 'What is CI/CD?', 'Explain Continuous Integration and Continuous Deployment.',
+        'CI/CD automates code building, testing, and deployment, ensuring fast and reliable software releases.',
+        'CI focuses on frequent code integration, while CD automates deployment to production.', 'HARD', 'APPROVED',
+        FALSE, 'GeeksForGeeks');
 
--- Liên kết câu hỏi với Phỏng vấn cơ bản về Fullstack (Session 7)
-INSERT INTO interview_session_question (interview_session_id, question_id) VALUES 
-(7, 61), (7, 62), (7, 63), (7, 64), (7, 65), (7, 66), (7, 67), (7, 68), (7, 69), (7, 70);
+-- Link questions to Basic Fullstack Interview (Session 7)
+INSERT INTO interview_session_question (interview_session_id, question_id)
+VALUES (7, 61),
+       (7, 62),
+       (7, 63),
+       (7, 64),
+       (7, 65),
+       (7, 66),
+       (7, 67),
+       (7, 68),
+       (7, 69),
+       (7, 70);
 
--- Chèn câu hỏi cho Phỏng vấn MERN Stack (Session 8)
-INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status, is_deleted, source)
-VALUES 
-(71, 'MERN Stack là gì?', 'Mô tả MERN Stack và các thành phần của nó.', 'MERN Stack bao gồm MongoDB (cơ sở dữ liệu), Express.js (framework backend), React (thư viện giao diện), và Node.js (môi trường runtime).', 'Nó là một ngăn xếp dựa trên JavaScript để xây dựng ứng dụng web Fullstack.', 'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(72, 'MongoDB là gì?', 'Giải thích MongoDB và lợi ích của nó.', 'MongoDB là cơ sở dữ liệu NoSQL lưu trữ dữ liệu dưới dạng tài liệu giống JSON, cung cấp tính linh hoạt và khả năng mở rộng.', 'Nó không có schema, lý tưởng cho việc xử lý dữ liệu không cấu trúc trong ứng dụng Fullstack.', 'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(73, 'Express.js là gì?', 'Mô tả Express.js và vai trò của nó trong MERN Stack.', 'Express.js là framework Node.js để xây dựng API RESTful và xử lý yêu cầu HTTP.', 'Nó đơn giản hóa logic và định tuyến phía server trong ứng dụng MERN.', 'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(74, 'Node.js là gì?', 'Giải thích Node.js và cách sử dụng trong phát triển backend.', 'Node.js là môi trường runtime JavaScript để thực thi mã phía server, cho phép thao tác I/O không chặn.', 'Nó cung cấp sức mạnh cho backend của ứng dụng MERN, xử lý yêu cầu và logic nghiệp vụ.', 'MEDIUM', 'APPROVED', FALSE, 'InterviewBit'),
-(75, 'Làm thế nào để kết nối React với Express?', 'Mô tả cách kết nối giao diện React với backend Express.', 'Sử dụng yêu cầu HTTP (như fetch hoặc axios) để giao tiếp với API Express, xử lý dữ liệu ở định dạng JSON.', 'Cài đặt CORS trong Express để cho phép yêu cầu từ domain của ứng dụng React.', 'MEDIUM', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(76, 'Mongoose là gì?', 'Giải thích Mongoose và vai trò của nó trong MongoDB.', 'Mongoose là thư viện ODM (Object Data Modeling) cho MongoDB, đơn giản hóa việc mô hình hóa dữ liệu và truy vấn.', 'Nó cung cấp schema và xác thực cho MongoDB trong ứng dụng Node.js.', 'MEDIUM', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(77, 'Làm thế nào để quản lý trạng thái trong ứng dụng MERN?', 'Mô tả quản lý trạng thái trong ứng dụng MERN Stack.', 'Sử dụng useState hoặc Redux cho trạng thái giao diện, và quản lý trạng thái backend qua MongoDB và logic Express.', 'Tập trung trạng thái phức tạp với Redux để có luồng dữ liệu dự đoán được giữa các components.', 'HARD', 'APPROVED', FALSE, 'UseBraintrust'),
-(78, 'RESTful routing là gì?', 'Giải thích RESTful routing trong Express.js.', 'RESTful routing sử dụng các phương thức HTTP và mẫu URL để thực hiện thao tác CRUD trên tài nguyên.', 'Nó tuân theo các quy ước như GET /users để liệt kê và POST /users để tạo.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(79, 'Làm thế nào để bảo mật ứng dụng MERN?', 'Mô tả các phương pháp bảo mật cho ứng dụng MERN Stack.', 'Sử dụng JWT để xác thực, làm sạch đầu vào, kích hoạt HTTPS và sử dụng Helmet cho các tiêu đề bảo mật Express.', 'Triển khai bcrypt để băm mật khẩu và xác thực tất cả đầu vào người dùng.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(80, 'SSR trong MERN là gì?', 'Giải thích server-side rendering trong MERN Stack.', 'SSR hiển thị components React trên server, gửi HTML đến client để tăng tốc độ tải ban đầu.', 'Nó cải thiện SEO và hiệu suất, sử dụng các framework như Next.js trong ứng dụng MERN.', 'HARD', 'APPROVED', FALSE, 'InterviewBit');
+-- Insert questions for MERN Stack Interview (Session 8)
+INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status,
+                      is_deleted, source)
+VALUES (71, 'What is the MERN Stack?', 'Describe the MERN Stack and its components.',
+        'The MERN Stack consists of MongoDB (database), Express.js (backend framework), React (UI library), and Node.js (runtime environment).',
+        'It is a JavaScript-based stack for building Fullstack web applications.', 'EASY', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (72, 'What is MongoDB?', 'Explain MongoDB and its benefits.',
+        'MongoDB is a NoSQL database that stores data as JSON-like documents, offering flexibility and scalability.',
+        'It is schemaless, ideal for handling unstructured data in Fullstack applications.', 'EASY', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (73, 'What is Express.js?', 'Describe Express.js and its role in the MERN Stack.',
+        'Express.js is a Node.js framework for building RESTful APIs and handling HTTP requests.',
+        'It simplifies server-side logic and routing in MERN applications.', 'EASY', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (74, 'What is Node.js?', 'Explain Node.js and its use in backend development.',
+        'Node.js is a JavaScript runtime for executing server-side code, enabling non-blocking I/O operations.',
+        'It powers the backend of MERN applications, handling requests and business logic.', 'MEDIUM', 'APPROVED',
+        FALSE, 'InterviewBit'),
+       (75, 'How to connect React with Express?', 'Describe how to connect a React frontend with an Express backend.',
+        'Use HTTP requests (like fetch or axios) to communicate with Express APIs, handling data in JSON format.',
+        'Enable CORS in Express to allow requests from the React application’s domain.', 'MEDIUM', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (76, 'What is Mongoose?', 'Explain Mongoose and its role in MongoDB.',
+        'Mongoose is an ODM (Object Data Modeling) library for MongoDB, simplifying data modeling and querying.',
+        'It provides schemas and validation for MongoDB in Node.js applications.', 'MEDIUM', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (77, 'How to manage state in a MERN application?', 'Describe state management in a MERN Stack application.',
+        'Use useState or Redux for frontend state, and manage backend state via MongoDB and Express logic.',
+        'Centralize complex state with Redux for predictable data flow between components.', 'HARD', 'APPROVED', FALSE,
+        'UseBraintrust'),
+       (78, 'What is RESTful routing?', 'Explain RESTful routing in Express.js.',
+        'RESTful routing uses HTTP methods and URL patterns to perform CRUD operations on resources.',
+        'It follows conventions like GET /users for listing and POST /users for creating.', 'HARD', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (79, 'How to secure a MERN application?', 'Describe security practices for a MERN Stack application.',
+        'Use JWT for authentication, sanitize inputs, enable HTTPS, and use Helmet for Express security headers.',
+        'Implement bcrypt for password hashing and validate all user inputs.', 'HARD', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (80, 'What is SSR in MERN?', 'Explain server-side rendering in the MERN Stack.',
+        'SSR renders React components on the server, sending HTML to the client for faster initial load times.',
+        'It improves SEO and performance, using frameworks like Next.js in MERN applications.', 'HARD', 'APPROVED',
+        FALSE, 'InterviewBit');
 
--- Liên kết câu hỏi với Phỏng vấn MERN Stack (Session 8)
-INSERT INTO interview_session_question (interview_session_id, question_id) VALUES 
-(8, 71), (8, 72), (8, 73), (8, 74), (8, 75), (8, 76), (8, 77), (8, 78), (8, 79), (8, 80);
+-- Link questions to MERN Stack Interview (Session 8)
+INSERT INTO interview_session_question (interview_session_id, question_id)
+VALUES (8, 71),
+       (8, 72),
+       (8, 73),
+       (8, 74),
+       (8, 75),
+       (8, 76),
+       (8, 77),
+       (8, 78),
+       (8, 79),
+       (8, 80);
 
--- Chèn câu hỏi cho Phỏng vấn nâng cao về Fullstack (Session 9)
-INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status, is_deleted, source)
-VALUES 
-(81, 'Kiến trúc monolithic là gì?', 'Giải thích kiến trúc monolithic và ưu/nhược điểm của nó.', 'Kiến trúc monolithic kết hợp tất cả thành phần ứng dụng vào một đơn vị duy nhất, triển khai cùng nhau.', 'Ưu: Phát triển đơn giản; Nhược: Khó mở rộng và bảo trì so với microservices.', 'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(82, 'Kiến trúc microservices là gì?', 'Mô tả microservices và lợi ích của chúng.', 'Microservices là các dịch vụ nhỏ, độc lập giao tiếp qua API, cho phép mở rộng và linh hoạt.', 'Chúng cho phép triển khai độc lập và dễ bảo trì nhưng tăng độ phức tạp.', 'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(83, 'DevOps là gì?', 'Giải thích DevOps và vai trò của nó trong phát triển Fullstack.', 'DevOps là phương pháp kết hợp phát triển và vận hành để tự động hóa và tối ưu hóa việc cung cấp phần mềm.', 'Nó sử dụng pipeline CI/CD và các công cụ như Jenkins để cải thiện tốc độ triển khai.', 'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(84, 'Reverse proxy là gì?', 'Mô tả reverse proxy và cách sử dụng trong ứng dụng web.', 'Reverse proxy chuyển tiếp yêu cầu của client đến các server backend, cung cấp cân bằng tải và bảo mật.', 'Nó che giấu chi tiết server và có thể lưu trữ phản hồi để cải thiện hiệu suất.', 'MEDIUM', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(85, 'API Gateway là gì?', 'Giải thích vai trò của API Gateway trong ứng dụng Fullstack.', 'API Gateway là điểm vào cho yêu cầu client, định tuyến chúng đến các microservices phù hợp.', 'Nó xử lý xác thực, giới hạn tốc độ và cân bằng tải cho API.', 'MEDIUM', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(86, 'Chỉ mục cơ sở dữ liệu là gì?', 'Mô tả chỉ mục cơ sở dữ liệu và tác động của nó đến hiệu suất.', 'Chỉ mục tạo cấu trúc dữ liệu để tăng tốc thực thi truy vấn bằng cách giảm việc quét dữ liệu.', 'Nó cải thiện hiệu suất đọc nhưng có thể làm chậm thao tác ghi do cập nhật chỉ mục.', 'MEDIUM', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(87, 'Tính nhất quán cuối cùng trong Fullstack là gì?', 'Giải thích tính nhất quán cuối cùng trong bối cảnh ứng dụng Fullstack.', 'Tính nhất quán cuối cùng đảm bảo các hệ thống phân tán như cơ sở dữ liệu cuối cùng đồng bộ sau khi cập nhật.', 'Nó được sử dụng trong các hệ thống có khả năng mở rộng để ưu tiên tính sẵn sàng hơn tính nhất quán tức thời.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(88, 'Triển khai blue-green là gì?', 'Mô tả triển khai blue-green và lợi ích của nó.', 'Triển khai blue-green chạy hai môi trường giống nhau, chuyển lưu lượng sang môi trường mới sau khi kiểm tra.', 'Nó giảm thiểu thời gian ngừng hoạt động và cho phép hoàn tác dễ dàng nếu có vấn đề.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(89, 'Kubernetes là gì?', 'Giải thích Kubernetes và cách sử dụng trong phát triển Fullstack.', 'Kubernetes là nền tảng điều phối container, tự động hóa triển khai, mở rộng và quản lý.', 'Nó đảm bảo tính sẵn sàng cao và khả năng mở rộng cho ứng dụng Fullstack.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
-(90, 'GraphQL Federation là gì?', 'Mô tả GraphQL Federation và vai trò của nó trong ứng dụng Fullstack.', 'GraphQL Federation kết hợp nhiều dịch vụ GraphQL thành một endpoint duy nhất, đơn giản hóa API phức tạp.', 'Nó cho phép phát triển mô-đun, giúp các nhóm quản lý các dịch vụ độc lập.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks');
+-- Insert questions for Advanced Fullstack Interview (Session 9)
+INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status,
+                      is_deleted, source)
+VALUES (81, 'What is a monolithic architecture?', 'Explain monolithic architecture and its pros and cons.',
+        'Monolithic architecture combines all application components into a single unit, deployed together.',
+        'Pros: Simple development; Cons: Hard to scale and maintain compared to microservices.', 'EASY', 'APPROVED',
+        FALSE, 'GeeksForGeeks'),
+       (82, 'What is a microservices architecture?', 'Describe microservices and their benefits.',
+        'Microservices are small, independent services communicating via APIs, enabling scalability and flexibility.',
+        'They allow independent deployment and easier maintenance but increase complexity.', 'EASY', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (83, 'What is DevOps?', 'Explain DevOps and its role in Fullstack development.',
+        'DevOps is a methodology combining development and operations to automate and optimize software delivery.',
+        'It uses CI/CD pipelines and tools like Jenkins to improve deployment speed.', 'EASY', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (84, 'What is a reverse proxy?', 'Describe a reverse proxy and its use in web applications.',
+        'A reverse proxy forwards client requests to backend servers, providing load balancing and security.',
+        'It hides server details and can cache responses to improve performance.', 'MEDIUM', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (85, 'What is an API Gateway?', 'Explain the role of an API Gateway in Fullstack applications.',
+        'An API Gateway is a single entry point for client requests, routing them to appropriate microservices.',
+        'It handles authentication, rate limiting, and load balancing for APIs.', 'MEDIUM', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (86, 'What is a database index?', 'Describe database indexes and their impact on performance.',
+        'Indexes create data structures to speed up query execution by reducing data scanning.',
+        'They improve read performance but may slow write operations due to index updates.', 'MEDIUM', 'APPROVED',
+        FALSE, 'GeeksForGeeks'),
+       (87, 'What is eventual consistency in Fullstack?',
+        'Explain eventual consistency in the context of Fullstack applications.',
+        'Eventual consistency ensures distributed systems like databases eventually synchronize after updates.',
+        'It is used in scalable systems to prioritize availability over immediate consistency.', 'HARD', 'APPROVED',
+        FALSE, 'GeeksForGeeks'),
+       (88, 'What is blue-green deployment?', 'Describe blue-green deployment and its benefits.',
+        'Blue-green deployment runs two identical environments, switching traffic to the new one after testing.',
+        'It minimizes downtime and allows easy rollback if issues arise.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
+       (89, 'What is Kubernetes?', 'Explain Kubernetes and its use in Fullstack development.',
+        'Kubernetes is a container orchestration platform, automating deployment, scaling, and management.',
+        'It ensures high availability and scalability for Fullstack applications.', 'HARD', 'APPROVED', FALSE,
+        'GeeksForGeeks'),
+       (90, 'What is GraphQL Federation?', 'Describe GraphQL Federation and its role in Fullstack applications.',
+        'GraphQL Federation combines multiple GraphQL services into a single endpoint, simplifying complex APIs.',
+        'It enables modular development, allowing teams to manage independent services.', 'HARD', 'APPROVED', FALSE,
+        'GeeksForGeeks');
 
--- Liên kết câu hỏi với Phỏng vấn nâng cao về Fullstack (Session 9)
-INSERT INTO interview_session_question (interview_session_id, question_id) VALUES 
-(9, 81), (9, 82), (9, 83), (9, 84), (9, 85), (9, 86), (9, 87), (9, 88), (9, 89), (9, 90);
+-- Link questions to Advanced Fullstack Interview (Session 9)
+INSERT INTO interview_session_question (interview_session_id, question_id)
+VALUES (9, 81),
+       (9, 82),
+       (9, 83),
+       (9, 84),
+       (9, 85),
+       (9, 86),
+       (9, 87),
+       (9, 88),
+       (9, 89),
+       (9, 90);
 
--- Chèn tag cho câu hỏi
-INSERT INTO question_tag (question_id, tag_id) VALUES 
--- Phỏng vấn cơ bản về giao diện người dùng (1-10): JavaScript, Cấu trúc dữ liệu
-(1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6, 2), (7, 2), (8, 2), (9, 2), (10, 2),
-(8, 6), (10, 6),
--- Phỏng vấn lập trình viên ReactJS (11-20): ReactJS, JavaScript
-(11, 4), (12, 4), (13, 4), (14, 4), (15, 4), (16, 4), (17, 4), (18, 4), (19, 4), (20, 4),
-(11, 2), (12, 2), (13, 2), (14, 2), (15, 2), (16, 2), (17, 2), (18, 2), (19, 2), (20, 2),
--- Phỏng vấn nâng cao về giao diện người dùng (21-30): JavaScript, Cấu trúc dữ liệu
-(21, 2), (22, 2), (23, 2), (24, 2), (25, 2), (26, 2), (27, 2), (28, 2), (29, 2), (30, 2),
-(25, 6), (27, 6),
--- Phỏng vấn cơ bản về backend (31-40): Java, SQL
-(31, 1), (32, 5), (33, 1), (34, 1), (35, 5), (36, 5), (37, 1), (38, 1), (39, 1), (40, 5),
--- Phỏng vấn lập trình viên Spring Boot (41-50): Java, Spring Boot
-(41, 3), (42, 3), (43, 3), (44, 3), (45, 3), (46, 3), (47, 3), (48, 3), (49, 3), (50, 3),
-(41, 1), (42, 1), (43, 1), (44, 1), (45, 1), (46, 1), (47, 1), (48, 1), (49, 1), (50, 1),
--- Phỏng vấn nâng cao về backend (51-60): SQL, Cấu trúc dữ liệu
-(51, 5), (52, 5), (53, 5), (54, 1), (55, 1), (56, 5), (57, 6), (58, 5), (59, 5), (60, 1),
--- Phỏng vấn cơ bản về Fullstack (61-70): JavaScript, Java, SQL
-(61, 2), (62, 1), (63, 1), (64, 2), (65, 1), (66, 1), (67, 1), (68, 1), (69, 1), (70, 1),
-(62, 5), (67, 5),
--- Phỏng vấn MERN Stack (71-80): ReactJS, JavaScript
-(71, 4), (72, 5), (73, 1), (74, 1), (75, 4), (76, 5), (77, 4), (78, 1), (79, 1), (80, 4),
-(71, 2), (73, 2), (74, 2), (75, 2), (77, 2), (78, 2), (79, 2), (80, 2),
--- Phỏng vấn nâng cao về Fullstack (81-90): Java, SQL, Cấu trúc dữ liệu
-(81, 1), (82, 1), (83, 1), (84, 1), (85, 1), (86, 5), (87, 5), (88, 1), (89, 1), (90, 1),
-(81, 6), (82, 6), (87, 6);
-
--- Chèn tag cho interview session
-INSERT INTO interview_session_tag (interview_session_id, tag_id) VALUES 
-(1, 2), (1, 6), -- Phỏng vấn cơ bản về giao diện người dùng: JavaScript, Cấu trúc dữ liệu
-(2, 2), (2, 4), -- Phỏng vấn lập trình viên ReactJS: JavaScript, ReactJS
-(3, 2), (3, 6), -- Phỏng vấn nâng cao về giao diện người dùng: JavaScript, Cấu trúc dữ liệu
-(4, 1), (4, 5), -- Phỏng vấn cơ bản về backend: Java, SQL
-(5, 1), (5, 3), -- Phỏng vấn lập trình viên Spring Boot: Java, Spring Boot
-(6, 5), (6, 6), -- Phỏng vấn nâng cao về backend: SQL, Cấu trúc dữ liệu
-(7, 1), (7, 2), (7, 5), -- Phỏng vấn cơ bản về Fullstack: Java, JavaScript, SQL
-(8, 2), (8, 4), (8, 5), -- Phỏng vấn MERN Stack: JavaScript, ReactJS, SQL
-(9, 1), (9, 5), (9, 6); -- Phỏng vấn nâng cao về Fullstack: Java, SQL, Cấu trúc dữ liệu
-
--- Thêm Package
-INSERT INTO package(package_id, create_at, description, is_deleted, package_name, price, update_at, cv_analyze_count, interview_count, jd_analyze_count)
+-- Insert tags for questions
+INSERT INTO question_tag (question_id, tag_id)
 VALUES
-    (1, NOW(), 'Gói chào mừng miễn phí cho người mới bắt đầu luyện phỏng vấn', false, 'Welcome', 0, NOW(), 10, 10, 5),
-    (2, NOW(), 'Gói luyện phỏng vấn cơ bản với số lượng câu hỏi và phân tích giới hạn', false, 'Beginner', 99000, NOW(), 25, 25, 15),
-    (3, NOW(), 'Gói luyện phỏng vấn chuyên sâu, không giới hạn câu hỏi và phân tích chi tiết', false, 'Professional', 299000, NOW(), 60, 60, 35);
+-- Basic User Interface Interview (1-10): JavaScript, Data Structures
+(1, 2),
+(2, 2),
+(3, 2),
+(4, 2),
+(5, 2),
+(6, 2),
+(7, 2),
+(8, 2),
+(9, 2),
+(10, 2),
+(8, 6),
+(10, 6),
+-- ReactJS Developer Interview (11-20): ReactJS, JavaScript
+(11, 4),
+(12, 4),
+(13, 4),
+(14, 4),
+(15, 4),
+(16, 4),
+(17, 4),
+(18, 4),
+(19, 4),
+(20, 4),
+(11, 2),
+(12, 2),
+(13, 2),
+(14, 2),
+(15, 2),
+(16, 2),
+(17, 2),
+(18, 2),
+(19, 2),
+(20, 2),
+-- Advanced User Interface Interview (21-30): JavaScript, Data Structures
+(21, 2),
+(22, 2),
+(23, 2),
+(24, 2),
+(25, 2),
+(26, 2),
+(27, 2),
+(28, 2),
+(29, 2),
+(30, 2),
+(25, 6),
+(27, 6),
+-- Basic Backend Interview (31-40): Java, SQL
+(31, 1),
+(32, 5),
+(33, 1),
+(34, 1),
+(35, 5),
+(36, 5),
+(37, 1),
+(38, 1),
+(39, 1),
+(40, 5),
+-- Spring Boot Developer Interview (41-50): Java, Spring Boot
+(41, 3),
+(42, 3),
+(43, 3),
+(44, 3),
+(45, 3),
+(46, 3),
+(47, 3),
+(48, 3),
+(49, 3),
+(50, 3),
+(41, 1),
+(42, 1),
+(43, 1),
+(44, 1),
+(45, 1),
+(46, 1),
+(47, 1),
+(48, 1),
+(49, 1),
+(50, 1),
+-- Advanced Backend Interview (51-60): SQL, Data Structures
+(51, 5),
+(52, 5),
+(53, 5),
+(54, 1),
+(55, 1),
+(56, 5),
+(57, 6),
+(58, 5),
+(59, 5),
+(60, 1),
+-- Basic Fullstack Interview (61-70): JavaScript, Java, SQL
+(61, 2),
+(62, 1),
+(63, 1),
+(64, 2),
+(65, 1),
+(66, 1),
+(67, 1),
+(68, 1),
+(69, 1),
+(70, 1),
+(62, 5),
+(67, 5),
+-- MERN Stack Interview (71-80): ReactJS, JavaScript
+(71, 4),
+(72, 5),
+(73, 1),
+(74, 1),
+(75, 4),
+(76, 5),
+(77, 4),
+(78, 1),
+(79, 1),
+(80, 4),
+(71, 2),
+(73, 2),
+(74, 2),
+(75, 2),
+(77, 2),
+(78, 2),
+(79, 2),
+(80, 2),
+-- Advanced Fullstack Interview (81-90): Java, SQL, Data Structures
+(81, 1),
+(82, 1),
+(83, 1),
+(84, 1),
+(85, 1),
+(86, 5),
+(87, 5),
+(88, 1),
+(89, 1),
+(90, 1),
+(81, 6),
+(82, 6),
+(87, 6);
 
+-- Insert tags for interview sessions
+INSERT INTO interview_session_tag (interview_session_id, tag_id)
+VALUES (1, 2),
+       (1, 6), -- Basic User Interface Interview: JavaScript, Data Structures
+       (2, 2),
+       (2, 4), -- ReactJS Developer Interview: JavaScript, ReactJS
+       (3, 2),
+       (3, 6), -- Advanced User Interface Interview: JavaScript, Data Structures
+       (4, 1),
+       (4, 5), -- Basic Backend Interview: Java, SQL
+       (5, 1),
+       (5, 3), -- Spring Boot Developer Interview: Java, Spring Boot
+       (6, 5),
+       (6, 6), -- Advanced Backend Interview: SQL, Data Structures
+       (7, 1),
+       (7, 2),
+       (7, 5), -- Basic Fullstack Interview: Java, JavaScript, SQL
+       (8, 2),
+       (8, 4),
+       (8, 5), -- MERN Stack Interview: JavaScript, ReactJS, SQL
+       (9, 1),
+       (9, 5),
+       (9, 6);
+-- Advanced Fullstack Interview: Java, SQL, Data Structures
 
--- Đặt lại Sequence IDs
-SELECT setval('interview_session_interview_session_id_seq', (SELECT MAX(interview_session_id) FROM interview_session) + 1);
+-- Insert Packages
+INSERT INTO package (package_id, create_at, description, is_deleted, package_name, price, update_at, cv_analyze_count,
+                     interview_count, jd_analyze_count)
+VALUES (1, NOW(), 'Free welcome package for beginners to practice interviews', FALSE, 'Welcome', 0, NOW(), 10, 10, 5),
+       (2, NOW(), 'Basic interview practice package with limited questions and analysis', FALSE, 'Beginner', 99000,
+        NOW(), 25, 25, 15),
+       (3, NOW(), 'Advanced interview practice package with unlimited questions and detailed analysis', FALSE,
+        'Professional', 299000, NOW(), 60, 60, 35);
+
+-- Reset Sequence IDs
+SELECT setval('interview_session_interview_session_id_seq',
+              (SELECT MAX(interview_session_id) FROM interview_session) + 1);
 SELECT setval('topic_topic_id_seq', (SELECT MAX(topic_id) FROM topic) + 1);
 SELECT setval('tag_tag_id_seq', (SELECT MAX(tag_id) FROM tag) + 1);
 SELECT setval('question_question_id_seq', (SELECT MAX(question_id) FROM question) + 1);
