@@ -78,6 +78,11 @@ public class ForumPostController {
         return ResponseEntity.ok(forumPostService.getMyPosts());
     }
 
+    @GetMapping("/by-topic/{topicId}")
+    public Response<List<CreateResponseForumDTO>> getByTopic(@PathVariable Long topicId) {
+        return forumPostService.getPostsByTopic(topicId);
+    }
+
     @PostMapping
     public Response<CreateResponseForumDTO> createForumPost(@Valid @RequestBody CreateRequestForumPostDTO forumPostDTO) {
         return forumPostService.createForumPost(forumPostDTO);
