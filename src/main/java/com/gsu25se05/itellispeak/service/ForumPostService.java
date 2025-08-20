@@ -61,6 +61,46 @@ public class ForumPostService {
         return post;
     }
 
+    public Response<List<CreateResponseForumDTO>> getPostsByTopic(Long topicId) {
+
+        User current = accountUtils.getCurrentAccount();
+        if (current == null) return new Response<>(401, "Please log in first", null);
+
+        ForumTopicType topic = forumTopicTypeRepository.findById(topicId)
+                .orElseThrow(() -> new NotFoundException("Topic not found"));
+
+        List<ForumPost> posts = forumPostRepository
+                .findByForumTopicType_IdAndIsDeletedFalseOrderByCreateAtDesc(topicId);
+
+        List<CreateResponseForumDTO> data = posts.stream().map(post -> {
+            String email = post.getUser() != null ? post.getUser().getEmail() : null;
+            String authorUsername = (email != null && email.contains("@")) ? email.split("@")[0] : "unknown";
+
+            // lọc ảnh active
+            List<String> activeImages = post.getPictures() == null ? Collections.emptyList() :
+                    post.getPictures().stream()
+                            .filter(p -> !Boolean.TRUE.equals(p.isDeleted()))
+                            .map(ForumPostPicture::getUrl)
+                            .collect(Collectors.toList());
+
+            int readTime = estimateReadTime(post.getContent());
+
+            return new CreateResponseForumDTO(
+                    post.getId(),
+                    post.getTitle(),
+                    post.getContent(),
+                    activeImages,
+                    authorUsername,
+                    post.getForumTopicType(),
+                    post.getCreateAt(),
+                    post.getLikeCount(),
+                    readTime
+            );
+        }).collect(Collectors.toList());
+
+        return new Response<>(200, "Get posts by topic successfully", data);
+    }
+
     public Response<List<CreateResponseForumDTO>> getMyPosts() {
         User user = accountUtils.getCurrentAccount();
         if (user == null)
