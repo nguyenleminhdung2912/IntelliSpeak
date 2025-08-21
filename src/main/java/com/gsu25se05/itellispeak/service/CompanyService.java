@@ -58,6 +58,13 @@ public class CompanyService {
         List<HRResponseDTO> hrDTOs = company.getHrList().stream().map(hr -> {
             HRResponseDTO hrDto = new HRResponseDTO();
             hrDto.setHrId(hr.getHrId());
+            String firstName = hr.getUser().getFirstName();
+            String lastName  = hr.getUser().getLastName();
+
+            String fullName = (firstName == null || firstName.isBlank())
+                    ? lastName
+                    : firstName + " " + lastName;
+            hrDto.setName(fullName);
             hrDto.setCompany(company.getName());
             hrDto.setPhone(hr.getPhone());
             hrDto.setCountry(hr.getCountry());

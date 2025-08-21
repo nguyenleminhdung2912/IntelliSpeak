@@ -264,6 +264,11 @@ public class AuthService implements UserDetailsService {
         User account = new User(
                 registerRequestDTO.getEmail()
         );
+        String email = registerRequestDTO.getEmail();
+        if (email != null && email.contains("@")) {
+            String beforeAt = email.substring(0, email.indexOf("@"));
+            account.setLastName(beforeAt);
+        }
         account.setAvatar(defaultAvatar);
 
         account.setPassword(passwordEncoder.encode(registerRequestDTO.getPassword()));
