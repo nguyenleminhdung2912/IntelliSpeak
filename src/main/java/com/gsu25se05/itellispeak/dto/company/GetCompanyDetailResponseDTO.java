@@ -1,6 +1,7 @@
 package com.gsu25se05.itellispeak.dto.company;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.gsu25se05.itellispeak.dto.ai_evaluation.InterviewSessionDto;
 import com.gsu25se05.itellispeak.dto.hr.HRResponseDTO;
 import com.gsu25se05.itellispeak.dto.interview_session.InterviewSessionDTO;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class GetCompanyDetailResponseDTO {
     private Long companyId;
     private String name;

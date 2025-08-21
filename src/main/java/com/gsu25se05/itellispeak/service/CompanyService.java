@@ -3,6 +3,7 @@ package com.gsu25se05.itellispeak.service;
 import com.gsu25se05.itellispeak.dto.ai_evaluation.InterviewSessionDto;
 import com.gsu25se05.itellispeak.dto.company.CreateCompanyRequestDTO;
 import com.gsu25se05.itellispeak.dto.company.GetCompanyDetailResponseDTO;
+import com.gsu25se05.itellispeak.dto.company.InterviewSessionUserDto;
 import com.gsu25se05.itellispeak.dto.hr.HRResponseDTO;
 import com.gsu25se05.itellispeak.entity.Company;
 import com.gsu25se05.itellispeak.repository.CompanyRepository;
@@ -21,8 +22,21 @@ public class CompanyService {
         this.companyRepository = companyRepository;
     }
 
-    public List<Company> getAllCompanies() {
-        return companyRepository.findAll();
+    public List<GetCompanyDetailResponseDTO> getAllCompanyDetails() {
+        return companyRepository.findAll().stream().map(company -> {
+            GetCompanyDetailResponseDTO dto = new GetCompanyDetailResponseDTO();
+            dto.setCompanyId(company.getCompanyId());
+            dto.setName(company.getName());
+            dto.setShortName(company.getShortName());
+            dto.setDescription(company.getDescription());
+            dto.setLogoUrl(company.getLogoUrl());
+            dto.setWebsite(company.getWebsite());
+            dto.setCreateAt(company.getCreateAt());
+            dto.setUpdateAt(company.getUpdateAt());
+            dto.setIsDeleted(company.getIsDeleted());
+            // hrList and interviewTemplateList remain empty
+            return dto;
+        }).toList();
     }
 
     public GetCompanyDetailResponseDTO getCompanyDetailById(Long companyId) {
@@ -58,13 +72,21 @@ public class CompanyService {
 
         // Map InterviewSessions
         List<InterviewSessionDto> sessionDTOs = company.getInterviewSessions().stream().map(session -> {
+            InterviewSessionUserDto createdByDto = null;
+            if (session.getCreatedBy() != null) {
+                createdByDto = new InterviewSessionUserDto(
+                        session.getCreatedBy().getUserId(),
+                        session.getCreatedBy().getFirstName() + " " + session.getCreatedBy().getLastName(),
+                        session.getCreatedBy().getAvatar()
+                );
+            }
             InterviewSessionDto sessionDto = new InterviewSessionDto();
             sessionDto.setInterviewSessionId(session.getInterviewSessionId());
             sessionDto.setTitle(session.getTitle());
             sessionDto.setDescription(session.getDescription());
             sessionDto.setTotalQuestion(session.getTotalQuestion());
             sessionDto.setDurationEstimate(session.getDurationEstimate() != null ? session.getDurationEstimate().toString() : null);
-            // Optionally map questions if needed
+            sessionDto.setCreatedBy(createdByDto);
             return sessionDto;
         }).toList();
         dto.setInterviewTemplateList(sessionDTOs);
