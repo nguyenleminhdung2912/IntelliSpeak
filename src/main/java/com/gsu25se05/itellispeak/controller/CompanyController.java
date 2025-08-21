@@ -24,6 +24,12 @@ public class CompanyController {
     }
 
     @GetMapping
+    public ResponseEntity<Response<List<GetCompanyDetailResponseDTO>>> getAllCompaniesWhichHaveInterviewSession() {
+        List<GetCompanyDetailResponseDTO> companies = companyService.getAllCompanyDetailsWhichHaveInterviewSession();
+        return ResponseEntity.ok(new Response<>(200, "Get all companies successfully", companies));
+    }
+
+    @GetMapping("/all")
     public ResponseEntity<Response<List<GetCompanyDetailResponseDTO>>> getAllCompanies() {
         List<GetCompanyDetailResponseDTO> companies = companyService.getAllCompanyDetails();
         return ResponseEntity.ok(new Response<>(200, "Get all companies successfully", companies));
