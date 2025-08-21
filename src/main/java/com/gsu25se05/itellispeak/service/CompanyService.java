@@ -37,7 +37,8 @@ public class CompanyService {
                 .updateAt(LocalDateTime.now())
                 .isDeleted(false)
                 .build();
-        return companyRepository.save(company);
+        company = companyRepository.save(company);
+        return company;
     }
 
     public Company updateCompany(Long id, Company updatedCompany) {

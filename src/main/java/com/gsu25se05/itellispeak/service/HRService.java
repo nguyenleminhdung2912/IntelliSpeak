@@ -50,7 +50,7 @@ public class HRService {
             company.setIsDeleted(false);
             company = companyRepository.save(company);
         } else {
-            company = companyRepository.findById(company.getCompanyId()).orElse(null);
+            company = companyRepository.findById(request.getCompanyId()).orElse(null);
             if (company == null) {
                 return new Response<>(500, "The company with this ID does not exist, please check again!", null);
             }
@@ -60,7 +60,6 @@ public class HRService {
         HR hrRequest = new HR();
         hrRequest.setUser(user);
         hrRequest.setCompany(company);
-        hrRequest.setCompany(null);
         hrRequest.setPhone(request.getPhone());
         hrRequest.setCountry(request.getCountry());
         hrRequest.setExperienceYears(request.getExperienceYears());
