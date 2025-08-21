@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 public class HRResponseDTO {
     private Long hrId;
     private String company;
+    private String name;
     private String phone;
     private String country;
     private Integer experienceYears;

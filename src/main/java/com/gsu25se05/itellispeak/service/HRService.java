@@ -70,9 +70,17 @@ public class HRService {
 
         HR saved = hrRepository.save(hrRequest);
 
+        String firstName = saved.getUser().getFirstName();
+        String lastName  = saved.getUser().getLastName();
+
+        String fullName = (firstName == null || firstName.isBlank())
+                ? lastName
+                : firstName + " " + lastName;
+
         HRResponseDTO responseDTO = new HRResponseDTO(
                 saved.getHrId(),
                 saved.getCompany().getName(),
+                fullName,
                 saved.getPhone(),
                 saved.getCountry(),
                 saved.getExperienceYears(),
@@ -93,9 +101,17 @@ public class HRService {
         HR hrApplication = hrRepository.findByUser(user)
                 .orElseThrow(() -> new AuthAppException(ErrorCode.HR_NOT_FOUND));
 
+        String firstName = hrApplication.getUser().getFirstName();
+        String lastName  = hrApplication.getUser().getLastName();
+
+        String fullName = (firstName == null || firstName.isBlank())
+                ? lastName
+                : firstName + " " + lastName;
+
         HRResponseDTO responseDTO = new HRResponseDTO(
                 hrApplication.getHrId(),
                 hrApplication.getCompany().getName(),
+                fullName,
                 hrApplication.getPhone(),
                 hrApplication.getCountry(),
                 hrApplication.getExperienceYears(),
