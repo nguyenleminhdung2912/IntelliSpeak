@@ -3,6 +3,7 @@ package com.gsu25se05.itellispeak.service;
 import com.gsu25se05.itellispeak.dto.ai_evaluation.InterviewSessionDto;
 import com.gsu25se05.itellispeak.dto.company.CreateCompanyRequestDTO;
 import com.gsu25se05.itellispeak.dto.company.GetCompanyDetailResponseDTO;
+import com.gsu25se05.itellispeak.dto.company.InterviewSessionUserDto;
 import com.gsu25se05.itellispeak.dto.hr.HRResponseDTO;
 import com.gsu25se05.itellispeak.entity.Company;
 import com.gsu25se05.itellispeak.repository.CompanyRepository;
@@ -58,13 +59,21 @@ public class CompanyService {
 
         // Map InterviewSessions
         List<InterviewSessionDto> sessionDTOs = company.getInterviewSessions().stream().map(session -> {
+            InterviewSessionUserDto createdByDto = null;
+            if (session.getCreatedBy() != null) {
+                createdByDto = new InterviewSessionUserDto(
+                        session.getCreatedBy().getUserId(),
+                        session.getCreatedBy().getFirstName() + " " + session.getCreatedBy().getLastName(),
+                        session.getCreatedBy().getAvatar()
+                );
+            }
             InterviewSessionDto sessionDto = new InterviewSessionDto();
             sessionDto.setInterviewSessionId(session.getInterviewSessionId());
             sessionDto.setTitle(session.getTitle());
             sessionDto.setDescription(session.getDescription());
             sessionDto.setTotalQuestion(session.getTotalQuestion());
             sessionDto.setDurationEstimate(session.getDurationEstimate() != null ? session.getDurationEstimate().toString() : null);
-            // Optionally map questions if needed
+            sessionDto.setCreatedBy(createdByDto);
             return sessionDto;
         }).toList();
         dto.setInterviewTemplateList(sessionDTOs);

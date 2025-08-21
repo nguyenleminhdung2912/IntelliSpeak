@@ -2,6 +2,7 @@ package com.gsu25se05.itellispeak.dto.ai_evaluation;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.gsu25se05.itellispeak.dto.company.InterviewSessionUserDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,4 +22,5 @@ public class InterviewSessionDto {
     private int totalQuestion;
     private String durationEstimate;
     private List<QuestionDto> questions;
+    private InterviewSessionUserDto createdBy;
 }
