@@ -1,6 +1,9 @@
 package com.gsu25se05.itellispeak.service;
 
+import com.gsu25se05.itellispeak.dto.ai_evaluation.InterviewSessionDto;
 import com.gsu25se05.itellispeak.dto.company.CreateCompanyRequestDTO;
+import com.gsu25se05.itellispeak.dto.company.GetCompanyDetailResponseDTO;
+import com.gsu25se05.itellispeak.dto.hr.HRResponseDTO;
 import com.gsu25se05.itellispeak.entity.Company;
 import com.gsu25se05.itellispeak.repository.CompanyRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -22,8 +25,51 @@ public class CompanyService {
         return companyRepository.findAll();
     }
 
-    public Company getCompanyById(Long id) {
-        return companyRepository.findById(id).orElse(null);
+    public GetCompanyDetailResponseDTO getCompanyDetailById(Long companyId) {
+        Company company = companyRepository.findById(companyId).orElse(null);
+        if (company == null) return null;
+
+        GetCompanyDetailResponseDTO dto = new GetCompanyDetailResponseDTO();
+        dto.setCompanyId(company.getCompanyId());
+        dto.setName(company.getName());
+        dto.setShortName(company.getShortName());
+        dto.setDescription(company.getDescription());
+        dto.setLogoUrl(company.getLogoUrl());
+        dto.setWebsite(company.getWebsite());
+        dto.setCreateAt(company.getCreateAt());
+        dto.setUpdateAt(company.getUpdateAt());
+        dto.setIsDeleted(company.getIsDeleted());
+
+        // Map HRs
+        List<HRResponseDTO> hrDTOs = company.getHrList().stream().map(hr -> {
+            HRResponseDTO hrDto = new HRResponseDTO();
+            hrDto.setHrId(hr.getHrId());
+            hrDto.setCompany(company.getName());
+            hrDto.setPhone(hr.getPhone());
+            hrDto.setCountry(hr.getCountry());
+            hrDto.setExperienceYears(hr.getExperienceYears());
+            hrDto.setLinkedinUrl(hr.getLinkedinUrl());
+            hrDto.setCvUrl(hr.getCvUrl());
+            hrDto.setSubmittedAt(hr.getSubmittedAt());
+            hrDto.setHrStatus(hr.getStatus() != null ? hr.getStatus().name() : null);
+            return hrDto;
+        }).toList();
+        dto.setHrList(hrDTOs);
+
+        // Map InterviewSessions
+        List<InterviewSessionDto> sessionDTOs = company.getInterviewSessions().stream().map(session -> {
+            InterviewSessionDto sessionDto = new InterviewSessionDto();
+            sessionDto.setInterviewSessionId(session.getInterviewSessionId());
+            sessionDto.setTitle(session.getTitle());
+            sessionDto.setDescription(session.getDescription());
+            sessionDto.setTotalQuestion(session.getTotalQuestion());
+            sessionDto.setDurationEstimate(session.getDurationEstimate() != null ? session.getDurationEstimate().toString() : null);
+            // Optionally map questions if needed
+            return sessionDto;
+        }).toList();
+        dto.setInterviewTemplateList(sessionDTOs);
+
+        return dto;
     }
 
     public Company createCompany(CreateCompanyRequestDTO createCompanyRequestDTO) {

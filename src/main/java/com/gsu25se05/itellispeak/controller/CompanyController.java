@@ -2,6 +2,7 @@ package com.gsu25se05.itellispeak.controller;
 
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.company.CreateCompanyRequestDTO;
+import com.gsu25se05.itellispeak.dto.company.GetCompanyDetailResponseDTO;
 import com.gsu25se05.itellispeak.entity.Company;
 import com.gsu25se05.itellispeak.service.CompanyService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -29,9 +30,12 @@ public class CompanyController {
     }
 
     @GetMapping("/{company_id}")
-    public ResponseEntity<Response<Company>> getCompanyById(@PathVariable Long company_id) {
-        Company companies = companyService.getCompanyById(company_id);
-        return ResponseEntity.ok(new Response<>(200, "Get company by id successfully", companies));
+    public ResponseEntity<Response<GetCompanyDetailResponseDTO>> getCompanyById(@PathVariable Long company_id) {
+        GetCompanyDetailResponseDTO companyDetail = companyService.getCompanyDetailById(company_id);
+        if (companyDetail == null) {
+            return ResponseEntity.status(404).body(new Response<>(404, "Company not found", null));
+        }
+        return ResponseEntity.ok(new Response<>(200, "Get company by id successfully", companyDetail));
     }
 
     @PostMapping
