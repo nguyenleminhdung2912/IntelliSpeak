@@ -105,7 +105,7 @@ public class InterviewSessionService {
     }
 
     @Transactional
-    public Iterable<InterviewSession> getAllInterviewSession() {
+    public List<InterviewSession> getAllInterviewSession() {
         return interviewSessionRepository.findAllBySourceNotOrSourceIsNull("RANDOM");
     }
 

@@ -53,8 +53,8 @@ public class InterviewSessionController {
 
     @GetMapping("/sessions/get-all")
     @Operation(summary = "Tạm thời bỏ đi, không dùng tới, chỉ cần admin dùng thôi")
-    public ResponseEntity<Response<Iterable<InterviewSession>>> getAllSessions() {
-        Iterable<InterviewSession> sessions = interviewSessionService.getAllInterviewSession();
+    public ResponseEntity<Response<List<InterviewSession>>> getAllSessions() {
+        List<InterviewSession> sessions = interviewSessionService.getAllInterviewSession();
         return ResponseEntity.ok(new Response<>(200, "All interview sessions fetched", sessions));
     }
 

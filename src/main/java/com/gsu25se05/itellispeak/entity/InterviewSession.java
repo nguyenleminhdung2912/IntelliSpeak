@@ -65,10 +65,12 @@ public class InterviewSession {
 
     @ManyToOne
     @JoinColumn(name = "created_by", nullable = true)
+    @JsonIgnore
     private User createdBy;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "company_id", nullable = true)
+    @JsonIgnore
     private Company company;
 
     @ManyToMany
