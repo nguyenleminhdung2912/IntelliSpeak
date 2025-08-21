@@ -10,11 +10,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class HRRequestDTO {
-    private String company;
-    @NotBlank(message = "Vui lòng nhập số điện thoại")
+    private Long companyId;
+    private String companyNameIfNotExist;
+    @NotBlank(message = "Please enter your phone number.")
     @Pattern(
             regexp = "^(0|\\+84)[0-9]{9}$",
-            message = "Số điện thoại không đúng định dạng nhà mạng Việt Nam"
+            message = "Please enter a Viet Nam's phone number."
     )
     private String phone;
     private String country;

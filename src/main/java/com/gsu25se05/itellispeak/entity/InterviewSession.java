@@ -1,6 +1,5 @@
 package com.gsu25se05.itellispeak.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -64,6 +63,14 @@ public class InterviewSession {
     @JsonManagedReference
     private List<InterviewHistory> interviewHistories;
 
+    @ManyToOne
+    @JoinColumn(name = "created_by", nullable = true)
+    private User createdBy;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "company_id", nullable = true)
+    private Company company;
+
     @ManyToMany
     @JoinTable(
             name = "interview_session_tag",
@@ -82,8 +89,5 @@ public class InterviewSession {
     @JsonManagedReference
     private Set<Question> questions = new HashSet<>();
 
-    @ManyToOne
-    @JoinColumn(name = "created_by", nullable = true)
-    private User createdBy;
 }
 
