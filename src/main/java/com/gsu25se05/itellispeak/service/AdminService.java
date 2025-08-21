@@ -94,7 +94,7 @@ public class AdminService {
                     hr.getHrId(),
                     fullName,
                     email,
-                    hr.getCompany(),
+                    hr.getCompany().getName(),
                     hr.getPhone(),
                     hr.getCountry(),
                     hr.getExperienceYears(),

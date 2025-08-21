@@ -2,7 +2,6 @@ package com.gsu25se05.itellispeak.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -48,13 +47,24 @@ public class Question {
     @Column
     private Boolean is_deleted;
 
-    @Column
-    private String source;
+    @Column(nullable = false)
+    private String source; //Where is this question from: "geeksforgeeks", "leetcode"
 
-    @ManyToOne
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = true)
+    private QuestionSourceType sourceType;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "created_by", nullable = true)
     private User createdBy;
 
+    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<InterviewHistoryDetail> historyDetails;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "company_id", nullable = true)
+    private Company company;
 
     @ManyToMany
     @JoinTable(
@@ -68,10 +78,5 @@ public class Question {
     @ManyToMany(mappedBy = "questions")
     @JsonBackReference
     private Set<InterviewSession> interviewSessions = new HashSet<>();
-
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL)
-    @JsonIgnore
-    private List<InterviewHistoryDetail> historyDetails;
-
 }
 

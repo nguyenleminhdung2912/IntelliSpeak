@@ -22,16 +22,14 @@ VALUES (1, 'Java', 'Programming language', NOW(), NULL, FALSE),
 -- Topic 1: User Interface
 INSERT INTO topic_tag (topic_id, tag_id)
 VALUES (1, 2), -- JavaScript
-       (1, 4);
--- ReactJS
+       (1, 4); -- ReactJS
 
 -- Topic 2: Backend System
 INSERT INTO topic_tag (topic_id, tag_id)
 VALUES (2, 1), -- Java
        (2, 3), -- Spring Boot
        (2, 5), -- SQL
-       (2, 6);
--- Data Structures
+       (2, 6); -- Data Structures
 
 -- Topic 3: Fullstack
 INSERT INTO topic_tag (topic_id, tag_id)
@@ -39,8 +37,7 @@ VALUES (3, 1), -- Java
        (3, 2), -- JavaScript
        (3, 3), -- Spring Boot
        (3, 4), -- ReactJS
-       (3, 5);
--- SQL
+       (3, 5); -- SQL
 
 -- Insert data into the interview_session table for User Interface
 INSERT INTO interview_session (interview_session_id, topic_id, title, description, total_question, difficulty,
@@ -75,48 +72,48 @@ VALUES (7, 3, 'Basic Fullstack Interview', 'Covers fundamental concepts of both 
 
 -- Insert questions for Basic User Interface Interview (Session 1)
 INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status,
-                      is_deleted, source)
+                      is_deleted, source, source_type)
 VALUES (1, 'What is HTML?', 'Explain the purpose and basic structure of HTML in web development.',
         'HTML stands for HyperText Markup Language, used to create the structure of a webpage with tags like <div>, <p>, <a>, organizing content such as text, images, and links for browsers to display.',
         'HTML is the foundation of webpages, defining structure with elements like headings, paragraphs, and lists, enabling browsers to display content accurately.',
-        'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
+        'EASY', 'APPROVED', FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (2, 'What is CSS?', 'Describe the role of CSS in web development.',
         'CSS (Cascading Style Sheets) is used to style the appearance of a webpage with properties like color, font, and layout for HTML elements.',
         'CSS controls the visual presentation of HTML elements, making webpages visually appealing and responsive.',
-        'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
+        'EASY', 'APPROVED', FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (3, 'What is JavaScript?', 'Explain what JavaScript is and its main applications.',
         'JavaScript is a programming language that adds interactivity to webpages, such as dynamic content and event handling.',
         'JavaScript enables client-side scripting, updating dynamic content without reloading the page.', 'EASY',
-        'APPROVED', FALSE, 'InterviewBit'),
+        'APPROVED', FALSE, 'InterviewBit', 'SYSTEM'),
        (4, 'What are semantic HTML elements?', 'Describe semantic HTML elements and their importance.',
         'Semantic HTML elements like <header>, <footer>, <article> convey the meaning of content, improving accessibility and SEO.',
         'They provide context to browsers and search engines, making the webpage structure more meaningful and navigable.',
-        'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
+        'EASY', 'APPROVED', FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (5, 'What is the CSS box model?', 'Explain the CSS box model and its components.',
         'The CSS box model represents an element’s structure, including content, padding, border, and margin, affecting its size and spacing.',
         'It defines how elements are displayed on a page, with padding inside the border and margin outside, influencing layout calculations.',
-        'MEDIUM', 'APPROVED', FALSE, 'Simplilearn'),
+        'MEDIUM', 'APPROVED', FALSE, 'Simplilearn', 'SYSTEM'),
        (6, 'What is the DOM?', 'Describe the Document Object Model and its role in web development.',
         'The DOM is a tree-like structure representing HTML elements, allowing JavaScript to manipulate webpage content dynamically.',
         'It acts as an interface for JavaScript to interact with and modify the structure, style, and content of a webpage.',
-        'MEDIUM', 'APPROVED', FALSE, 'InterviewBit'),
+        'MEDIUM', 'APPROVED', FALSE, 'InterviewBit', 'SYSTEM'),
        (7, 'What is event delegation?', 'Explain the concept of event delegation in JavaScript.',
         'Event delegation attaches an event listener to a parent element to handle events for its child elements, improving performance.',
         'It leverages event bubbling to capture events from child elements, reducing the number of event listeners needed.',
-        'MEDIUM', 'APPROVED', FALSE, 'GeeksForGeeks'),
+        'MEDIUM', 'APPROVED', FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (8, 'What is a closure in JavaScript?', 'Define a closure and provide an example of its use.',
         'A closure is a function that retains access to variables from its outer scope even after the outer function has executed.',
         'Example: A counter function retains a count variable across multiple calls using a closure.', 'HARD',
-        'APPROVED', FALSE, 'InterviewBit'),
+        'APPROVED', FALSE, 'InterviewBit', 'SYSTEM'),
        (9, 'How does the z-index property work?',
         'Explain how the z-index property affects element positioning in CSS.',
         'The z-index property controls the stacking order of positioned elements (relative, absolute, fixed), with higher values appearing in front.',
         'It only works on elements with a position property, with negative values placing elements behind.', 'HARD',
-        'APPROVED', FALSE, 'GeeksForGeeks'),
+        'APPROVED', FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (10, 'What is a Promise in JavaScript?', 'Describe a Promise and its role in handling asynchronous operations.',
         'A Promise is an object representing the completion or failure of an asynchronous operation, with states like pending, fulfilled, or rejected.',
         'Promises handle asynchronous tasks like API calls, allowing chaining with .then() and error handling with .catch().',
-        'HARD', 'APPROVED', FALSE, 'InterviewBit');
+        'HARD', 'APPROVED', FALSE, 'InterviewBit', 'SYSTEM');
 
 -- Link questions to Basic User Interface Interview (Session 1)
 INSERT INTO interview_session_question (interview_session_id, question_id)
@@ -133,48 +130,48 @@ VALUES (1, 1),
 
 -- Insert questions for ReactJS Developer Interview (Session 2)
 INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status,
-                      is_deleted, source)
+                      is_deleted, source, source_type)
 VALUES (11, 'What is React?', 'Explain what React is and its key features.',
         'React is a JavaScript library for building user interfaces, using components, virtual DOM, and declarative syntax.',
         'It enables the creation of reusable UI components and efficiently updates the DOM via the virtual DOM.',
-        'EASY', 'APPROVED', FALSE, 'Simplilearn'),
+        'EASY', 'APPROVED', FALSE, 'Simplilearn', 'SYSTEM'),
        (12, 'What is a component in React?', 'Describe components and their role in a React application.',
         'Components are reusable building blocks in React, representing parts of the UI like buttons or forms.',
         'They can be functional or class-based, receiving props and managing state to render dynamic content.', 'EASY',
-        'APPROVED', FALSE, 'InterviewBit'),
+        'APPROVED', FALSE, 'InterviewBit', 'SYSTEM'),
        (13, 'What are props in React?', 'Explain the purpose of props in React.',
         'Props (properties) are read-only data passed from parent to child components to configure behavior or appearance.',
         'Props enable reusable components by passing dynamic data, like a username for a profile component.', 'EASY',
-        'APPROVED', FALSE, 'GeeksForGeeks'),
+        'APPROVED', FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (14, 'What is state in React?', 'Describe the concept of state and how it differs from props.',
         'State is a mutable object within a component, holding data that affects rendering, managed internally.',
         'State changes trigger re-renders, while props are passed from parent components and are immutable.', 'MEDIUM',
-        'APPROVED', FALSE, 'InterviewBit'),
+        'APPROVED', FALSE, 'InterviewBit', 'SYSTEM'),
        (15, 'What are React Hooks?', 'Explain React Hooks and their purpose.',
         'Hooks are functions like useState and useEffect, allowing functional components to manage state and lifecycle events.',
         'They simplify state management and side effects, replacing class-based lifecycle methods.', 'MEDIUM',
-        'APPROVED', FALSE, 'Simplilearn'),
+        'APPROVED', FALSE, 'Simplilearn', 'SYSTEM'),
        (16, 'What is the virtual DOM?', 'Describe the virtual DOM and its benefits in React.',
         'The virtual DOM is a lightweight copy of the real DOM, used by React to optimize updates by minimizing direct DOM manipulation.',
         'It improves performance by batching changes and only updating necessary parts of the real DOM.', 'MEDIUM',
-        'APPROVED', FALSE, 'GeeksForGeeks'),
+        'APPROVED', FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (17, 'What is useEffect?', 'Explain the useEffect Hook and its common use cases.',
         'useEffect is a Hook that handles side effects, like fetching data or updating the DOM, after a component renders.',
         'It runs after every render by default but can be configured to run conditionally with a dependency array.',
-        'MEDIUM', 'APPROVED', FALSE, 'InterviewBit'),
+        'MEDIUM', 'APPROVED', FALSE, 'InterviewBit', 'SYSTEM'),
        (18, 'What is Redux?', 'Describe Redux and its role in state management.',
         'Redux is a library for managing global state in JavaScript applications, using a store, actions, and reducers.',
         'It centralizes state, making it predictable and manageable in large React applications.', 'HARD', 'APPROVED',
-        FALSE, 'Simplilearn'),
+        FALSE, 'Simplilearn', 'SYSTEM'),
        (19, 'How to optimize performance in React?',
         'Explain techniques for optimizing performance in React applications.',
         'Techniques include using memoization (React.memo), lazy loading components, and avoiding unnecessary re-renders with useCallback/useMemo.',
         'Performance optimization involves reducing state updates and using tools like React Profiler to identify bottlenecks.',
-        'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
+        'HARD', 'APPROVED', FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (20, 'What is server-side rendering in React?', 'Describe server-side rendering and its benefits.',
         'Server-side rendering (SSR) renders React components on the server, sending HTML to the client for faster initial load times.',
         'SSR improves SEO and performance by delivering pre-rendered content, especially for content-heavy applications.',
-        'HARD', 'APPROVED', FALSE, 'InterviewBit');
+        'HARD', 'APPROVED', FALSE, 'InterviewBit', 'SYSTEM');
 
 -- Link questions to ReactJS Developer Interview (Session 2)
 INSERT INTO interview_session_question (interview_session_id, question_id)
@@ -191,47 +188,47 @@ VALUES (2, 11),
 
 -- Insert questions for Advanced User Interface Interview (Session 3)
 INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status,
-                      is_deleted, source)
+                      is_deleted, source, source_type)
 VALUES (21, 'What is a service worker?', 'Explain the role of a service worker in web applications.',
         'Service workers are background scripts that enable features like offline support and push notifications.',
         'They act as a proxy between the application and the network, caching resources for faster loading and offline functionality.',
-        'EASY', 'APPROVED', FALSE, 'GeeksForGeeks'),
+        'EASY', 'APPROVED', FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (22, 'What is responsive design?', 'Describe responsive design and how it is implemented.',
         'Responsive design ensures a website adapts to different screen sizes using techniques like fluid grids and media queries.',
         'It uses CSS media queries and flexible layouts to provide an optimal experience across devices.', 'EASY',
-        'APPROVED', FALSE, 'Simplilearn'),
+        'APPROVED', FALSE, 'Simplilearn', 'SYSTEM'),
        (23, 'What is web accessibility?', 'Explain web accessibility and its importance.',
         'Web accessibility ensures web content is usable by people with disabilities, following standards like WCAG.',
         'It involves using semantic HTML, ARIA roles, and keyboard navigation to make websites inclusive.', 'EASY',
-        'APPROVED', FALSE, 'GeeksForGeeks'),
+        'APPROVED', FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (24, 'What is the event loop in JavaScript?', 'Describe how the event loop works in JavaScript.',
         'The event loop manages asynchronous operations by processing the call stack and task queue, ensuring non-blocking execution.',
         'It continuously checks the call stack and pushes tasks from the queue when the stack is empty.', 'MEDIUM',
-        'APPROVED', FALSE, 'InterviewBit'),
+        'APPROVED', FALSE, 'InterviewBit', 'SYSTEM'),
        (25, 'What is tree shaking?', 'Explain tree shaking and its role in JavaScript optimization.',
         'Tree shaking eliminates unused code from JavaScript bundles during the build process, reducing file size.',
         'It relies on ES6 modules and tools like Webpack to remove dead code, improving performance.', 'MEDIUM',
-        'APPROVED', FALSE, 'GeeksForGeeks'),
+        'APPROVED', FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (26, 'What is lazy loading?', 'Describe lazy loading and its benefits in web development.',
         'Lazy loading delays loading non-critical resources (like images) until needed, improving page load times.',
         'It enhances performance by reducing initial load time and saving bandwidth.', 'MEDIUM', 'APPROVED', FALSE,
-        'Simplilearn'),
+        'Simplilearn', 'SYSTEM'),
        (27, 'What is a memory leak in JavaScript?', 'Explain memory leaks and how to prevent them.',
         'Memory leaks occur when unused objects remain in memory, causing performance issues.',
         'Prevent them by avoiding global variables, cleaning up event listeners, and using tools like Chrome DevTools.',
-        'HARD', 'APPROVED', FALSE, 'InterviewBit'),
+        'HARD', 'APPROVED', FALSE, 'InterviewBit', 'SYSTEM'),
        (28, 'What is Webpack?', 'Describe Webpack and its role in user interface development.',
         'Webpack is a module bundler that aggregates JavaScript modules, assets, and dependencies into a single bundle.',
         'It optimizes assets, supports code splitting, and integrates with tools like Babel for modern JavaScript.',
-        'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
+        'HARD', 'APPROVED', FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (29, 'What is the critical rendering path?', 'Explain the critical rendering path and how to optimize it.',
         'The critical rendering path is the sequence of steps a browser takes to render a page, including parsing HTML and executing CSS/JS.',
         'Optimize it by minimizing CSS/JS, inlining critical CSS, and deferring non-critical scripts.', 'HARD',
-        'APPROVED', FALSE, 'Simplilearn'),
+        'APPROVED', FALSE, 'Simplilearn', 'SYSTEM'),
        (30, 'What is TypeScript?', 'Describe TypeScript and its benefits in user interface development.',
         'TypeScript is a superset of JavaScript that adds static typing, improving code reliability and maintainability.',
         'It catches errors at compile time, enhances IDE support, and improves large-scale application development.',
-        'HARD', 'APPROVED', FALSE, 'InterviewBit');
+        'HARD', 'APPROVED', FALSE, 'InterviewBit', 'SYSTEM');
 
 -- Link questions to Advanced User Interface Interview (Session 3)
 INSERT INTO interview_session_question (interview_session_id, question_id)
@@ -248,47 +245,47 @@ VALUES (3, 21),
 
 -- Insert questions for Basic Backend Interview (Session 4)
 INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status,
-                      is_deleted, source)
+                      is_deleted, source, source_type)
 VALUES (31, 'What is a REST API?', 'Explain what a REST API is and its key principles.',
         'A REST API is an architectural style for building APIs using HTTP methods like GET, POST, DELETE, adhering to principles like statelessness and resource-based URLs.',
         'It uses standard HTTP protocols to perform CRUD operations on resources identified by URIs.', 'EASY',
-        'APPROVED', FALSE, 'GeeksForGeeks'),
+        'APPROVED', FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (32, 'What is a database?', 'Describe the role of a database in web development.',
         'A database stores, retrieves, and manages data, serving as the backend storage for applications.',
         'It interacts with backend logic to provide data to the user interface, ensuring persistent storage.', 'EASY',
-        'APPROVED', FALSE, 'UseBraintrust'),
+        'APPROVED', FALSE, 'UseBraintrust', 'SYSTEM'),
        (33, 'What is middleware?', 'Explain middleware in the context of backend development.',
         'Middleware is software that processes requests and responses between the server and database, handling tasks like authentication.',
         'It sits between the application and services, enabling logging, authentication, and other operations.', 'EASY',
-        'APPROVED', FALSE, 'UseBraintrust'),
+        'APPROVED', FALSE, 'UseBraintrust', 'SYSTEM'),
        (34, 'What is HTTP?', 'Describe the HTTP protocol and its common methods.',
         'HTTP is a protocol for transferring data over the web, using methods like GET, POST, PUT, and DELETE.',
         'It enables client-server communication, with methods defining actions on resources.', 'EASY', 'APPROVED',
-        FALSE, 'GeeksForGeeks'),
+        FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (35, 'What is a primary key?', 'Explain the concept of a primary key in databases.',
         'A primary key is a unique identifier for each record in a database table, ensuring data integrity.',
         'It prevents duplicate records and is used to reference records in related tables.', 'MEDIUM', 'APPROVED',
-        FALSE, 'GeeksForGeeks'),
+        FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (36, 'What is SQL injection?', 'Describe SQL injection and how to prevent it.',
         'SQL injection is an attack that injects malicious SQL code into queries, compromising database security.',
         'Prevent it using prepared statements, parameterized queries, and input validation.', 'MEDIUM', 'APPROVED',
-        FALSE, 'InterviewBit'),
+        FALSE, 'InterviewBit', 'SYSTEM'),
        (37, 'What is ORM?', 'Explain Object-Relational Mapping and its benefits.',
         'ORM maps database tables to objects in code, simplifying database interactions with tools like Hibernate.',
         'It reduces repetitive code and makes database operations more intuitive.', 'MEDIUM', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (38, 'What is JWT?', 'Describe JSON Web Tokens and their use in authentication.',
         'JWT is a token-based authentication mechanism containing encoded user data, used to verify identity.',
         'It consists of a header, payload, and signature, validated by the server to secure APIs.', 'HARD', 'APPROVED',
-        FALSE, 'InterviewBit'),
+        FALSE, 'InterviewBit', 'SYSTEM'),
        (39, 'What is load balancing?', 'Explain load balancing and its role in backend systems.',
         'Load balancing distributes traffic across multiple servers to improve performance and reliability.',
         'It prevents server overload, ensuring high availability and scalability.', 'HARD', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (40, 'What is caching?', 'Describe caching and its benefits in backend development.',
         'Caching stores frequently accessed data in memory to reduce database load and improve response times.',
         'Techniques like Redis or Memcached enhance performance for repeated queries.', 'HARD', 'APPROVED', FALSE,
-        'UseBraintrust');
+        'UseBraintrust', 'SYSTEM');
 
 -- Link questions to Basic Backend Interview (Session 4)
 INSERT INTO interview_session_question (interview_session_id, question_id)
@@ -305,47 +302,47 @@ VALUES (4, 31),
 
 -- Insert questions for Spring Boot Developer Interview (Session 5)
 INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status,
-                      is_deleted, source)
+                      is_deleted, source, source_type)
 VALUES (41, 'What is Spring Boot?', 'Explain what Spring Boot is and its key features.',
         'Spring Boot is a Java framework that simplifies Spring development with auto-configuration and embedded servers.',
         'It provides starters, auto-configures dependencies, and supports rapid application development.', 'EASY',
-        'APPROVED', FALSE, 'GeeksForGeeks'),
+        'APPROVED', FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (42, 'What is dependency injection?', 'Describe dependency injection in Spring Boot.',
         'Dependency injection is a design pattern where dependencies are injected into objects, managed by Spring’s IoC container.',
-        'It decouples components, making them easier to test and maintain.', 'EASY', 'APPROVED', FALSE, 'InterviewBit'),
+        'It decouples components, making them easier to test and maintain.', 'EASY', 'APPROVED', FALSE, 'InterviewBit', 'SYSTEM'),
        (43, 'What are Spring Boot starters?', 'Explain the role of starters in Spring Boot.',
         'Starters are pre-configured dependencies that simplify project setup, like spring-boot-starter-web for web applications.',
         'They reduce manual configuration by including necessary libraries.', 'EASY', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (44, 'What is the @RestController annotation?', 'Describe the @RestController annotation in Spring Boot.',
         '@RestController marks a class as a RESTful controller, handling HTTP requests and returning JSON responses.',
         'It combines @Controller and @ResponseBody for simpler API development.', 'MEDIUM', 'APPROVED', FALSE,
-        'InterviewBit'),
+        'InterviewBit', 'SYSTEM'),
        (45, 'What is Spring Data JPA?', 'Explain Spring Data JPA and its benefits.',
         'Spring Data JPA simplifies database access by providing repository interfaces for CRUD operations.',
         'It reduces boilerplate code and integrates with Hibernate for ORM.', 'MEDIUM', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (46, 'What is Actuator in Spring Boot?', 'Describe Actuator and its use in Spring Boot.',
         'Actuator provides endpoints for monitoring and managing Spring Boot applications, like /health and /metrics.',
         'It offers insights into application health, metrics, and configuration.', 'MEDIUM', 'APPROVED', FALSE,
-        'InterviewBit'),
+        'InterviewBit', 'SYSTEM'),
        (47, 'What is Spring Security?', 'Explain Spring Security and its role in backend applications.',
         'Spring Security is a framework for securing Java applications, handling authentication and authorization.',
         'It supports features like OAuth2, JWT, and role-based access control.', 'HARD', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (48, 'How to handle exceptions in Spring Boot?', 'Describe exception handling in Spring Boot.',
         'Use @ControllerAdvice and @ExceptionHandler to handle exceptions globally, returning custom error responses.',
         'Spring Boot provides default error handling, customizable via properties or custom handlers.', 'HARD',
-        'APPROVED', FALSE, 'InterviewBit'),
+        'APPROVED', FALSE, 'InterviewBit', 'SYSTEM'),
        (49, 'What are microservices?', 'Explain microservices and their implementation in Spring Boot.',
         'Microservices are small, independent services communicating via APIs, built using Spring Boot’s REST capabilities.',
         'Spring Boot supports microservices with features like Eureka for service discovery.', 'HARD', 'APPROVED',
-        FALSE, 'GeeksForGeeks'),
+        FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (50, 'How to optimize performance in Spring Boot?',
         'Describe techniques for optimizing Spring Boot application performance.',
         'Use caching, optimize database queries, enable lazy loading, and profile performance with Actuator.',
         'Techniques include connection pooling and reducing bean creation overhead.', 'HARD', 'APPROVED', FALSE,
-        'GeeksForGeeks');
+        'GeeksForGeeks', 'SYSTEM');
 
 -- Link questions to Spring Boot Developer Interview (Session 5)
 INSERT INTO interview_session_question (interview_session_id, question_id)
@@ -362,47 +359,47 @@ VALUES (5, 41),
 
 -- Insert questions for Advanced Backend Interview (Session 6)
 INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status,
-                      is_deleted, source)
+                      is_deleted, source, source_type)
 VALUES (51, 'What is a database transaction?', 'Explain database transactions and their properties.',
         'A transaction is a sequence of operations treated as a single unit, adhering to ACID properties (Atomicity, Consistency, Isolation, Durability).',
         'It ensures data integrity by rolling back if any operation fails, maintaining database consistency.', 'EASY',
-        'APPROVED', FALSE, 'GeeksForGeeks'),
+        'APPROVED', FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (52, 'What is database normalization?', 'Describe database normalization and its purpose.',
         'Normalization organizes database tables to eliminate redundancy and ensure data integrity.',
         'It divides tables into smaller ones based on functional dependencies.', 'EASY', 'APPROVED', FALSE,
-        'InterviewBit'),
+        'InterviewBit', 'SYSTEM'),
        (53, 'What is an index in a database?', 'Explain the role of indexes in databases.',
         'An index is a data structure that improves query performance by enabling faster data retrieval.',
         'It acts like a book’s index, pointing to data locations in a table.', 'EASY', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (54, 'What is GraphQL?', 'Describe GraphQL and its benefits over REST.',
         'GraphQL is a query language for APIs, allowing clients to request specific data, reducing over- or under-fetching.',
         'It provides a single endpoint and flexible queries, unlike REST with multiple endpoints.', 'MEDIUM',
-        'APPROVED', FALSE, 'UseBraintrust'),
+        'APPROVED', FALSE, 'UseBraintrust', 'SYSTEM'),
        (55, 'What are WebSockets?', 'Explain WebSockets and their use in backend development.',
         'WebSockets provide a bidirectional communication channel for real-time data exchange between client and server.',
         'They are used for applications like chat or live updates, unlike HTTP’s request-response model.', 'MEDIUM',
-        'APPROVED', FALSE, 'UseBraintrust'),
+        'APPROVED', FALSE, 'UseBraintrust', 'SYSTEM'),
        (56, 'What is sharding?', 'Describe database sharding and its benefits.',
         'Sharding splits a database into smaller, distributed parts to improve scalability and performance.',
         'It distributes data across multiple servers, reducing the load on individual databases.', 'MEDIUM', 'APPROVED',
-        FALSE, 'GeeksForGeeks'),
+        FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (57, 'What is a distributed system?', 'Explain distributed systems and their challenges.',
         'A distributed system is a collection of independent computers working together to achieve a common goal.',
         'Challenges include network latency, fault tolerance, and data consistency across nodes.', 'HARD', 'APPROVED',
-        FALSE, 'GeeksForGeeks'),
+        FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (58, 'What is eventual consistency?', 'Describe eventual consistency in distributed databases.',
         'Eventual consistency ensures all nodes in a distributed system eventually reflect the same data after updates.',
         'It sacrifices immediate consistency for availability and partition tolerance.', 'HARD', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (59, 'What is the CAP theorem?', 'Explain the CAP theorem and its implications for databases.',
         'The CAP theorem states that a distributed system can only guarantee two of three properties: Consistency, Availability, Partition Tolerance.',
         'It guides database design, balancing trade-offs for specific use cases.', 'HARD', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (60, 'What is circuit breaking?', 'Describe circuit breaking in microservices.',
         'Circuit breaking prevents cascading failures by stopping requests to a failing service, improving system resilience.',
         'It monitors service health and opens the circuit when errors exceed a threshold.', 'HARD', 'APPROVED', FALSE,
-        'GeeksForGeeks');
+        'GeeksForGeeks', 'SYSTEM');
 
 -- Link questions to Advanced Backend Interview (Session 6)
 INSERT INTO interview_session_question (interview_session_id, question_id)
@@ -419,47 +416,47 @@ VALUES (6, 51),
 
 -- Insert questions for Basic Fullstack Interview (Session 7)
 INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status,
-                      is_deleted, source)
+                      is_deleted, source, source_type)
 VALUES (61, 'What is a Fullstack developer?', 'Define the role of a Fullstack developer.',
         'A Fullstack developer works on both user interface (UI) and backend development, handling the entire web application stack.',
         'They are proficient in technologies like HTML, JavaScript, and backend frameworks like Spring Boot.', 'EASY',
-        'APPROVED', FALSE, 'UseBraintrust'),
+        'APPROVED', FALSE, 'UseBraintrust', 'SYSTEM'),
        (62, 'What is an API?', 'Explain what an API is and its role in Fullstack development.',
         'An API (Application Programming Interface) allows different systems or components to communicate, often between the UI and backend.',
         'It defines request and response structures, like REST or GraphQL APIs.', 'EASY', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (63, 'What is version control?', 'Describe version control and its importance in development.',
         'Version control tracks code changes, enabling collaboration and rollbacks using tools like Git.',
         'It ensures teams can work concurrently and maintain code history.', 'EASY', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (64, 'What is AJAX?', 'Explain AJAX and its use in Fullstack applications.',
         'AJAX (Asynchronous JavaScript and XML) enables asynchronous data fetching without page reloads, improving user experience.',
         'It allows the UI to dynamically request data from the backend, like in search suggestions.', 'MEDIUM',
-        'APPROVED', FALSE, 'UseBraintrust'),
+        'APPROVED', FALSE, 'UseBraintrust', 'SYSTEM'),
        (65, 'What is CORS?', 'Describe CORS and its role in web development.',
         'CORS (Cross-Origin Resource Sharing) is a security mechanism controlling resource sharing between different domains.',
         'It allows or restricts API access from a UI hosted on a different origin.', 'MEDIUM', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (66, 'What is the package.json file?', 'Explain the purpose of the package.json file in a Node.js project.',
         'package.json defines project metadata, dependencies, and scripts for tasks like building or running.',
         'It ensures consistent dependency installation across environments.', 'MEDIUM', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (67, 'What is authentication in web applications?', 'Describe authentication and common methods used.',
         'Authentication verifies user identity, using methods like JWT, OAuth2, or session-based authentication.',
         'It ensures only authorized users access protected resources in an application.', 'HARD', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (68, 'What is a CDN?', 'Explain Content Delivery Networks and their benefits.',
         'A CDN distributes content via global servers to reduce latency and improve page load speeds.',
         'It caches static assets like images and scripts, enhancing performance.', 'HARD', 'APPROVED', FALSE,
-        'UseBraintrust'),
+        'UseBraintrust', 'SYSTEM'),
        (69, 'What is Docker?', 'Describe Docker and its use in Fullstack development.',
         'Docker is a containerization platform that packages code and dependencies for consistent deployment.',
         'It ensures applications run identically across development and production environments.', 'HARD', 'APPROVED',
-        FALSE, 'GeeksForGeeks'),
+        FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (70, 'What is CI/CD?', 'Explain Continuous Integration and Continuous Deployment.',
         'CI/CD automates code building, testing, and deployment, ensuring fast and reliable software releases.',
         'CI focuses on frequent code integration, while CD automates deployment to production.', 'HARD', 'APPROVED',
-        FALSE, 'GeeksForGeeks');
+        FALSE, 'GeeksForGeeks', 'SYSTEM');
 
 -- Link questions to Basic Fullstack Interview (Session 7)
 INSERT INTO interview_session_question (interview_session_id, question_id)
@@ -476,47 +473,47 @@ VALUES (7, 61),
 
 -- Insert questions for MERN Stack Interview (Session 8)
 INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status,
-                      is_deleted, source)
+                      is_deleted, source, source_type)
 VALUES (71, 'What is the MERN Stack?', 'Describe the MERN Stack and its components.',
         'The MERN Stack consists of MongoDB (database), Express.js (backend framework), React (UI library), and Node.js (runtime environment).',
         'It is a JavaScript-based stack for building Fullstack web applications.', 'EASY', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (72, 'What is MongoDB?', 'Explain MongoDB and its benefits.',
         'MongoDB is a NoSQL database that stores data as JSON-like documents, offering flexibility and scalability.',
         'It is schemaless, ideal for handling unstructured data in Fullstack applications.', 'EASY', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (73, 'What is Express.js?', 'Describe Express.js and its role in the MERN Stack.',
         'Express.js is a Node.js framework for building RESTful APIs and handling HTTP requests.',
         'It simplifies server-side logic and routing in MERN applications.', 'EASY', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (74, 'What is Node.js?', 'Explain Node.js and its use in backend development.',
         'Node.js is a JavaScript runtime for executing server-side code, enabling non-blocking I/O operations.',
         'It powers the backend of MERN applications, handling requests and business logic.', 'MEDIUM', 'APPROVED',
-        FALSE, 'InterviewBit'),
+        FALSE, 'InterviewBit', 'SYSTEM'),
        (75, 'How to connect React with Express?', 'Describe how to connect a React frontend with an Express backend.',
         'Use HTTP requests (like fetch or axios) to communicate with Express APIs, handling data in JSON format.',
         'Enable CORS in Express to allow requests from the React application’s domain.', 'MEDIUM', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (76, 'What is Mongoose?', 'Explain Mongoose and its role in MongoDB.',
         'Mongoose is an ODM (Object Data Modeling) library for MongoDB, simplifying data modeling and querying.',
         'It provides schemas and validation for MongoDB in Node.js applications.', 'MEDIUM', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (77, 'How to manage state in a MERN application?', 'Describe state management in a MERN Stack application.',
         'Use useState or Redux for frontend state, and manage backend state via MongoDB and Express logic.',
         'Centralize complex state with Redux for predictable data flow between components.', 'HARD', 'APPROVED', FALSE,
-        'UseBraintrust'),
+        'UseBraintrust', 'SYSTEM'),
        (78, 'What is RESTful routing?', 'Explain RESTful routing in Express.js.',
         'RESTful routing uses HTTP methods and URL patterns to perform CRUD operations on resources.',
         'It follows conventions like GET /users for listing and POST /users for creating.', 'HARD', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (79, 'How to secure a MERN application?', 'Describe security practices for a MERN Stack application.',
         'Use JWT for authentication, sanitize inputs, enable HTTPS, and use Helmet for Express security headers.',
         'Implement bcrypt for password hashing and validate all user inputs.', 'HARD', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (80, 'What is SSR in MERN?', 'Explain server-side rendering in the MERN Stack.',
         'SSR renders React components on the server, sending HTML to the client for faster initial load times.',
         'It improves SEO and performance, using frameworks like Next.js in MERN applications.', 'HARD', 'APPROVED',
-        FALSE, 'InterviewBit');
+        FALSE, 'InterviewBit', 'SYSTEM');
 
 -- Link questions to MERN Stack Interview (Session 8)
 INSERT INTO interview_session_question (interview_session_id, question_id)
@@ -533,47 +530,47 @@ VALUES (8, 71),
 
 -- Insert questions for Advanced Fullstack Interview (Session 9)
 INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status,
-                      is_deleted, source)
+                      is_deleted, source, source_type)
 VALUES (81, 'What is a monolithic architecture?', 'Explain monolithic architecture and its pros and cons.',
         'Monolithic architecture combines all application components into a single unit, deployed together.',
         'Pros: Simple development; Cons: Hard to scale and maintain compared to microservices.', 'EASY', 'APPROVED',
-        FALSE, 'GeeksForGeeks'),
+        FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (82, 'What is a microservices architecture?', 'Describe microservices and their benefits.',
         'Microservices are small, independent services communicating via APIs, enabling scalability and flexibility.',
         'They allow independent deployment and easier maintenance but increase complexity.', 'EASY', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (83, 'What is DevOps?', 'Explain DevOps and its role in Fullstack development.',
         'DevOps is a methodology combining development and operations to automate and optimize software delivery.',
         'It uses CI/CD pipelines and tools like Jenkins to improve deployment speed.', 'EASY', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (84, 'What is a reverse proxy?', 'Describe a reverse proxy and its use in web applications.',
         'A reverse proxy forwards client requests to backend servers, providing load balancing and security.',
         'It hides server details and can cache responses to improve performance.', 'MEDIUM', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (85, 'What is an API Gateway?', 'Explain the role of an API Gateway in Fullstack applications.',
         'An API Gateway is a single entry point for client requests, routing them to appropriate microservices.',
         'It handles authentication, rate limiting, and load balancing for APIs.', 'MEDIUM', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (86, 'What is a database index?', 'Describe database indexes and their impact on performance.',
         'Indexes create data structures to speed up query execution by reducing data scanning.',
         'They improve read performance but may slow write operations due to index updates.', 'MEDIUM', 'APPROVED',
-        FALSE, 'GeeksForGeeks'),
+        FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (87, 'What is eventual consistency in Fullstack?',
         'Explain eventual consistency in the context of Fullstack applications.',
         'Eventual consistency ensures distributed systems like databases eventually synchronize after updates.',
         'It is used in scalable systems to prioritize availability over immediate consistency.', 'HARD', 'APPROVED',
-        FALSE, 'GeeksForGeeks'),
+        FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (88, 'What is blue-green deployment?', 'Describe blue-green deployment and its benefits.',
         'Blue-green deployment runs two identical environments, switching traffic to the new one after testing.',
-        'It minimizes downtime and allows easy rollback if issues arise.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks'),
+        'It minimizes downtime and allows easy rollback if issues arise.', 'HARD', 'APPROVED', FALSE, 'GeeksForGeeks', 'SYSTEM'),
        (89, 'What is Kubernetes?', 'Explain Kubernetes and its use in Fullstack development.',
         'Kubernetes is a container orchestration platform, automating deployment, scaling, and management.',
         'It ensures high availability and scalability for Fullstack applications.', 'HARD', 'APPROVED', FALSE,
-        'GeeksForGeeks'),
+        'GeeksForGeeks', 'SYSTEM'),
        (90, 'What is GraphQL Federation?', 'Describe GraphQL Federation and its role in Fullstack applications.',
         'GraphQL Federation combines multiple GraphQL services into a single endpoint, simplifying complex APIs.',
         'It enables modular development, allowing teams to manage independent services.', 'HARD', 'APPROVED', FALSE,
-        'GeeksForGeeks');
+        'GeeksForGeeks', 'SYSTEM');
 
 -- Link questions to Advanced Fullstack Interview (Session 9)
 INSERT INTO interview_session_question (interview_session_id, question_id)
@@ -750,8 +747,7 @@ VALUES (1, 2),
        (8, 5), -- MERN Stack Interview: JavaScript, ReactJS, SQL
        (9, 1),
        (9, 5),
-       (9, 6);
--- Advanced Fullstack Interview: Java, SQL, Data Structures
+       (9, 6); -- Advanced Fullstack Interview: Java, SQL, Data Structures
 
 -- Insert Packages
 INSERT INTO package (package_id, create_at, description, is_deleted, package_name, price, update_at, cv_analyze_count,
@@ -762,6 +758,30 @@ VALUES (1, NOW(), 'Free welcome package for beginners to practice interviews', F
        (3, NOW(), 'Advanced interview practice package with unlimited questions and detailed analysis', FALSE,
         'Professional', 299000, NOW(), 60, 60, 35);
 
+-- Insert Companies
+INSERT INTO public.company (company_id, create_at, description, is_deleted, logo_url, name, short_name, update_at, website)
+VALUES
+    (1, NOW(), 'A global technology company specializing in cloud computing and e-commerce platforms.', FALSE, 'https://example.com/logos/amazon.png', 'Amazon Web Services', 'AWS', NOW(), 'https://aws.amazon.com'),
+    (2, NOW(), 'A leading software company known for Windows, Office, and Azure cloud services.', FALSE, 'https://example.com/logos/microsoft.png', 'Microsoft Corporation', 'MSFT', NOW(), 'https://www.microsoft.com'),
+    (3, NOW(), 'A technology giant focused on search, AI, and Android software development.', FALSE, 'https://example.com/logos/google.png', 'Google LLC', 'GOOGL', NOW(), 'https://www.google.com'),
+    (4, NOW(), 'A social media and technology company developing software for global connectivity.', FALSE, 'https://example.com/logos/meta.png', 'Meta Platforms, Inc.', 'META', NOW(), 'https://www.meta.com'),
+    (5, NOW(), 'A leader in enterprise software, specializing in cloud-based CRM solutions.', FALSE, 'https://example.com/logos/salesforce.png', 'Salesforce, Inc.', 'CRM', NOW(), 'https://www.salesforce.com'),
+    (6, NOW(), 'A financial technology company providing payment processing software.', FALSE, 'https://example.com/logos/paypal.png', 'PayPal Holdings, Inc.', 'PYPL', NOW(), 'https://www.paypal.com'),
+    (7, NOW(), 'A global leader in database management and cloud computing software.', FALSE, 'https://example.com/logos/oracle.png', 'Oracle Corporation', 'ORCL', NOW(), 'https://www.oracle.com'),
+    (8, NOW(), 'A software company focused on enterprise resource planning and cloud solutions.', FALSE, 'https://example.com/logos/sap.png', 'SAP SE', 'SAP', NOW(), 'https://www.sap.com'),
+    (9, NOW(), 'A provider of customer service software and cloud communication platforms.', FALSE, 'https://example.com/logos/zendesk.png', 'Zendesk, Inc.', 'ZEN', NOW(), 'https://www.zendesk.com'),
+    (10, NOW(), 'A company specializing in team collaboration and project management software.', FALSE, 'https://example.com/logos/atlassian.png', 'Atlassian Corporation', 'TEAM', NOW(), 'https://www.atlassian.com'),
+    (11, NOW(), 'A Vietnamese technology company providing software development and IT services.', FALSE, 'https://example.com/logos/fpt.png', 'FPT Corporation', 'FPT', NOW(), 'https://www.fpt.com'),
+    (12, NOW(), 'A Vietnamese software company specializing in mobile apps and AI solutions.', FALSE, 'https://example.com/logos/vinsofts.png', 'VinSofts', 'VINS', NOW(), 'https://www.vinsofts.com'),
+    (13, NOW(), 'A Vietnamese firm focused on software outsourcing and digital transformation.', FALSE, 'https://example.com/logos/tma.png', 'TMA Solutions', 'TMA', NOW(), 'https://www.tmasolutions.com'),
+    (14, NOW(), 'A Vietnamese software company developing fintech and e-commerce solutions.', FALSE, 'https://example.com/logos/vng.png', 'VNG Corporation', 'VNG', NOW(), 'https://www.vng.com.vn'),
+    (15, NOW(), 'A Vietnamese technology company specializing in blockchain and AI software.', FALSE, 'https://example.com/logos/axieinfinity.png', 'Sky Mavis', 'SKYM', NOW(), 'https://skymavis.com'),
+    (16, NOW(), 'A software company providing cybersecurity and antivirus solutions.', FALSE, 'https://example.com/logos/kaspersky.png', 'Kaspersky Lab', 'KASP', NOW(), 'https://www.kaspersky.com'),
+    (17, NOW(), 'A company focused on cloud-based HR and payroll software solutions.', FALSE, 'https://example.com/logos/workday.png', 'Workday, Inc.', 'WDAY', NOW(), 'https://www.workday.com'),
+    (18, NOW(), 'A Vietnamese software firm specializing in game development and IT services.', FALSE, 'https://example.com/logos/gameloft.png', 'Gameloft Vietnam', 'GAME', NOW(), 'https://www.gameloft.com'),
+    (19, NOW(), 'A software company developing data analytics and visualization tools.', FALSE, 'https://example.com/logos/tableau.png', 'Tableau Software', 'TBL', NOW(), 'https://www.tableau.com'),
+    (20, NOW(), 'A Vietnamese company providing software outsourcing and cloud solutions.', FALSE, 'https://example.com/logos/harveynash.png', 'Harvey Nash Vietnam', 'HNV', NOW(), 'https://www.harveynash.vn');
+
 -- Reset Sequence IDs
 SELECT setval('interview_session_interview_session_id_seq',
               (SELECT MAX(interview_session_id) FROM interview_session) + 1);
@@ -769,3 +789,4 @@ SELECT setval('topic_topic_id_seq', (SELECT MAX(topic_id) FROM topic) + 1);
 SELECT setval('tag_tag_id_seq', (SELECT MAX(tag_id) FROM tag) + 1);
 SELECT setval('question_question_id_seq', (SELECT MAX(question_id) FROM question) + 1);
 SELECT setval('package_package_id_seq', (SELECT MAX(package_id) FROM package) + 1);
+SELECT setval('company_company_id_seq', (SELECT MAX(company_id) FROM company) + 1);

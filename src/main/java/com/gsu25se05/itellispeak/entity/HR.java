@@ -23,8 +23,9 @@ public class HR {
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "company", length = 100)
-    private String company;
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "company_id", referencedColumnName = "company_id")
+    private Company company;
 
     @Column(name = "phone", length = 20)
     private String phone;
