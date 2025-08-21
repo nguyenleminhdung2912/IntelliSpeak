@@ -22,6 +22,25 @@ public class CompanyService {
         this.companyRepository = companyRepository;
     }
 
+    public List<GetCompanyDetailResponseDTO> getAllCompanyDetailsWhichHaveInterviewSession() {
+        return companyRepository.findAll().stream()
+                .filter(company -> company.getInterviewSessions() != null && !company.getInterviewSessions().isEmpty())
+                .map(company -> {
+                    GetCompanyDetailResponseDTO dto = new GetCompanyDetailResponseDTO();
+                    dto.setCompanyId(company.getCompanyId());
+                    dto.setName(company.getName());
+                    dto.setShortName(company.getShortName());
+                    dto.setDescription(company.getDescription());
+                    dto.setLogoUrl(company.getLogoUrl());
+                    dto.setWebsite(company.getWebsite());
+                    dto.setCreateAt(company.getCreateAt());
+                    dto.setUpdateAt(company.getUpdateAt());
+                    dto.setIsDeleted(company.getIsDeleted());
+                    // hrList and interviewTemplateList remain empty
+                    return dto;
+                }).toList();
+    }
+
     public List<GetCompanyDetailResponseDTO> getAllCompanyDetails() {
         return companyRepository.findAll().stream().map(company -> {
             GetCompanyDetailResponseDTO dto = new GetCompanyDetailResponseDTO();
