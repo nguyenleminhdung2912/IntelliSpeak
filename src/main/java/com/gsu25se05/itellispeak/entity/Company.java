@@ -1,5 +1,6 @@
 package com.gsu25se05.itellispeak.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,7 +18,7 @@ import java.util.List;
 public class Company {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "company_id")
     private Long companyId;
 
@@ -51,5 +52,6 @@ public class Company {
 
     // Một công ty có nhiều session
     @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<InterviewSession> interviewSessions = new ArrayList<>();
 }

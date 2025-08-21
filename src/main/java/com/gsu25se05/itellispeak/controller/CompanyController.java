@@ -24,22 +24,20 @@ public class CompanyController {
 
     @GetMapping
     public ResponseEntity<Response<List<Company>>> getAllCompanies() {
-        try {
-            List<Company> companies = companyService.getAllCompanies();
-            return ResponseEntity.ok(new Response<>(200, "Get all companies successfully", companies));
-        } catch (Exception e) {
-            return ResponseEntity.ok(new Response<>(500, "Something went wrong, please try again!", null));
-        }
+        List<Company> companies = companyService.getAllCompanies();
+        return ResponseEntity.ok(new Response<>(200, "Get all companies successfully", companies));
+    }
+
+    @GetMapping("/{company_id}")
+    public ResponseEntity<Response<Company>> getCompanyById(@PathVariable Long company_id) {
+        Company companies = companyService.getCompanyById(company_id);
+        return ResponseEntity.ok(new Response<>(200, "Get company by id successfully", companies));
     }
 
     @PostMapping
-    public ResponseEntity<Response<Company>> createCompanies(CreateCompanyRequestDTO createCompanyRequestDTO) {
-        try {
-            Company companies = companyService.createCompany(createCompanyRequestDTO);
-            return ResponseEntity.ok(new Response<>(200, "Get all companies successfully", companies));
-        } catch (Exception e) {
-            return ResponseEntity.ok(new Response<>(500, "Something went wrong, please try again!", null));
-        }
+    public ResponseEntity<Response<Company>> createCompanies(@RequestBody CreateCompanyRequestDTO createCompanyRequestDTO) {
+        Company companies = companyService.createCompany(createCompanyRequestDTO);
+        return ResponseEntity.ok(new Response<>(200, "Get all companies successfully", companies));
     }
 
 }
