@@ -19,5 +19,6 @@ public class SessionWithQuestionsDTO {
     private String description;
     private Integer totalQuestion;
     private Duration durationEstimate;
+    private Long companyId;
     private List<QuestionInfoDTO> questions;
 }

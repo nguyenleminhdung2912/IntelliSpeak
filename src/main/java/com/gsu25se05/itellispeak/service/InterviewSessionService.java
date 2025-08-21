@@ -219,6 +219,9 @@ public class InterviewSessionService {
         SessionWithQuestionsDTO dto = new SessionWithQuestionsDTO();
         dto.setInterviewSessionId(tempSession.getInterviewSessionId());
         dto.setTitle(tempSession.getTitle());
+        dto.setCompanyId(
+                tempSession.getCompany() != null ? tempSession.getCompany().getCompanyId() : null
+        );
         dto.setDescription(tempSession.getDescription());
         dto.setTotalQuestion(total);
         dto.setDurationEstimate(tempSession.getDurationEstimate());
@@ -325,6 +328,9 @@ public class InterviewSessionService {
         SessionWithQuestionsDTO dto = new SessionWithQuestionsDTO();
         dto.setInterviewSessionId(sessionId);
         dto.setTitle(session.getTitle());
+        dto.setCompanyId(
+                session.getCompany() != null ? session.getCompany().getCompanyId() : null
+        );
         dto.setDescription(session.getDescription());
         dto.setTotalQuestion(total);
         dto.setDurationEstimate(session.getDurationEstimate());
