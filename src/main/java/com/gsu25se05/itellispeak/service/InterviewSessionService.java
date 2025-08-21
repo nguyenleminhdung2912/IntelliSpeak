@@ -156,7 +156,12 @@ public class InterviewSessionService {
         int total = request.getNumberOfQuestion();
 
         // Set ratio based on total
-        if (total == 5) {
+        if (total == 3) {
+            easyCount = 1;
+            mediumCount = 2;
+            hardCount = 0;
+        }
+        else if (total == 5) {
             easyCount = 2;
             mediumCount = 2;
             hardCount = 1;
