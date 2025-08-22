@@ -84,19 +84,28 @@ public class QuestionService {
         return new Response<>(200, "Successfully retrieved question list", questions);
     }
 
-    public Response<List<QuestionDTO>> importFromCsv(MultipartFile file) {
+    public Response<List<QuestionDTO>> importFromCsv(MultipartFile file, Long tagId) {
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) {
             return new Response<>(401, "Please log in to continue", null);
         }
-
         String roleName = currentUser.getRole().name();
         if (!"HR".equalsIgnoreCase(roleName) && !"ADMIN".equalsIgnoreCase(roleName)) {
             return new Response<>(403, "Only HR or ADMIN users can import questions", null);
         }
 
+        if (tagId == null) {
+            return new Response<>(400, "Missing required parameter: tagId", null);
+        }
+
+        // Đảm bảo tag tồn tại
+        Tag tag = tagRepository.findById(tagId).orElse(null);
+        if (tag == null) {
+            return new Response<>(400, "Tag not found: " + tagId, null);
+        }
+
         final List<String> REQUIRED_HEADERS = List.of(
-                "title", "content", "difficulty", "suitableAnswer1", "suitableAnswer2", "tagIds"
+                "title", "content", "difficulty", "suitableAnswer1", "suitableAnswer2"
         );
 
         List<QuestionDTO> imported = new ArrayList<>();
@@ -105,14 +114,13 @@ public class QuestionService {
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
 
-            // Đọc toàn bộ để loại BOM nếu có
             List<String> lines = reader.lines().collect(Collectors.toList());
             if (lines.isEmpty()) {
                 return new Response<>(400, "CSV file is empty", null);
             }
+
             // remove UTF-8 BOM
             lines.set(0, lines.get(0).replace("\uFEFF", ""));
-
             String csvContent = String.join("\n", lines);
 
             try (CSVParser csv = CSVFormat.DEFAULT
@@ -121,36 +129,33 @@ public class QuestionService {
                     .withTrim()
                     .parse(new StringReader(csvContent))) {
 
-                // Kiểm tra header bắt buộc
-                List<String> headers = csv.getHeaderNames().stream()
-                        .map(String::trim).collect(Collectors.toList());
+                // Kiểm tra header bắt buộc (case-insensitive)
+                Set<String> headersLc = csv.getHeaderNames().stream()
+                        .map(h -> h == null ? "" : h.trim().toLowerCase())
+                        .collect(Collectors.toSet());
+
                 for (String required : REQUIRED_HEADERS) {
-                    if (!headers.contains(required)) {
+                    if (!headersLc.contains(required.toLowerCase())) {
                         return new Response<>(400, "CSV file is missing required column: " + required, null);
                     }
                 }
 
-                long rowIndex = 1; // 1-based cho dễ đọc log (không tính header)
+                // Bỏ qua hoàn toàn cột tagIds nếu file có (để đảm bảo dùng duy nhất 1 tag từ request)
+                long rowIndex = 1;
                 for (CSVRecord r : csv) {
                     rowIndex++;
                     try {
-
                         String title = safe(r, "title");
                         String content = safe(r, "content");
                         String difficultyRaw = safe(r, "difficulty");
                         String s1 = safe(r, "suitableAnswer1");
                         String s2 = safe(r, "suitableAnswer2");
-                        String tagIdsStr = safe(r, "tagIds");
 
-                        // Validate tối thiểu
                         if (title.isBlank() || content.isBlank() || difficultyRaw.isBlank()) {
                             throw new IllegalArgumentException("title/content/difficulty must not be blank");
                         }
 
                         String difficulty = normalizeDifficulty(difficultyRaw); // EASY|MEDIUM|HARD
-
-                        // Parse tagIds: nhận "1,2, 3" hoặc "[1,2,3]"
-                        Set<Long> tagIds = parseTagIds(tagIdsStr);
 
                         QuestionDTO dto = new QuestionDTO();
                         dto.setTitle(title);
@@ -158,7 +163,8 @@ public class QuestionService {
                         dto.setDifficulty(difficulty);
                         dto.setSuitableAnswer1(s1);
                         dto.setSuitableAnswer2(s2);
-                        dto.setTagIds(tagIds);
+
+                        dto.setTagIds(Set.of(tagId));
 
                         imported.add(save(dto));
                     } catch (Exception rowEx) {
@@ -166,7 +172,6 @@ public class QuestionService {
                     }
                 }
             }
-
         } catch (IOException e) {
             return new Response<>(500, "Unable to read CSV file: " + e.getMessage(), null);
         } catch (IllegalArgumentException e) {
@@ -174,7 +179,6 @@ public class QuestionService {
         }
 
         if (!rowErrors.isEmpty()) {
-
             String msg = "CSV import completed with " + rowErrors.size() + " row error(s). "
                     + "First error: " + rowErrors.get(0);
             return new Response<>(200, msg, imported);
