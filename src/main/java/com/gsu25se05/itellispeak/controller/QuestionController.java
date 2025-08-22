@@ -45,9 +45,9 @@ public class QuestionController {
         return ResponseEntity.ok(questionService.getByCurrentUser());
     }
 
-    @PostMapping("/import-csv")
-    public Response<List<QuestionDTO>> importQuestionsFromCsv(@RequestParam("file") MultipartFile file) {
-        return questionService.importFromCsv(file);
+    @PostMapping("/import-csv/{tagId}")
+    public Response<List<QuestionDTO>> importQuestionsFromCsv(@RequestParam("file") MultipartFile file, @PathVariable Long tagId) {
+        return questionService.importFromCsv(file, tagId);
     }
 
 
