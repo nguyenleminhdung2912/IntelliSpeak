@@ -2,6 +2,7 @@ package com.gsu25se05.itellispeak.service;
 
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.forum.*;
+import com.gsu25se05.itellispeak.dto.savedPost.ToggleSaveDTO;
 import com.gsu25se05.itellispeak.entity.*;
 import com.gsu25se05.itellispeak.exception.auth.NotFoundException;
 import com.gsu25se05.itellispeak.repository.*;
@@ -298,91 +299,110 @@ public class ForumPostService {
 
     }
 
-    public Response<String> savePost(Long postId) {
+    @Transactional
+    public Response<ToggleSaveDTO> savePost(Long postId) {
         User user = accountUtils.getCurrentAccount();
         if (user == null) return new Response<>(401, "Please log in first", null);
 
         ForumPost post = forumPostRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Post not found"));
 
-        if (savedPostRepository.findByUserAndForumPost(user, post).isPresent()) {
-            return new Response<>(400, "The post has already been saved", null);
+        SavedPost saved = savedPostRepository.findByUserAndForumPost(user, post).orElse(null);
+
+        if (saved == null) {
+            SavedPost created = SavedPost.builder()
+                    .user(user)
+                    .forumPost(post)
+                    .savedAt(LocalDateTime.now())
+                    .isDeleted(false)
+                    .build();
+            savedPostRepository.save(created);
+            return new Response<>(200, "Post saved successfully",
+                    new ToggleSaveDTO(postId, true));
         }
 
-        SavedPost savedPost = SavedPost.builder()
-                .user(user)
-                .forumPost(post)
-                .savedAt(LocalDateTime.now())
-                .build();
+        if (Boolean.TRUE.equals(saved.isDeleted())) {
+            saved.setDeleted(false);
+            saved.setSavedAt(LocalDateTime.now());
+            savedPostRepository.save(saved);
+            return new Response<>(200, "Post saved successfully",
+                    new ToggleSaveDTO(postId, true));
+        }
 
-        savedPostRepository.save(savedPost);
-        return new Response<>(200, "Post saved successfully", null);
+        saved.setDeleted(true);
+        savedPostRepository.save(saved);
+
+        return new Response<>(200, "Post unsaved successfully",
+                new ToggleSaveDTO(postId, false));
     }
 
+
     public Response<List<CreateResponseForumDTO>> getSavedPosts() {
-        User user = accountUtils.getCurrentAccount();
-        if (user == null)
-            return new Response<>(401, "Please log in first", null);
+        User current = accountUtils.getCurrentAccount();
+        if (current == null) return new Response<>(401, "Please log in first", null);
 
-        String email = user.getEmail();
-        String username = email != null && email.contains("@") ? email.split("@")[0] : "unknown";
+        List<SavedPost> savedPosts = savedPostRepository
+                .findByUserAndIsDeletedFalseOrderBySavedAtDesc(current);
 
-        List<SavedPost> savedPosts = savedPostRepository.findByUser(user).stream()
-                .filter(savedPost -> !savedPost.isDeleted())
-                .collect(Collectors.toList());
-
-        List<CreateResponseForumDTO> responseList = savedPosts.stream()
+        List<CreateResponseForumDTO> data = savedPosts.stream()
                 .map(SavedPost::getForumPost)
-                .filter(post -> !Boolean.TRUE.equals(post.getIsDeleted()))
+                .filter(p -> !Boolean.TRUE.equals(p.getIsDeleted()))
                 .map(post -> {
                     int readTime = estimateReadTime(post.getContent());
+
+                    String authorEmail = post.getUser() != null ? post.getUser().getEmail() : null;
+                    String authorUsername = (authorEmail != null && authorEmail.contains("@"))
+                            ? authorEmail.split("@")[0] : "unknown";
+
+                    // chỉ lấy ảnh active
+                    List<String> images = (post.getPictures() == null) ? List.of() :
+                            post.getPictures().stream()
+                                    .filter(pic -> !Boolean.TRUE.equals(pic.isDeleted()))
+                                    .map(ForumPostPicture::getUrl)
+                                    .toList();
+
                     CreateResponseForumDTO dto = new CreateResponseForumDTO();
                     dto.setPostId(post.getId());
                     dto.setTitle(post.getTitle());
                     dto.setContent(post.getContent());
-                    dto.setImage(post.getPictures().stream().map(p -> p.getUrl()).toList());
-                    dto.setUserName(username);
+                    dto.setImage(images);
+                    dto.setUserName(authorUsername);
                     dto.setForumTopicType(post.getForumTopicType());
                     dto.setCreateAt(post.getCreateAt());
                     dto.setReactionCount(post.getLikeCount());
                     dto.setReadTimeEstimate(readTime);
                     return dto;
                 })
-                .collect(Collectors.toList());
+                .toList();
 
-        return new Response<>(200, "Retrieved saved posts successfully", responseList);
-
+        return new Response<>(200, "Retrieved saved posts successfully", data);
     }
 
-    public Response<String> unSavePost(Long postId) {
+
+    @Transactional
+    public Response<ToggleSaveDTO> unSavePost(Long postId) {
         User user = accountUtils.getCurrentAccount();
         if (user == null) return new Response<>(401, "Please log in first", null);
 
         ForumPost post = forumPostRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Post not found"));
 
-        SavedPost savedPost = savedPostRepository.findByUserAndForumPost(user, post)
+        SavedPost saved = savedPostRepository.findByUserAndForumPost(user, post)
                 .orElseThrow(() -> new NotFoundException("Saved post not found"));
 
-        savedPost.setDeleted(true);
-        savedPost.setSavedAt(LocalDateTime.now());
-        savedPostRepository.save(savedPost);
-
-        return new Response<>(200, "Unsave post successfully", null);
-    }
-
-    public Response<List<ForumPost>> getTopPostsByReplies(int limit) {
-        List<ForumPost> posts = forumPostRepository.findTopPostsByReplyCount(limit);
-
-        for (ForumPost post : posts) {
-            List<ForumPostPicture> activePictures = post.getPictures().stream()
-                    .filter(p -> !Boolean.TRUE.equals(p.isDeleted()))
-                    .collect(Collectors.toList());
-            post.setPictures(activePictures);
+        // Nếu đã hủy trước đó thì idempotent (không lỗi, cứ trả về isSaved=false)
+        if (Boolean.TRUE.equals(saved.isDeleted())) {
+            return new Response<>(200, "Post already unsaved",
+                    new ToggleSaveDTO(postId, false));
         }
 
-        return new Response<>(200, "Get featured posts successfully", posts);
+        saved.setDeleted(true);
+        savedPostRepository.save(saved);
+
+        return new Response<>(200, "Unsave post successfully",
+                new ToggleSaveDTO(postId, false));
     }
+
 
     public List<ForumPostReply> getRepliesByPostId(Long postId) {
         ForumPost post = forumPostRepository.findById(postId)

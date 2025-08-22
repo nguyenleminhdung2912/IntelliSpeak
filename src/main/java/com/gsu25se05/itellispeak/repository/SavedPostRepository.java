@@ -17,6 +17,9 @@ public interface SavedPostRepository extends JpaRepository<SavedPost, Long> {
     // Lấy toàn bộ bài viết đã lưu của người dùng
     List<SavedPost> findByUser(User user);
 
+    List<SavedPost> findByUserAndIsDeletedFalseOrderBySavedAtDesc(User user);
+
+
     //  Xóa bài viết đã lưu
     void deleteByUserAndForumPost(User user, ForumPost forumPost);
 }

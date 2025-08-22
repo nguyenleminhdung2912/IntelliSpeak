@@ -108,13 +108,13 @@ public class ForumPostController {
         return ResponseEntity.status(response.getCode()).body(response);
     }
 
-    @Operation(summary = "Sort posts by the highest number of comments")
-    @GetMapping("/top-replied")
-    public ResponseEntity<Response<List<ForumPost>>> getTopRepliedPosts(
-            @RequestParam(defaultValue = "5") int limit) {
-        Response<List<ForumPost>> response = forumPostService.getTopPostsByReplies(limit);
-        return ResponseEntity.status(response.getCode()).body(response);
-    }
+//    @Operation(summary = "Sort posts by the highest number of comments")
+//    @GetMapping("/top-replied")
+//    public ResponseEntity<Response<List<ForumPost>>> getTopRepliedPosts(
+//            @RequestParam(defaultValue = "5") int limit) {
+//        Response<List<ForumPost>> response = forumPostService.getTopPostsByReplies(limit);
+//        return ResponseEntity.status(response.getCode()).body(response);
+//    }
 
     @PostMapping("/{postId}/like")
     public ResponseEntity<Response<String>> likeOrUnlikePost(
