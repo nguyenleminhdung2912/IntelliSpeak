@@ -26,11 +26,6 @@ public class ForumPost {
     @JsonIgnore
     private User user;
 
-//    @ManyToOne
-//    @JoinColumn(name = "forum_category_id", nullable = false)
-//    @JsonIgnore
-//    private ForumCategory forumCategory;
-
     @OneToMany(mappedBy = "forumPost", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ForumPostPicture> pictures = new ArrayList<>();
 
