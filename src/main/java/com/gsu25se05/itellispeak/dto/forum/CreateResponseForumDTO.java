@@ -26,7 +26,7 @@ public class CreateResponseForumDTO {
 
     private ForumTopicType forumTopicType;
 
-//    private ForumCategory forumCategory;
+    private Boolean isSaved;
 
     private LocalDateTime createAt;
 

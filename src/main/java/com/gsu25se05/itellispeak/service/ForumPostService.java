@@ -39,28 +39,97 @@ public class ForumPostService {
         this.forumPostReplyRepository = forumPostReplyRepository;
     }
 
-    public List<ForumPost> getAllPosts() {
+    // ForumPostService.java
+    public Response<List<CreateResponseForumDTO>> getAllPosts() {
+        User current = accountUtils.getCurrentAccount();
+
+        // Lấy tất cả bài chưa xóa (có thể thêm order nếu muốn)
         List<ForumPost> posts = forumPostRepository.findByIsDeletedFalse();
-        for (ForumPost post : posts) {
-            List<ForumPostPicture> activePictures = post.getPictures().stream()
-                    .filter(p -> !Boolean.TRUE.equals(p.isDeleted()))
-                    .collect(Collectors.toList());
-            post.setPictures(activePictures);
-        }
-        return posts;
+
+        // Nếu đã đăng nhập -> lấy danh sách postId mà user đang lưu
+        final java.util.Set<Long> savedIds = (current == null)
+                ? java.util.Collections.emptySet()
+                : new java.util.HashSet<>(savedPostRepository.findActiveSavedPostIdsByUser(current));
+
+        List<CreateResponseForumDTO> data = posts.stream().map(post -> {
+            // Ảnh active
+            List<String> images = (post.getPictures() == null) ? List.of() :
+                    post.getPictures().stream()
+                            .filter(p -> !Boolean.TRUE.equals(p.isDeleted()))
+                            .map(ForumPostPicture::getUrl)
+                            .toList();
+
+            // Tên tác giả
+            String authorEmail = (post.getUser() != null) ? post.getUser().getEmail() : null;
+            String authorUsername = (authorEmail != null && authorEmail.contains("@"))
+                    ? authorEmail.substring(0, authorEmail.indexOf('@'))
+                    : "unknown";
+
+            // isSaved: true nếu postId nằm trong savedIds
+            boolean isSaved = savedIds.contains(post.getId());
+
+            int readTime = estimateReadTime(post.getContent());
+
+            return new CreateResponseForumDTO(
+                    post.getId(),
+                    post.getTitle(),
+                    post.getContent(),
+                    images,
+                    authorUsername,
+                    post.getForumTopicType(),
+                    isSaved,
+                    post.getCreateAt(),
+                    post.getLikeCount(),
+                    readTime
+            );
+        }).toList();
+
+        return new Response<>(200, "Success", data);
     }
 
-    public ForumPost getPostById(Long id) {
-        ForumPost post = forumPostRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Post not found with ID: " + id));
 
-        List<ForumPostPicture> activePictures = post.getPictures().stream()
-                .filter(p -> !Boolean.TRUE.equals(p.isDeleted()))
-                .collect(Collectors.toList());
-        post.setPictures(activePictures);
+    public Response<CreateResponseForumDTO> getPostById(Long postId) {
+        User current = accountUtils.getCurrentAccount();
+        if (current == null) return new Response<>(401, "Please log in first", null);
 
-        return post;
+        ForumPost post = forumPostRepository.findById(postId)
+                .orElseThrow(() -> new NotFoundException("Post not found with ID: " + postId));
+
+        // Ảnh active
+        List<String> activeImages = (post.getPictures() == null) ? List.of() :
+                post.getPictures().stream()
+                        .filter(p -> !Boolean.TRUE.equals(p.isDeleted()))
+                        .map(ForumPostPicture::getUrl)
+                        .toList();
+
+        // Tên tác giả
+        String authorEmail = (post.getUser() != null) ? post.getUser().getEmail() : null;
+        String authorUsername = (authorEmail != null && authorEmail.contains("@"))
+                ? authorEmail.split("@")[0] : "unknown";
+
+        // isSaved = tồn tại SavedPost với isDeleted=false
+        boolean isSaved = savedPostRepository.findByUserAndForumPost(current, post)
+                .filter(saved -> !Boolean.TRUE.equals(saved.isDeleted()))
+                .isPresent();
+
+        int readTime = estimateReadTime(post.getContent());
+
+        CreateResponseForumDTO dto = new CreateResponseForumDTO(
+                post.getId(),
+                post.getTitle(),
+                post.getContent(),
+                activeImages,
+                authorUsername,
+                post.getForumTopicType(),
+                isSaved,
+                post.getCreateAt(),
+                post.getLikeCount(),
+                readTime
+        );
+
+        return new Response<>(200, "Get post detail successfully", dto);
     }
+
 
     public Response<List<CreateResponseForumDTO>> getPostsByTopic(Long topicId) {
 
@@ -84,6 +153,10 @@ public class ForumPostService {
                             .map(ForumPostPicture::getUrl)
                             .collect(Collectors.toList());
 
+            boolean isSaved = savedPostRepository.findByUserAndForumPost(current, post)
+                    .filter(saved -> !Boolean.TRUE.equals(saved.isDeleted()))
+                    .isPresent();
+
             int readTime = estimateReadTime(post.getContent());
 
             return new CreateResponseForumDTO(
@@ -93,6 +166,7 @@ public class ForumPostService {
                     activeImages,
                     authorUsername,
                     post.getForumTopicType(),
+                    isSaved,
                     post.getCreateAt(),
                     post.getLikeCount(),
                     readTime
@@ -112,6 +186,9 @@ public class ForumPostService {
 
         List<ForumPost> myPosts = forumPostRepository.findByUserAndIsDeletedFalse(user);
 
+
+
+
         List<CreateResponseForumDTO> responseList = myPosts.stream()
                 .map(post -> {
                     int readTime = estimateReadTime(post.getContent());
@@ -120,6 +197,10 @@ public class ForumPostService {
                             .map(ForumPostPicture::getUrl)
                             .collect(Collectors.toList());
 
+                    boolean isSaved = savedPostRepository.findByUserAndForumPost(user, post)
+                            .filter(saved -> !Boolean.TRUE.equals(saved.isDeleted()))
+                            .isPresent();
+
                     return new CreateResponseForumDTO(
                             post.getId(),
                             post.getTitle(),
@@ -127,6 +208,7 @@ public class ForumPostService {
                             activeImages,
                             username,
                             post.getForumTopicType(),
+                            isSaved,
                             post.getCreateAt(),
                             post.getLikeCount(),
                             readTime
@@ -182,6 +264,10 @@ public class ForumPostService {
 
         int readTime = estimateReadTime(post.getContent());
 
+        boolean isSaved = savedPostRepository.findByUserAndForumPost(user, post)
+                .filter(saved -> !Boolean.TRUE.equals(saved.isDeleted()))
+                .isPresent();
+
         CreateResponseForumDTO responseDTO = new CreateResponseForumDTO(
                 post.getId(),
                 post.getTitle(),
@@ -189,6 +275,7 @@ public class ForumPostService {
                 responseImageUrls,
                 username,
                 post.getForumTopicType(),
+                isSaved,
                 post.getCreateAt(),
                 post.getLikeCount(),
                 readTime
@@ -368,6 +455,7 @@ public class ForumPostService {
                     dto.setImage(images);
                     dto.setUserName(authorUsername);
                     dto.setForumTopicType(post.getForumTopicType());
+                    dto.setIsSaved(true);
                     dto.setCreateAt(post.getCreateAt());
                     dto.setReactionCount(post.getLikeCount());
                     dto.setReadTimeEstimate(readTime);
