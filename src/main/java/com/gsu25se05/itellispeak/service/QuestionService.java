@@ -42,6 +42,7 @@ public class QuestionService {
     public QuestionDTO save(QuestionDTO dto) {
         Question entity = questionMapper.toEntity(dto);
         entity.setQuestionStatus(QuestionStatus.APPROVED);
+        entity.setSource("GeeksForGeeks");
 
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser != null) {
@@ -94,58 +95,74 @@ public class QuestionService {
             return new Response<>(403, "Only HR or ADMIN users can import questions", null);
         }
 
-        List<QuestionDTO> importedQuestions = new ArrayList<>();
+        final List<String> REQUIRED_HEADERS = List.of(
+                "title", "content", "difficulty", "suitableAnswer1", "suitableAnswer2", "tagIds"
+        );
+
+        List<QuestionDTO> imported = new ArrayList<>();
+        List<String> rowErrors = new ArrayList<>();
 
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
 
+            // Đọc toàn bộ để loại BOM nếu có
             List<String> lines = reader.lines().collect(Collectors.toList());
             if (lines.isEmpty()) {
                 return new Response<>(400, "CSV file is empty", null);
             }
-
+            // remove UTF-8 BOM
             lines.set(0, lines.get(0).replace("\uFEFF", ""));
 
             String csvContent = String.join("\n", lines);
-            try (CSVParser csvParser = CSVFormat.DEFAULT
+
+            try (CSVParser csv = CSVFormat.DEFAULT
                     .withFirstRecordAsHeader()
                     .withIgnoreHeaderCase()
                     .withTrim()
                     .parse(new StringReader(csvContent))) {
 
-                List<String> headers = csvParser.getHeaderNames().stream()
-                        .map(String::trim)
-                        .collect(Collectors.toList());
-
-                List<String> requiredHeaders = List.of("title", "content", "difficulty", "suitableAnswer1", "suitableAnswer2", "tagIds");
-                for (String required : requiredHeaders) {
+                // Kiểm tra header bắt buộc
+                List<String> headers = csv.getHeaderNames().stream()
+                        .map(String::trim).collect(Collectors.toList());
+                for (String required : REQUIRED_HEADERS) {
                     if (!headers.contains(required)) {
                         return new Response<>(400, "CSV file is missing required column: " + required, null);
                     }
                 }
 
-                for (CSVRecord record : csvParser) {
+                long rowIndex = 1; // 1-based cho dễ đọc log (không tính header)
+                for (CSVRecord r : csv) {
+                    rowIndex++;
                     try {
-                        QuestionDTO dto = new QuestionDTO();
-                        dto.setTitle(record.get("title"));
-                        dto.setContent(record.get("content"));
-                        dto.setDifficulty(record.get("difficulty"));
-                        dto.setSuitableAnswer1(record.get("suitableAnswer1"));
-                        dto.setSuitableAnswer2(record.get("suitableAnswer2"));
 
-                        String tagIdsStr = record.get("tagIds");
-                        if (tagIdsStr != null && !tagIdsStr.isBlank()) {
-                            Set<Long> tagIds = Arrays.stream(tagIdsStr.split(","))
-                                    .map(String::trim)
-                                    .filter(s -> !s.isEmpty())
-                                    .map(Long::parseLong)
-                                    .collect(Collectors.toSet());
-                            dto.setTagIds(tagIds);
+                        String title = safe(r, "title");
+                        String content = safe(r, "content");
+                        String difficultyRaw = safe(r, "difficulty");
+                        String s1 = safe(r, "suitableAnswer1");
+                        String s2 = safe(r, "suitableAnswer2");
+                        String tagIdsStr = safe(r, "tagIds");
+
+                        // Validate tối thiểu
+                        if (title.isBlank() || content.isBlank() || difficultyRaw.isBlank()) {
+                            throw new IllegalArgumentException("title/content/difficulty must not be blank");
                         }
 
-                        importedQuestions.add(save(dto));
-                    } catch (Exception e) {
-                        return new Response<>(400, "Error while reading CSV row: " + e.getMessage(), null);
+                        String difficulty = normalizeDifficulty(difficultyRaw); // EASY|MEDIUM|HARD
+
+                        // Parse tagIds: nhận "1,2, 3" hoặc "[1,2,3]"
+                        Set<Long> tagIds = parseTagIds(tagIdsStr);
+
+                        QuestionDTO dto = new QuestionDTO();
+                        dto.setTitle(title);
+                        dto.setContent(content);
+                        dto.setDifficulty(difficulty);
+                        dto.setSuitableAnswer1(s1);
+                        dto.setSuitableAnswer2(s2);
+                        dto.setTagIds(tagIds);
+
+                        imported.add(save(dto));
+                    } catch (Exception rowEx) {
+                        rowErrors.add("Row " + rowIndex + ": " + rowEx.getMessage());
                     }
                 }
             }
@@ -156,6 +173,48 @@ public class QuestionService {
             return new Response<>(400, "Invalid CSV format: " + e.getMessage(), null);
         }
 
-        return new Response<>(200, "CSV import successful", importedQuestions);
+        if (!rowErrors.isEmpty()) {
+
+            String msg = "CSV import completed with " + rowErrors.size() + " row error(s). "
+                    + "First error: " + rowErrors.get(0);
+            return new Response<>(200, msg, imported);
+        }
+        return new Response<>(200, "CSV import successful", imported);
+    }
+
+    private static String safe(CSVRecord r, String col) {
+        String v = r.get(col);
+        return v == null ? "" : v.trim();
+    }
+
+    private static String normalizeDifficulty(String raw) {
+        String s = raw.trim().toUpperCase();
+        switch (s) {
+            case "EASY":
+            case "MEDIUM":
+            case "HARD":
+                return s;
+            default:
+                // nếu muốn nghiêm ngặt, throw; hoặc default MEDIUM
+                return "MEDIUM";
+        }
+    }
+
+    private static Set<Long> parseTagIds(String raw) {
+        if (raw == null || raw.isBlank()) return Collections.emptySet();
+        String s = raw.trim();
+        // Hỗ trợ dạng [1,2,3]
+        if (s.startsWith("[") && s.endsWith("]")) {
+            s = s.substring(1, s.length() - 1);
+        }
+        if (s.isBlank()) return Collections.emptySet();
+
+        return Arrays.stream(s.split(","))
+                .map(String::trim)
+                .filter(x -> !x.isEmpty())
+                .map(x -> x.replaceAll("[^0-9]", "")) // lọc ký tự không phải số
+                .filter(x -> !x.isEmpty())
+                .map(Long::parseLong)
+                .collect(Collectors.toSet());
     }
 }
