@@ -2,10 +2,9 @@ package com.gsu25se05.itellispeak.service;
 
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.question.QuestionDTO;
-import com.gsu25se05.itellispeak.entity.Question;
-import com.gsu25se05.itellispeak.entity.QuestionStatus;
-import com.gsu25se05.itellispeak.entity.Tag;
-import com.gsu25se05.itellispeak.entity.User;
+import com.gsu25se05.itellispeak.dto.question.UpdateQuestionDTO;
+import com.gsu25se05.itellispeak.entity.*;
+import com.gsu25se05.itellispeak.repository.InterviewSessionRepository;
 import com.gsu25se05.itellispeak.repository.QuestionRepository;
 import com.gsu25se05.itellispeak.repository.TagRepository;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
@@ -31,12 +30,14 @@ public class QuestionService {
     private final QuestionMapper questionMapper;
     private final TagRepository tagRepository;
     private final AccountUtils accountUtils;
+    private final InterviewSessionRepository interviewSessionRepository;
 
-    public QuestionService(QuestionRepository questionRepository, QuestionMapper questionMapper, TagRepository tagRepository, AccountUtils accountUtils) {
+    public QuestionService(QuestionRepository questionRepository, QuestionMapper questionMapper, TagRepository tagRepository, AccountUtils accountUtils, InterviewSessionRepository interviewSessionRepository) {
         this.questionRepository = questionRepository;
         this.questionMapper = questionMapper;
         this.tagRepository = tagRepository;
         this.accountUtils = accountUtils;
+        this.interviewSessionRepository = interviewSessionRepository;
     }
 
     public QuestionDTO save(QuestionDTO dto) {
@@ -54,6 +55,27 @@ public class QuestionService {
             entity.setTags(tags);
         }
         return questionMapper.toDTO(questionRepository.save(entity));
+    }
+
+    public void deleteQuestion(Long questionId) {
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new IllegalArgumentException("Question not found"));
+        question.setIs_deleted(true);
+        questionRepository.save(question);
+    }
+
+    public QuestionDTO updateQuestion(Long questionId, UpdateQuestionDTO dto) {
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new IllegalArgumentException("Question not found"));
+
+        if (dto.getTitle() != null) question.setTitle(dto.getTitle());
+        if (dto.getContent() != null) question.setContent(dto.getContent());
+        if (dto.getSuitableAnswer1() != null) question.setSuitableAnswer1(dto.getSuitableAnswer1());
+        if (dto.getSuitableAnswer2() != null) question.setSuitableAnswer2(dto.getSuitableAnswer2());
+        if (dto.getDifficulty() != null) question.setDifficulty(dto.getDifficulty());
+        if (dto.getSource() != null) question.setSource(dto.getSource());
+
+        return questionMapper.toDTO(questionRepository.save(question));
     }
 
     public Optional<QuestionDTO> findById(Long id) {
@@ -220,5 +242,14 @@ public class QuestionService {
                 .filter(x -> !x.isEmpty())
                 .map(Long::parseLong)
                 .collect(Collectors.toSet());
+    }
+
+    public void removeQuestionFromSession(Long sessionId, Long questionId) {
+        InterviewSession session = interviewSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Session not found"));
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new IllegalArgumentException("Question not found"));
+        session.getQuestions().remove(question);
+        interviewSessionRepository.save(session);
     }
 }

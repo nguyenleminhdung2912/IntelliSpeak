@@ -21,10 +21,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 
 import java.time.LocalDateTime;
 import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class AdminService {
@@ -298,5 +295,12 @@ public class AdminService {
                 .isDeleted(savedUser.getIsDeleted())
                 .packageId(welcomePackage.getPackageId())
                 .build();
+    }
+
+    public void banUser(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthAppException(ErrorCode.ACCOUNT_NOT_FOUND));
+        user.setIsDeleted(true);
+        userRepository.save(user);
     }
 }

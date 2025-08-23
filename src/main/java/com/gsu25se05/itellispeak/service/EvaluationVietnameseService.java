@@ -23,9 +23,9 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class EvaluationService {
+public class EvaluationVietnameseService {
 
-    private static final Logger logger = LoggerFactory.getLogger(EvaluationService.class);
+    private static final Logger logger = LoggerFactory.getLogger(EvaluationVietnameseService.class);
 
     private final WebClient webClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -34,7 +34,7 @@ public class EvaluationService {
     private final InterviewSessionRepository interviewSessionRepository;
     private final AccountUtils accountUtils;
 
-    public EvaluationService(
+    public EvaluationVietnameseService(
             @Value("${gemini.api.url:https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent}") String geminiApiUrl,
             @Value("${gemini.api.key}") String apiKey,
             InterviewHistoryRepository interviewHistoryRepository,
@@ -55,7 +55,7 @@ public class EvaluationService {
     public EvaluationBatchResponseDto evaluateBatch(EvaluationRequestDto request) {
 
         User currentUser = accountUtils.getCurrentAccount();
-        if (currentUser == null) throw new NotLoginException("Please log in to continue");
+        if (currentUser == null) throw new NotLoginException("Vui lòng đăng nhập để tiếp tục");
 
         EvaluationBatchResponseDto responseDto = new EvaluationBatchResponseDto();
         List<EvaluationResponseDto> results = new ArrayList<>();
@@ -66,7 +66,7 @@ public class EvaluationService {
 
             // Tạo prompt với chatHistory
             String prompt = buildPrompt(session, request.getChatHistory());
-            logger.info("Prompt sent to Gemini: {}", prompt);
+            logger.info("Prompt gửi đến Gemini: {}", prompt);
 
             // Tạo request body cho Gemini
             Map<String, Object> requestBody = Map.of(
@@ -85,13 +85,13 @@ public class EvaluationService {
                     .bodyToMono(String.class)
                     .block();
 
-            logger.info("Response from Gemini: {}", response);
+            logger.info("Phản hồi từ Gemini: {}", response);
 
             // Parse phản hồi JSON từ Gemini
             JsonNode json = objectMapper.readTree(response);
             JsonNode resultText = json.at("/candidates/0/content/parts/0/text");
             if (resultText.isMissingNode()) {
-                throw new RuntimeException("No text received from Gemini");
+                throw new RuntimeException("Không nhận được văn bản từ Gemini");
             }
 
             // Làm sạch và parse JSON từ text
@@ -109,7 +109,7 @@ public class EvaluationService {
             InterviewSession interviewSessionEntity = interviewSessionRepository.findById((long) session.getInterviewSessionId())
                     .orElse(null);
             if (interviewSessionEntity == null) {
-                throw new RuntimeException("InterviewSession not found with ID: " + session.getInterviewSessionId());
+                throw new RuntimeException("Không tìm thấy InterviewSession với ID: " + session.getInterviewSessionId());
             }
 
             // Tạo và lưu InterviewHistory trước
@@ -164,7 +164,7 @@ public class EvaluationService {
                     // Tìm Question từ database
                     Question question = questionRepository.findById((long) questionId).orElse(null);
                     if (question == null) {
-                        logger.warn("Question not found with ID: {}", questionId);
+                        logger.warn("Không tìm thấy câu hỏi với ID: {}", questionId);
                         continue; // Bỏ qua nếu không tìm thấy câu hỏi
                     }
 
@@ -210,20 +210,20 @@ public class EvaluationService {
                 responseDto.setEndedAt(interviewHistory.getEndedAt());
                 responseDto.setResults(results);
             } else {
-                throw new RuntimeException("Gemini JSON response results is not an array");
+                throw new RuntimeException("Phản hồi JSON từ Gemini không phải là mảng kết quả");
             }
         } catch (WebClientResponseException e) {
             EvaluationResponseDto errorDto = new EvaluationResponseDto();
-            errorDto.setError("Error while calling Gemini: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+            errorDto.setError("Lỗi khi gọi Gemini: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
             results.add(errorDto);
             responseDto.setResults(results);
-            logger.error("Error from Gemini: {}", e.getResponseBodyAsString());
+            logger.error("Lỗi từ Gemini: {}", e.getResponseBodyAsString());
         } catch (Exception e) {
             EvaluationResponseDto errorDto = new EvaluationResponseDto();
-            errorDto.setError("Error while processing: " + e.getMessage());
+            errorDto.setError("Lỗi khi xử lý: " + e.getMessage());
             results.add(errorDto);
             responseDto.setResults(results);
-            logger.error("Processing error: ", e);
+            logger.error("Lỗi xử lý: ", e);
         }
 
         return responseDto;
@@ -233,77 +233,78 @@ public class EvaluationService {
         StringBuilder prompt = new StringBuilder();
 
         // Thêm thông tin buổi phỏng vấn
-        prompt.append("Interview session information:\n")
+        prompt.append("Thông tin buổi phỏng vấn:\n")
                 .append(String.format("ID: %d\n", session.getInterviewSessionId()))
-                .append(String.format("Title: %s\n", session.getTitle()))
-                .append(String.format("Description: %s\n", session.getDescription()))
-                .append(String.format("Total questions: %d\n", session.getTotalQuestion()))
-                .append(String.format("Estimated duration: %s\n", session.getDurationEstimate()));
+                .append(String.format("Tiêu đề: %s\n", session.getTitle()))
+                .append(String.format("Mô tả: %s\n", session.getDescription()))
+                .append(String.format("Tổng số câu hỏi: %d\n", session.getTotalQuestion()))
+                .append(String.format("Thời gian ước tính: %s\n", session.getDurationEstimate()));
 
         // Thêm danh sách câu hỏi
-        prompt.append("\nQuestion list:\n");
+        prompt.append("\nDanh sách câu hỏi:\n");
         List<QuestionDto> questions = session.getQuestions();
         for (int i = 0; i < questions.size(); i++) {
             QuestionDto q = questions.get(i);
-            prompt.append(String.format("Question %d (ID: %d, Difficulty: %s):\n", i + 1, q.getQuestionId(), q.getDifficulty()))
-                    .append(String.format("  - Title: %s\n", q.getTitle()))
-                    .append(String.format("  - Content: %s\n", q.getContent()))
-                    .append(String.format("  - Sample Answer 1: %s\n", q.getSuitableAnswer1()))
-                    .append(String.format("  - Sample Answer 2: %s\n", q.getSuitableAnswer2()))
-                    .append(String.format("  - Tags: %s\n", String.join(", ", q.getTags())));
+            prompt.append(String.format("Câu hỏi %d (ID: %d, Độ khó: %s):\n", i + 1, q.getQuestionId(), q.getDifficulty()))
+                    .append(String.format("  - Tiêu đề: %s\n", q.getTitle()))
+                    .append(String.format("  - Nội dung: %s\n", q.getContent()))
+                    .append(String.format("  - Câu trả lời mẫu 1: %s\n", q.getSuitableAnswer1()))
+                    .append(String.format("  - Câu trả lời mẫu 2: %s\n", q.getSuitableAnswer2()))
+                    .append(String.format("  - Thẻ: %s\n", String.join(", ", q.getTags())));
         }
 
         // Thêm lịch sử hội thoại
-        prompt.append("\nConversation history:\n");
+        prompt.append("\nLịch sử hội thoại:\n");
         for (ChatMessageDto message : chatHistory) {
-            prompt.append(String.format("- Role: %s\n", message.getRole()))
-                    .append(String.format("  - Content: %s\n", message.getContent()));
+            prompt.append(String.format("- Vai trò: %s\n", message.getRole()))
+                    .append(String.format("  - Nội dung: %s\n", message.getContent()));
         }
 
         // Yêu cầu đánh giá
-        prompt.append("\nInstructions:\n")
-                .append("1. Analyze the 'Conversation history' to identify the user's answers (role 'user') for each question in the 'Question list'.\n")
-                .append("   - Merge all related user answers for each question.\n")
-                .append("   - Ignore irrelevant messages such as requests for hints, 'skip', 'don't know', 'repeat question', or similar.\n")
-                .append("2. Evaluate each question based on the two sample answers, using the merged user answers.\n")
-                .append("   - If there is no valid answer for a question, mark it as 'No answer' and assign a score of 0.\n")
-                .append("   - Assign a score from 0 to 10 based on the accuracy and quality of the answer (0 for completely incorrect or no answer, 10 for perfect).\n")
-                .append("   - Knowledge:\n")
-                .append("     - Was the answer correct (describe the correctness level)?\n")
-                .append("     - What knowledge needs improvement (detail missing points or areas to study)?\n")
-                .append("     - What was done well (correct or strong points in the answer, or 'None' if no answer)?\n")
-                .append("   - Communication:\n")
-                .append("     - Was the answer clear (easy to understand, coherent, or 'Not assessable' if no answer)?\n")
-                .append("     - Was the answer concise (not too wordy, or 'Not assessable' if no answer)?\n")
-                .append("     - Did the answer use appropriate technical terminology (or 'Not assessable' if no answer)?\n")
-                .append("   - Conclusion: Provide a short summary of the answer quality and general improvement suggestions.\n")
-                .append("3. Provide an overall evaluation of the candidate's performance in a concise, professional HR-style tone (1-2 sentences).\n")
-                .append("4. Return the result in valid JSON format (JSON only, no Markdown, no explanation):\n")
+        prompt.append("\nHướng dẫn:\n")
+                .append("1. Phân tích 'Lịch sử hội thoại' để xác định câu trả lời của người dùng (vai trò 'user') cho mỗi câu hỏi trong 'Danh sách câu hỏi'.\n")
+                .append("   - Gộp tất cả câu trả lời liên quan của người dùng cho mỗi câu hỏi.\n")
+                .append("   - Bỏ qua các tin nhắn không liên quan như yêu cầu gợi ý, 'bỏ qua', 'không biết', 'lặp lại câu hỏi', hoặc tương tự.\n")
+                .append("2. Đánh giá mỗi câu hỏi dựa trên hai câu trả lời mẫu, sử dụng câu trả lời đã gộp của người dùng.\n")
+                .append("   - Nếu không có câu trả lời hợp lệ cho một câu hỏi, ghi là 'Không có câu trả lời' và chấm 0 điểm.\n")
+                .append("   - Chấm điểm từ 0 đến 10 dựa trên độ chính xác và chất lượng của câu trả lời (0 cho hoàn toàn sai hoặc không có câu trả lời, 10 cho hoàn hảo).\n")
+                .append("   - Kiến thức:\n")
+                .append("     - Câu trả lời có đúng không (mô tả mức độ đúng)?\n")
+                .append("     - Kiến thức nào cần cải thiện (chi tiết các điểm còn thiếu hoặc lĩnh vực cần học)?\n")
+                .append("     - Điểm mạnh là gì (các điểm đúng hoặc mạnh trong câu trả lời, hoặc 'Không có' nếu không có câu trả lời)?\n")
+                .append("   - Giao tiếp:\n")
+                .append("     - Câu trả lời có rõ ràng không (dễ hiểu, mạch lạc, hoặc 'Không đánh giá được' nếu không có câu trả lời)?\n")
+                .append("     - Câu trả lời có ngắn gọn không (không quá dài dòng, hoặc 'Không đánh giá được' nếu không có câu trả lời)?\n")
+                .append("     - Câu trả lời có sử dụng thuật ngữ kỹ thuật phù hợp không (hoặc 'Không đánh giá được' nếu không có câu trả lời)?\n")
+                .append("   - Kết luận: Cung cấp tóm tắt ngắn gọn về chất lượng câu trả lời và gợi ý cải thiện chung.\n")
+                .append("3. Cung cấp một đánh giá tổng quan ngắn gọn về hiệu suất của ứng viên bằng giọng văn chuyên nghiệp, ngắn gọn (1-2 câu).\n")
+                .append("4. Trả về kết quả bằng định dạng JSON hợp lệ (chỉ JSON, không Markdown, không giải thích):\n")
                 .append("   {\n")
                 .append("     \"results\": [\n")
                 .append("       {\n")
                 .append("         \"questionId\": <ID>,\n")
-                .append("         \"question\": \"<Question content>\",\n")
-                .append("         \"userAnswer\": \"<User's answer or 'No answer' if none>\",\n")
-                .append("         \"score\": <Score from 0 to 10>,\n")
+                .append("         \"question\": \"<Nội dung câu hỏi>\",\n")
+                .append("         \"userAnswer\": \"<Câu trả lời của người dùng hoặc 'Không có câu trả lời' nếu không có>\",\n")
+                .append("         \"score\": <Điểm từ 0 đến 10>,\n")
                 .append("         \"feedback\": {\n")
                 .append("           \"knowledge\": {\n")
-                .append("             \"correctness\": \"<Was the answer correct?>\",\n")
-                .append("             \"improvement\": \"<What knowledge needs improvement>\",\n")
-                .append("             \"strengths\": \"<What was done well>\"\n")
+                .append("             \"correctness\": \"<Câu trả lời có đúng không?>\",\n")
+                .append("             \"improvement\": \"<Kiến thức nào cần cải thiện>\",\n")
+                .append("             \"strengths\": \"<Điểm mạnh là gì>\"\n")
                 .append("           },\n")
                 .append("           \"communication\": {\n")
-                .append("             \"clarity\": \"<Was the answer clear?>\",\n")
-                .append("             \"conciseness\": \"<Was the answer concise?>\",\n")
-                .append("             \"terminology\": \"<Did the answer use proper technical terms?>\"\n")
+                .append("             \"clarity\": \"<Câu trả lời có rõ ràng không?>\",\n")
+                .append("             \"conciseness\": \"<Câu trả lời có ngắn gọn không?>\",\n")
+                .append("             \"terminology\": \"<Câu trả lời có sử dụng thuật ngữ kỹ thuật phù hợp không?>\"\n")
                 .append("           },\n")
-                .append("           \"conclusion\": \"<Short conclusion and general suggestions>\"\n")
+                .append("           \"conclusion\": \"<Tóm tắt ngắn gọn và gợi ý cải thiện>\"\n")
                 .append("         }\n")
                 .append("       }\n")
                 .append("     ],\n")
-                .append("     \"overallEvaluation\": \"<Concise overall evaluation of the candidate's performance>\"\n")
+                .append("     \"overallEvaluation\": \"<Đánh giá tổng quan ngắn gọn về hiệu suất của ứng viên>\"\n")
                 .append("   }\n")
-                .append("5. Use a professional, concise HR-style tone.\n");
+                .append("5. Sử dụng giọng văn chuyên nghiệp, ngắn gọn, bằng tiếng Việt.\n")
+                .append("6. Xử lý đầu vào có thể là hỗn hợp tiếng Anh và tiếng Việt, nhưng phản hồi phải hoàn toàn bằng tiếng Việt.\n");
 
         return prompt.toString();
     }
