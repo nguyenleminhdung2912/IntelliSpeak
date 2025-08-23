@@ -39,9 +39,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class AuthService implements UserDetailsService {
@@ -199,6 +204,27 @@ public class AuthService implements UserDetailsService {
             answeredQuestionCompared = (percent >= 0 ? "+" : "") + String.format("%.0f", percent) + "%";
         }
 
+        // Calculate daily interview scores (last 10 days, oldest to newest)
+        Map<LocalDate, List<InterviewHistory>> groupedByDate = histories.stream()
+                .filter(h -> h.getStartedAt() != null && h.getAverageScore() != null)
+                .collect(Collectors.groupingBy(h -> h.getStartedAt().toLocalDate()));
+
+        List<DailyInterviewScoreDTO> dailyScores = groupedByDate.entrySet().stream()
+                .map(entry -> {
+                    double avg = entry.getValue().stream()
+                            .mapToDouble(InterviewHistory::getAverageScore)
+                            .average()
+                            .orElse(0.0);
+                    return DailyInterviewScoreDTO.builder()
+                            .date(entry.getKey().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+                            .averageScore(String.format("%.1f", avg))
+                            .build();
+                })
+                .sorted(Comparator.comparing(dto -> LocalDate.parse(dto.getDate(), DateTimeFormatter.ofPattern("dd/MM/yyyy")), Comparator.reverseOrder()))
+                .limit(10)
+                .sorted(Comparator.comparing(dto -> LocalDate.parse(dto.getDate(), DateTimeFormatter.ofPattern("dd/MM/yyyy"))))
+                .toList();
+
         UserProfileStatisticDTO statistic = UserProfileStatisticDTO.builder()
                 .interviewWeeklyCount(currentWeekCount + " sessions")
                 .comparedToLastWeek(
@@ -212,6 +238,7 @@ public class AuthService implements UserDetailsService {
                 .answeredQuestionComparedToLastWeek(
                         answeredQuestionCompared + " compared to last week"
                 )
+                .dailyScores(dailyScores)
                 .build();
 
         String email = user.getEmail();
