@@ -46,7 +46,6 @@ public class ForumPostReplyService {
 
 
         ForumPostReply forumPostReply = new ForumPostReply();
-        forumPostReply.setTitle(replyRequestDTO.getTitle());
         forumPostReply.setContent(replyRequestDTO.getContent());
         forumPostReply.setUser(account);
         ForumPost post = forumPostRepository.findById(replyRequestDTO.getPostId())
@@ -65,7 +64,6 @@ public class ForumPostReplyService {
                 forumPostReply.getId(),
                 forumPostReply.getForumPost(),
                 forumPostReply.getContent(),
-                forumPostReply.getTitle(),
                 forumPostReply.getCreateAt()
         );
 
@@ -84,10 +82,6 @@ public class ForumPostReplyService {
             return new Response<>(403, "You do not have permission to update this reply", null);
         }
 
-        if (replyRequestDTO.getTitle() != null && !replyRequestDTO.getTitle().trim().isEmpty()) {
-            reply.setTitle(replyRequestDTO.getTitle());
-        }
-
         if (replyRequestDTO.getContent() != null && !replyRequestDTO.getContent().trim().isEmpty()) {
             reply.setContent(replyRequestDTO.getContent());
         }
@@ -104,7 +98,6 @@ public class ForumPostReplyService {
                 reply.getId(),
                 reply.getForumPost(),
                 reply.getContent(),
-                reply.getTitle(),
                 reply.getUpdateAt()
         );
 
