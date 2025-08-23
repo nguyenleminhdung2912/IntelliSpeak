@@ -76,9 +76,6 @@ public class AuthService implements UserDetailsService {
     @Autowired
     private InterviewHistoryRepository interviewHistoryRepository;
 
-//    @Autowired
-//    private WalletRepository walletRepository;
-
     public User findUserByEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
     }
@@ -88,9 +85,22 @@ public class AuthService implements UserDetailsService {
         if (user == null) return null;
 
         String email = user.getEmail();
-        String userName = email != null && email.contains("@") ? email.split("@")[0] : "";
+        String userName = (email != null && email.contains("@")) ? email.substring(0, email.indexOf('@')) : "";
 
-        //abcd
+        Long packageId = (user.getAPackage() != null) ? user.getAPackage().getPackageId() : null;
+
+        int cvUsed = 0, jdUsed = 0, interviewUsed = 0;
+        UserUsage usage = user.getUserUsage();
+        if (usage == null) {
+
+            usage = userUsageRepository.findByUser(user).orElse(null);
+        }
+        if (usage != null) {
+            cvUsed = usage.getCvAnalyzeUsed();
+            jdUsed = usage.getJdAnalyzeUsed();
+            interviewUsed = usage.getInterviewUsed();
+        }
+
         return UserDTO.builder()
                 .userId(user.getUserId())
                 .firstName(user.getFirstName())
@@ -98,7 +108,7 @@ public class AuthService implements UserDetailsService {
                 .userName(userName)
                 .email(user.getEmail())
                 .role(user.getRole())
-//                .packageId(user.getAPackage().getPackageId())
+                .packageId(packageId)
                 .birthday(user.getBirthday())
                 .avatar(user.getAvatar())
                 .status(user.getStatus())
@@ -112,14 +122,17 @@ public class AuthService implements UserDetailsService {
                 .createAt(user.getCreateAt())
                 .updateAt(user.getUpdateAt())
                 .isDeleted(user.getIsDeleted())
+                .cvAnalyzeUsed(cvUsed)
+                .jdAnalyzeUsed(jdUsed)
+                .interviewUsed(interviewUsed)
                 .build();
     }
+
 
 
     public Response<UserProfileDTO> getCurrentUserProfile() {
         User user = accountUtils.getCurrentAccount();
         if (user == null) throw new NotLoginException("Please log in to continue");
-        // Fetch interview histories
         List<InterviewHistory> histories = interviewHistoryRepository.findByUser(user);
 
         // Calculate weekly counts
@@ -204,6 +217,17 @@ public class AuthService implements UserDetailsService {
         String email = user.getEmail();
         String userName = email != null && email.contains("@") ? email.split("@")[0] : "";
 
+        int cvUsed = 0, jdUsed = 0, interviewUsed = 0;
+        UserUsage usage = user.getUserUsage();
+        if (usage == null) {
+            usage = userUsageRepository.findByUser(user).orElse(null);
+        }
+        if (usage != null) {
+            cvUsed = usage.getCvAnalyzeUsed();
+            jdUsed = usage.getJdAnalyzeUsed();
+            interviewUsed = usage.getInterviewUsed();
+        }
+
         UserProfileDTO profile = UserProfileDTO.builder()
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
@@ -219,6 +243,9 @@ public class AuthService implements UserDetailsService {
                 .facebook(user.getFacebook())
                 .youtube(user.getYoutube())
                 .statistic(List.of(statistic))
+                .jdAnalyzeUsed(jdUsed)
+                .cvAnalyzeUsed(cvUsed)
+                .interviewUsed(interviewUsed)
                 .build();
 
         return new Response<>(200, "Profile information retrieved successfully", profile);

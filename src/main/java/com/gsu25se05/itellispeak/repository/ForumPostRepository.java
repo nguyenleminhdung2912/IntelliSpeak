@@ -11,9 +11,9 @@ import java.util.List;
 
 @Repository
 public interface ForumPostRepository extends JpaRepository<ForumPost, Long> {
-    List<ForumPost> findByIsDeletedFalse();
+    List<ForumPost> findByIsDeletedFalseOrderByCreateAtDesc();
 
-    List<ForumPost> findByUserAndIsDeletedFalse(User user);
+    List<ForumPost> findByUserAndIsDeletedFalseOrderByCreateAtDesc(User user);
 
 
     @Query(value = """
