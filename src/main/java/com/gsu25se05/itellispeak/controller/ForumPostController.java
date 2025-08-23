@@ -33,45 +33,20 @@ public class ForumPostController {
     @Autowired
     ForumPostService forumPostService;
 
-    public CreateResponseForumDTO mapToDTO(ForumPost post) {
-        String email = post.getUser().getEmail();
-        String username = email.substring(0, email.indexOf('@'));
-
-        List<String> imageUrls = post.getPictures().stream()
-                .filter(p -> !Boolean.TRUE.equals(p.isDeleted()))
-                .map(ForumPostPicture::getUrl)
-                .collect(Collectors.toList());
-
-        int readTime = (post.getContent() == null) ? 1 : Math.max(1, post.getContent().length() / 500);
-
-        return new CreateResponseForumDTO(
-                post.getId(),
-                post.getTitle(),
-                post.getContent(),
-                imageUrls,
-                username,
-                post.getForumTopicType(),
-                post.getCreateAt(),
-                post.getLikeCount(),
-                readTime
-        );
-    }
-
+    // ForumPostController.java
     @GetMapping()
     public ResponseEntity<Response<List<CreateResponseForumDTO>>> getAllForumPosts() {
-        List<ForumPost> posts = forumPostRepository.findByIsDeletedFalse();
-        List<CreateResponseForumDTO> response = posts.stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(new Response<>(200, "Success", response));
+        Response<List<CreateResponseForumDTO>> resp = forumPostService.getAllPosts();
+        return ResponseEntity.status(resp.getCode()).body(resp);
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<Response<CreateResponseForumDTO>> getForumPostById(@PathVariable Long id) {
-        ForumPost post = forumPostRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("No post found with ID: " + id));
-        return ResponseEntity.ok(new Response<>(200, "Success", mapToDTO(post)));
+        Response<CreateResponseForumDTO> resp = forumPostService.getPostById(id);
+        return ResponseEntity.status(resp.getCode()).body(resp);
     }
+
 
     @GetMapping("/my-posts")
     public ResponseEntity<Response<List<CreateResponseForumDTO>>> getMyPosts() {
@@ -108,13 +83,13 @@ public class ForumPostController {
         return ResponseEntity.status(response.getCode()).body(response);
     }
 
-    @Operation(summary = "Sort posts by the highest number of comments")
-    @GetMapping("/top-replied")
-    public ResponseEntity<Response<List<ForumPost>>> getTopRepliedPosts(
-            @RequestParam(defaultValue = "5") int limit) {
-        Response<List<ForumPost>> response = forumPostService.getTopPostsByReplies(limit);
-        return ResponseEntity.status(response.getCode()).body(response);
-    }
+//    @Operation(summary = "Sort posts by the highest number of comments")
+//    @GetMapping("/top-replied")
+//    public ResponseEntity<Response<List<ForumPost>>> getTopRepliedPosts(
+//            @RequestParam(defaultValue = "5") int limit) {
+//        Response<List<ForumPost>> response = forumPostService.getTopPostsByReplies(limit);
+//        return ResponseEntity.status(response.getCode()).body(response);
+//    }
 
     @PostMapping("/{postId}/like")
     public ResponseEntity<Response<String>> likeOrUnlikePost(

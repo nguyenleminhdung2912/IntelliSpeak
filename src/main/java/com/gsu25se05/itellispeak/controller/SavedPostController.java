@@ -2,6 +2,7 @@ package com.gsu25se05.itellispeak.controller;
 
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.forum.CreateResponseForumDTO;
+import com.gsu25se05.itellispeak.dto.savedPost.ToggleSaveDTO;
 import com.gsu25se05.itellispeak.entity.ForumPost;
 import com.gsu25se05.itellispeak.service.ForumPostService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,15 +24,15 @@ public class SavedPostController {
 
     @Operation(summary = "Lưu bài viết")
     @PostMapping("/{postId}")
-    public ResponseEntity<Response<String>> savePost(@PathVariable Long postId) {
-        Response<String> response = forumPostService.savePost(postId);
+    public ResponseEntity<Response<ToggleSaveDTO>> savePost(@PathVariable Long postId) {
+        Response<ToggleSaveDTO> response = forumPostService.savePost(postId);
         return ResponseEntity.status(response.getCode()).body(response);
     }
 
     @Operation(summary = "Bỏ lưu bài viết")
     @DeleteMapping("/{postId}")
-    public ResponseEntity<Response<String>> unSavePost(@PathVariable Long postId) {
-        Response<String> response = forumPostService.unSavePost(postId);
+    public ResponseEntity<Response<ToggleSaveDTO>> unSavePost(@PathVariable Long postId) {
+        Response<ToggleSaveDTO> response = forumPostService.unSavePost(postId);
         return ResponseEntity.status(response.getCode()).body(response);
     }
 
