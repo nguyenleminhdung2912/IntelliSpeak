@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/admin")
@@ -94,5 +95,12 @@ public class AdminController {
     public ResponseEntity<Response<UserDTO>> createUser(@RequestBody CreateUserDTO dto) {
         UserDTO data = adminService.createUser(dto);
         return ResponseEntity.ok(new Response<>(200, "User created successfully", data));
+    }
+
+    @PostMapping("/ban-user/{userId}")
+    @Operation(summary = "Ban a user (set isDeleted = true)")
+    public ResponseEntity<Response<Void>> banUser(@PathVariable UUID userId) {
+        adminService.banUser(userId);
+        return ResponseEntity.ok(new Response<>(200, "User banned successfully", null));
     }
 }
