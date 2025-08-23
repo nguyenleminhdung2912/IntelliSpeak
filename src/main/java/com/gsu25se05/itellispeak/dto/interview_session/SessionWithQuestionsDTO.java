@@ -2,6 +2,7 @@ package com.gsu25se05.itellispeak.dto.interview_session;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.gsu25se05.itellispeak.dto.topic.TagSimpleDTO;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,5 +21,6 @@ public class SessionWithQuestionsDTO {
     private Integer totalQuestion;
     private Duration durationEstimate;
     private Long companyId;
+    private List<TagSimpleDTO> tags;
     private List<QuestionInfoDTO> questions;
 }

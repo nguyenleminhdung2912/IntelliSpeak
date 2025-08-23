@@ -1,6 +1,7 @@
 package com.gsu25se05.itellispeak.dto.ai_evaluation;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.gsu25se05.itellispeak.dto.topic.TagSimpleDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,5 +24,6 @@ public class EvaluationBatchResponseDto {
     private String aiOverallEvaluate;
     private LocalDateTime startedAt;
     private LocalDateTime endedAt;
+    private List<TagSimpleDTO> tags;
     private List<EvaluationResponseDto> results;
 }

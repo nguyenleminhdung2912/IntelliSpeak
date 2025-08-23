@@ -187,7 +187,7 @@ public class InterviewSessionService {
 
         // Tạo InterviewSession tạm thời
         InterviewSession tempSession = new InterviewSession();
-        tempSession.setTitle("Random Interview Session");
+        tempSession.setTitle("Random Interview Session - " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")));
         tempSession.setDescription("Automatically generated from user");
         tempSession.setTotalQuestion(total);
         tempSession.setDifficulty(Difficulty.MEDIUM); // Có thể điều chỉnh logic
@@ -202,11 +202,13 @@ public class InterviewSessionService {
             Topic topic = topicRepository.findById(request.getTopicId())
                     .orElseThrow(() -> new RuntimeException("Topic not found"));
             tempSession.setTopic(topic);
+            tempSession.setTitle(topic.getTitle() + " " + tempSession.getTitle());
         }
 
+        Set<Tag> tags = new HashSet<>();
         // Gán Tags nếu có
         if (request.getTagIds() != null && !request.getTagIds().isEmpty()) {
-            Set<Tag> tags = new HashSet<>(tagRepository.findAllById(request.getTagIds()));
+            tags = new HashSet<>(tagRepository.findAllById(request.getTagIds()));
             tempSession.setTags(tags);
         }
 
@@ -220,6 +222,14 @@ public class InterviewSessionService {
         // Lưu InterviewSession
         tempSession = interviewSessionRepository.save(tempSession);
 
+        List<TagSimpleDTO> tagSimpleDTOS = new ArrayList<>();
+        for (Tag tag : tags) {
+            TagSimpleDTO tagSimpleDTO = new TagSimpleDTO();
+            tagSimpleDTO.setTitle(tag.getTitle());
+            tagSimpleDTO.setTagId(tag.getTagId());
+            tagSimpleDTOS.add(tagSimpleDTO);
+        }
+
         // Tạo DTO trả về
         SessionWithQuestionsDTO dto = new SessionWithQuestionsDTO();
         dto.setInterviewSessionId(tempSession.getInterviewSessionId());
@@ -227,6 +237,7 @@ public class InterviewSessionService {
         dto.setCompanyId(
                 tempSession.getCompany() != null ? tempSession.getCompany().getCompanyId() : null
         );
+        dto.setTags(tagSimpleDTOS);
         dto.setDescription(tempSession.getDescription());
         dto.setTotalQuestion(total);
         dto.setDurationEstimate(tempSession.getDurationEstimate());
