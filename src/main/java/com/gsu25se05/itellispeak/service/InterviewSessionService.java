@@ -243,9 +243,7 @@ public class InterviewSessionService {
         dto.setDurationEstimate(tempSession.getDurationEstimate());
         dto.setQuestions(result);
 
-        currentUser.getUserUsage().setInterviewUsed(currentUser.getUserUsage().getInterviewUsed() + 1);
         userRepository.save(currentUser);
-        userUsageRepository.save(currentUser.getUserUsage());
         return dto;
     }
 
