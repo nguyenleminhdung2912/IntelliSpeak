@@ -99,7 +99,10 @@ public class HRService {
         }
 
         HR hrApplication = hrRepository.findByUser(user)
-                .orElseThrow(() -> new AuthAppException(ErrorCode.HR_NOT_FOUND));
+                .orElse(null);
+        if (hrApplication == null ){
+            return new Response<>(200, "You have not submitted for applying HR yet", null);
+        }
 
         String firstName = hrApplication.getUser().getFirstName();
         String lastName  = hrApplication.getUser().getLastName();
