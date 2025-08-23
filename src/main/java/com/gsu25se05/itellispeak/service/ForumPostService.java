@@ -505,7 +505,6 @@ public class ForumPostService {
             );
             return new ForumPostReplyWithUserDTO(
                 reply.getId(),
-                reply.getTitle(),
                 reply.getContent(),
                 reply.getStatus(),
                 reply.getCreateAt(),
