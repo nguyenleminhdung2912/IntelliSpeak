@@ -63,14 +63,20 @@ public class AdminController {
     @PutMapping("/hr/{id}/approve")
     public ResponseEntity<Response<String>> approveHR(@PathVariable Long id) {
         adminService.approveHR(id);
-        return ResponseEntity.ok(new Response<>(200, "HR approved successfully", null));
+        return ResponseEntity.ok(new Response<>(200, "HR has been approved successfully.", null));
     }
 
     @Operation(summary = "Admin từ chối HR")
     @PutMapping("/hr/{id}/reject")
-    public ResponseEntity<Response<String>> rejectHR(@PathVariable Long id) {
-        adminService.rejectHR(id);
-        return ResponseEntity.ok(new Response<>(200, "HR rejected successfully", null));
+    public ResponseEntity<Response<String>> rejectHR(
+            @PathVariable Long id,
+            @RequestParam(required = false) String reason) {
+        adminService.rejectHR(id, reason);
+        String msg = "HR has been rejected successfully";
+        if (reason != null && !reason.isBlank()) {
+            msg += " with reason: " + reason;
+        }
+        return ResponseEntity.ok(new Response<>(200, msg, null));
     }
 
     @Operation(summary = "Get all users with their package info")
