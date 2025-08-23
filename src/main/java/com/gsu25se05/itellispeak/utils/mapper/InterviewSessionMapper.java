@@ -3,11 +3,14 @@ package com.gsu25se05.itellispeak.utils.mapper;
 
 import com.gsu25se05.itellispeak.dto.ai_evaluation.EvaluationBatchResponseDto;
 import com.gsu25se05.itellispeak.dto.interview_session.InterviewSessionDTO;
+import com.gsu25se05.itellispeak.dto.topic.TagSimpleDTO;
 import com.gsu25se05.itellispeak.entity.*;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -42,12 +45,20 @@ public class InterviewSessionMapper {
         return entity;
     }
 
-    public EvaluationBatchResponseDto toEvaluationBatchResponseForGetAllDto(InterviewSession history) {
+    public EvaluationBatchResponseDto toEvaluationBatchResponseForGetAllDto(InterviewSession interviewSession) {
         EvaluationBatchResponseDto responseDto = new EvaluationBatchResponseDto();
         responseDto.setInterviewHistoryId(null);
-        responseDto.setInterviewSessionId(history.getInterviewSessionId());
-        responseDto.setInterviewTitle(history.getTitle());
-        responseDto.setTotalQuestion(history.getTotalQuestion());
+        responseDto.setInterviewSessionId(interviewSession.getInterviewSessionId());
+        responseDto.setInterviewTitle(interviewSession.getTitle());
+        responseDto.setTotalQuestion(interviewSession.getTotalQuestion());
+        List<TagSimpleDTO> tagSimpleDTOS = new ArrayList<>();
+        for (Tag tag : interviewSession.getTags()) {
+            TagSimpleDTO tagSimpleDTO = new TagSimpleDTO();
+            tagSimpleDTO.setTitle(tag.getTitle());
+            tagSimpleDTO.setTagId(tag.getTagId());
+            tagSimpleDTOS.add(tagSimpleDTO);
+        }
+        responseDto.setTags(tagSimpleDTOS);
         responseDto.setAverageScore(null);
         responseDto.setAiOverallEvaluate(null);
         responseDto.setStartedAt(null);
