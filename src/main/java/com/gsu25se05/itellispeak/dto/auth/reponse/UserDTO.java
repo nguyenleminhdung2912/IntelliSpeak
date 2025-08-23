@@ -35,4 +35,7 @@ public class UserDTO {
     private LocalDateTime createAt;
     private LocalDateTime updateAt;
     private Boolean isDeleted;
+    private int cvAnalyzeUsed;
+    private int jdAnalyzeUsed;
+    private int interviewUsed;
 }

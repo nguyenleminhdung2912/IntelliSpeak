@@ -23,4 +23,7 @@ public class UserProfileDTO {
     private String facebook;
     private String youtube;
     private List<UserProfileStatisticDTO> statistic;
+    private int cvAnalyzeUsed;
+    private int jdAnalyzeUsed;
+    private int interviewUsed;
 }

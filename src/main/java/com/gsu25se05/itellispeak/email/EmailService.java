@@ -69,6 +69,42 @@ public class EmailService {
         }
     }
 
+    @Async
+    public void sendHrApprovalEmail(String recipientEmail, String hrName) {
+        try {
+            Context ctx = new Context();
+            ctx.setVariable("name", hrName);
+            ctx.setVariable("status", "APPROVED");
+
+            EmailDetail detail = new EmailDetail();
+            detail.setRecipient(recipientEmail);
+            detail.setName(hrName);
+            detail.setSubject("Your HR application has been approved");
+
+            proceedToSendMail(detail, ctx, "hr-approval");
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Async
+    public void sendHrRejectionEmail(String recipientEmail, String hrName, String reason) {
+        try {
+            Context ctx = new Context();
+            ctx.setVariable("name", hrName);
+            ctx.setVariable("status", "REJECTED");
+            ctx.setVariable("reason", (reason == null) ? "" : reason);
+
+            EmailDetail detail = new EmailDetail();
+            detail.setRecipient(recipientEmail);
+            detail.setName(hrName);
+            detail.setSubject("Your HR application has been rejected");
+
+            proceedToSendMail(detail, ctx, "hr-rejection");
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
 
 
     private void proceedToSendMail(EmailDetail emailDetail, Context context, String template) throws MessagingException {

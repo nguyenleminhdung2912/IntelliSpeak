@@ -13,13 +13,9 @@ public class LoginResponseDTO {
     private String message;
 
     private String error;
-
-
     private String token;
     private String refreshToken;
     private UserDTO user;
-
-
     public LoginResponseDTO(int code, String message, String error) {
         super();
         this.code = code;

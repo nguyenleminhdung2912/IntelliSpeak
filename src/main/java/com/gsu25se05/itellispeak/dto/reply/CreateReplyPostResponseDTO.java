@@ -17,8 +17,6 @@ public class CreateReplyPostResponseDTO {
 
     private ForumPost forumPost;
 
-    private String title;
-
     private String content;
 
     private LocalDateTime createAt;

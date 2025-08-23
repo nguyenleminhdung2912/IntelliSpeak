@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 public class UpdateReplyPostResponseDTO {
     private Long replyId;
     private ForumPost forumPost;
-    private String title;
     private String content;
     private LocalDateTime updateAt;
 }

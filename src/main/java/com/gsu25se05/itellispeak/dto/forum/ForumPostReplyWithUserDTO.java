@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 
 public class ForumPostReplyWithUserDTO {
     private Long id;
-    private String title;
     private String content;
     private String status;
     private LocalDateTime createAt;
@@ -12,10 +11,9 @@ public class ForumPostReplyWithUserDTO {
     private Boolean isDeleted;
     private UserInfo user;
 
-    public ForumPostReplyWithUserDTO(Long id, String title, String content, String status,
+    public ForumPostReplyWithUserDTO(Long id, String content, String status,
                                      LocalDateTime createAt, LocalDateTime updateAt, Boolean isDeleted, UserInfo user) {
         this.id = id;
-        this.title = title;
         this.content = content;
         this.status = status;
         this.createAt = createAt;
@@ -47,8 +45,6 @@ public class ForumPostReplyWithUserDTO {
     // getters and setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
     public String getStatus() { return status; }

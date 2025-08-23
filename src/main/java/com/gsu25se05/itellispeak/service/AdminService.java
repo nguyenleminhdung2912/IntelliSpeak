@@ -4,6 +4,7 @@ import com.gsu25se05.itellispeak.dto.admin.CreateUserDTO;
 import com.gsu25se05.itellispeak.dto.admin.UserWithPackageDTO;
 import com.gsu25se05.itellispeak.dto.auth.reponse.UserDTO;
 import com.gsu25se05.itellispeak.dto.hr.HRAdminResponseDTO;
+import com.gsu25se05.itellispeak.email.EmailService;
 import com.gsu25se05.itellispeak.entity.HR;
 import com.gsu25se05.itellispeak.entity.HRStatus;
 import com.gsu25se05.itellispeak.entity.Package;
@@ -15,6 +16,8 @@ import com.gsu25se05.itellispeak.repository.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionSynchronization;
 
 import java.time.LocalDateTime;
 import java.time.YearMonth;
@@ -28,15 +31,17 @@ public class AdminService {
     private final PackageRepository packageRepository;
     private final UserUsageRepository userUsageRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
 
-    public AdminService(TransactionRepository transactionRepository, UserRepository userRepository, HRRepository hrRepository, PackageRepository packageRepository, UserUsageRepository userUsageRepository, PasswordEncoder passwordEncoder) {
+    public AdminService(TransactionRepository transactionRepository, UserRepository userRepository, HRRepository hrRepository, PackageRepository packageRepository, UserUsageRepository userUsageRepository, PasswordEncoder passwordEncoder, EmailService emailService) {
         this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
         this.hrRepository = hrRepository;
         this.packageRepository = packageRepository;
         this.userUsageRepository = userUsageRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     public Double getMonthlyRevenue(int year, int month) {
@@ -104,24 +109,72 @@ public class AdminService {
     }
 
 
+    @Transactional
     public void approveHR(Long hrId) {
         HR hr = hrRepository.findById(hrId)
                 .orElseThrow(() -> new AuthAppException(ErrorCode.ACCOUNT_NOT_FOUND));
+
+        if (hr.getStatus() == HRStatus.APPROVED) {
+            return;
+        }
 
         User user = hr.getUser();
         hr.setStatus(HRStatus.APPROVED);
         hr.setApprovedAt(LocalDateTime.now());
         hrRepository.save(hr);
+
         user.setRole(User.Role.HR);
         userRepository.save(user);
+
+        String email = user.getEmail();
+        String name  = (user.getUsername() != null && !user.getUsername().isBlank())
+                ? user.getUsername()
+                : extractUsernameFromEmail(email);
+
+        // Đăng ký gửi mail sau khi transaction commit
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                emailService.sendHrApprovalEmail(email, name);
+            }
+        });
     }
 
-    public void rejectHR(Long hrId) {
+    @Transactional
+    public void rejectHR(Long hrId, String reason) {
         HR hr = hrRepository.findById(hrId)
                 .orElseThrow(() -> new AuthAppException(ErrorCode.ACCOUNT_NOT_FOUND));
+
+        // Tránh set lại trạng thái giống hiện tại
+        if (hr.getStatus() == HRStatus.REJECTED) {
+            // vẫn có thể gửi lại mail nếu bạn muốn, hoặc return
+            // return;
+        }
+
         hr.setStatus(HRStatus.REJECTED);
+        // nếu có field lưu reason: hr.setRejectionReason(reason);
         hrRepository.save(hr);
+
+        User user = hr.getUser();
+        String email = user.getEmail();
+        String name  = (user.getUsername() != null && !user.getUsername().isBlank())
+                ? user.getUsername()
+                : extractUsernameFromEmail(email);
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                emailService.sendHrRejectionEmail(email, name, reason);
+            }
+        });
     }
+
+    private String extractUsernameFromEmail(String email) {
+        if (email == null) return "there";
+        int at = email.indexOf('@');
+        return at > 0 ? email.substring(0, at) : email;
+    }
+
 
     public List<UserWithPackageDTO> getAllUsersWithPackage() {
         return userRepository.findAll().stream().map(user -> {

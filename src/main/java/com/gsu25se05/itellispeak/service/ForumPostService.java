@@ -39,14 +39,11 @@ public class ForumPostService {
         this.forumPostReplyRepository = forumPostReplyRepository;
     }
 
-    // ForumPostService.java
     public Response<List<CreateResponseForumDTO>> getAllPosts() {
         User current = accountUtils.getCurrentAccount();
 
-        // Lấy tất cả bài chưa xóa (có thể thêm order nếu muốn)
-        List<ForumPost> posts = forumPostRepository.findByIsDeletedFalse();
+        List<ForumPost> posts = forumPostRepository.findByIsDeletedFalseOrderByCreateAtDesc();
 
-        // Nếu đã đăng nhập -> lấy danh sách postId mà user đang lưu
         final java.util.Set<Long> savedIds = (current == null)
                 ? java.util.Collections.emptySet()
                 : new java.util.HashSet<>(savedPostRepository.findActiveSavedPostIdsByUser(current));
@@ -65,7 +62,6 @@ public class ForumPostService {
                     ? authorEmail.substring(0, authorEmail.indexOf('@'))
                     : "unknown";
 
-            // isSaved: true nếu postId nằm trong savedIds
             boolean isSaved = savedIds.contains(post.getId());
 
             int readTime = estimateReadTime(post.getContent());
@@ -102,12 +98,10 @@ public class ForumPostService {
                         .map(ForumPostPicture::getUrl)
                         .toList();
 
-        // Tên tác giả
         String authorEmail = (post.getUser() != null) ? post.getUser().getEmail() : null;
         String authorUsername = (authorEmail != null && authorEmail.contains("@"))
                 ? authorEmail.split("@")[0] : "unknown";
 
-        // isSaved = tồn tại SavedPost với isDeleted=false
         boolean isSaved = savedPostRepository.findByUserAndForumPost(current, post)
                 .filter(saved -> !Boolean.TRUE.equals(saved.isDeleted()))
                 .isPresent();
@@ -184,7 +178,7 @@ public class ForumPostService {
         String email = user.getEmail();
         String username = email != null && email.contains("@") ? email.split("@")[0] : "unknown";
 
-        List<ForumPost> myPosts = forumPostRepository.findByUserAndIsDeletedFalse(user);
+        List<ForumPost> myPosts = forumPostRepository.findByUserAndIsDeletedFalseOrderByCreateAtDesc(user);
 
 
 
@@ -511,7 +505,6 @@ public class ForumPostService {
             );
             return new ForumPostReplyWithUserDTO(
                 reply.getId(),
-                reply.getTitle(),
                 reply.getContent(),
                 reply.getStatus(),
                 reply.getCreateAt(),
