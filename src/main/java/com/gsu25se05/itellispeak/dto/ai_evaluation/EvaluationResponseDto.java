@@ -15,6 +15,7 @@ public class EvaluationResponseDto {
     private String suitableAnswer1;
     private String suitableAnswer2;
     private String userAnswer;
+    private Double score;
     private String level;
     private FeedbackDto feedback;
     private String error;

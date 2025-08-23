@@ -100,12 +100,16 @@ public class EvaluationService {
                 throw new RuntimeException("No text received from Gemini");
             }
 
-            // Làm sạch và parse mảng JSON từ text
+            // Làm sạch và parse JSON từ text
             String cleanedJson = resultText.asText()
                     .replaceAll("(?i)```json", "")
                     .replaceAll("(?i)```", "")
                     .trim();
-            JsonNode resultsJson = objectMapper.readTree(cleanedJson);
+            JsonNode responseJson = objectMapper.readTree(cleanedJson);
+
+            // Lấy danh sách kết quả và đánh giá tổng quan
+            JsonNode resultsJson = responseJson.get("results");
+            String overallEvaluation = responseJson.get("overallEvaluation").asText();
 
             // Tìm InterviewSession từ database
             InterviewSession interviewSessionEntity = interviewSessionRepository.findById((long) session.getInterviewSessionId())
@@ -135,8 +139,7 @@ public class EvaluationService {
                     dto.setQuestionId(questionId);
                     dto.setQuestion(jsonObj.get("question").asText());
                     dto.setUserAnswer(jsonObj.get("userAnswer").asText());
-                    String levelStr = jsonObj.get("level").asText();
-                    Double score = normalizeLevelToScore(levelStr);
+                    Double score = jsonObj.get("score").asDouble();
                     dto.setLevel(score.toString()); // Lưu score dưới dạng chuỗi cho DTO
 
                     // Parse feedback
@@ -199,7 +202,7 @@ public class EvaluationService {
                 interviewHistory.setDetails(details);
                 interviewHistory.setAverageScore(evaluatedQuestions > 0 ? totalScore / evaluatedQuestions : 0.0);
                 interviewHistory.setEndedAt(LocalDateTime.now());
-                interviewHistory.setAiOverallEvaluate(generateOverallEvaluation(results));
+                interviewHistory.setAiOverallEvaluate(overallEvaluation);
 
                 interviewHistory = interviewHistoryRepository.save(interviewHistory); // Lưu lại để cascade lưu details
 
@@ -213,7 +216,7 @@ public class EvaluationService {
                 responseDto.setEndedAt(interviewHistory.getEndedAt());
                 responseDto.setResults(results);
             } else {
-                throw new RuntimeException("Gemini JSON response is not an array");
+                throw new RuntimeException("Gemini JSON response results is not an array");
             }
         } catch (WebClientResponseException e) {
             EvaluationResponseDto errorDto = new EvaluationResponseDto();
@@ -230,60 +233,6 @@ public class EvaluationService {
         }
 
         return responseDto;
-    }
-
-    private Double normalizeLevelToScore(String level) {
-        if (level == null || level.trim().isEmpty()) {
-            return 2.0; // Sai
-        }
-        String normalized = Normalizer.normalize(level, Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "")
-                .replaceAll("[^\\p{ASCII}]", "")
-                .toUpperCase()
-                .replace(" ", "_");
-        switch (normalized) {
-            case "DUNG":
-            case "ĐUNG":
-                return 10.0;
-            case "DUNG_MOT_PHAN":
-            case "ĐUNG_MOT_PHAN":
-                return 7.0;
-            case "GAN_DUNG":
-            case "GẦN_DUNG":
-                return 4.0;
-            case "SAI":
-            default:
-                return 2.0;
-        }
-    }
-
-    private String generateOverallEvaluation(List<EvaluationResponseDto> results) {
-        if (results.isEmpty()) {
-            return "The candidate has not answered any questions and must complete the interview to be evaluated.";
-        }
-
-        double averageScore = results.stream()
-                .mapToDouble(r -> Double.parseDouble(r.getLevel()))
-                .average()
-                .orElse(0.0);
-
-        // Thu thập các điểm cần cải thiện
-        List<String> improvements = new ArrayList<>();
-        for (EvaluationResponseDto dto : results) {
-            FeedbackDto feedback = dto.getFeedback();
-            if (feedback != null && !feedback.getKnowledge().getImprovement().equals("None") && !feedback.getKnowledge().getImprovement().isEmpty()) {
-                improvements.add(feedback.getKnowledge().getImprovement());
-            }
-        }
-
-        String improvementSummary = improvements.isEmpty() ? "professional knowledge" : String.join(", ", new LinkedHashSet<>(improvements));
-
-        // Xây dựng nhận xét ngắn gọn
-        String performance = averageScore >= 7.0 ? "tốt" : averageScore >= 4.0 ? "good" : "fair";
-        return String.format(
-                "In this interview, the candidate performed %s, but needs to improve on %s to enhance the effectiveness of their answers.",
-                performance, improvementSummary
-        );
     }
 
     private String buildPrompt(InterviewSessionDto session, List<ChatMessageDto> chatHistory) {
@@ -310,7 +259,6 @@ public class EvaluationService {
                     .append(String.format("  - Tags: %s\n", String.join(", ", q.getTags())));
         }
 
-
         // Thêm lịch sử hội thoại
         prompt.append("\nConversation history:\n");
         for (ChatMessageDto message : chatHistory) {
@@ -324,10 +272,10 @@ public class EvaluationService {
                 .append("   - Merge all related user answers for each question.\n")
                 .append("   - Ignore irrelevant messages such as requests for hints, 'skip', 'don't know', 'repeat question', or similar.\n")
                 .append("2. Evaluate each question based on the two sample answers, using the merged user answers.\n")
-                .append("   - If there is no valid answer for a question, mark it as 'No answer' and the evaluation as 'Incorrect'.\n")
-                .append("   - Accuracy levels: Incorrect, Partially correct, Almost correct, Correct.\n")
+                .append("   - If there is no valid answer for a question, mark it as 'No answer' and assign a score of 0.\n")
+                .append("   - Assign a score from 0 to 10 based on the accuracy and quality of the answer (0 for completely incorrect or no answer, 10 for perfect).\n")
                 .append("   - Knowledge:\n")
-                .append("     - Was the answer correct (Incorrect/Partially correct/Almost correct/Correct)?\n")
+                .append("     - Was the answer correct (describe the correctness level)?\n")
                 .append("     - What knowledge needs improvement (detail missing points or areas to study)?\n")
                 .append("     - What was done well (correct or strong points in the answer, or 'None' if no answer)?\n")
                 .append("   - Communication:\n")
@@ -335,30 +283,33 @@ public class EvaluationService {
                 .append("     - Was the answer concise (not too wordy, or 'Not assessable' if no answer)?\n")
                 .append("     - Did the answer use appropriate technical terminology (or 'Not assessable' if no answer)?\n")
                 .append("   - Conclusion: Provide a short summary of the answer quality and general improvement suggestions.\n")
-                .append("3. Return the result in valid JSON format (JSON only, no Markdown, no explanation):\n")
-                .append("   [\n")
-                .append("     {\n")
-                .append("       \"questionId\": <ID>,\n")
-                .append("       \"question\": \"<Question content>\",\n")
-                .append("       \"userAnswer\": \"<User's answer or 'No answer' if none>\",\n")
-                .append("       \"level\": \"<Accuracy level: Incorrect, Almost correct, Partially correct, Correct>\",\n")
-                .append("       \"feedback\": {\n")
-                .append("         \"knowledge\": {\n")
-                .append("           \"correctness\": \"<Was the answer correct?>\",\n")
-                .append("           \"improvement\": \"<What knowledge needs improvement>\",\n")
-                .append("           \"strengths\": \"<What was done well>\"\n")
-                .append("         },\n")
-                .append("         \"communication\": {\n")
-                .append("           \"clarity\": \"<Was the answer clear?>\",\n")
-                .append("           \"conciseness\": \"<Was the answer concise?>\",\n")
-                .append("           \"terminology\": \"<Did the answer use proper technical terms?>\"\n")
-                .append("         },\n")
-                .append("         \"conclusion\": \"<Short conclusion and general suggestions>\"\n")
+                .append("3. Provide an overall evaluation of the candidate's performance in a concise, professional HR-style tone (1-2 sentences).\n")
+                .append("4. Return the result in valid JSON format (JSON only, no Markdown, no explanation):\n")
+                .append("   {\n")
+                .append("     \"results\": [\n")
+                .append("       {\n")
+                .append("         \"questionId\": <ID>,\n")
+                .append("         \"question\": \"<Question content>\",\n")
+                .append("         \"userAnswer\": \"<User's answer or 'No answer' if none>\",\n")
+                .append("         \"score\": <Score from 0 to 10>,\n")
+                .append("         \"feedback\": {\n")
+                .append("           \"knowledge\": {\n")
+                .append("             \"correctness\": \"<Was the answer correct?>\",\n")
+                .append("             \"improvement\": \"<What knowledge needs improvement>\",\n")
+                .append("             \"strengths\": \"<What was done well>\"\n")
+                .append("           },\n")
+                .append("           \"communication\": {\n")
+                .append("             \"clarity\": \"<Was the answer clear?>\",\n")
+                .append("             \"conciseness\": \"<Was the answer concise?>\",\n")
+                .append("             \"terminology\": \"<Did the answer use proper technical terms?>\"\n")
+                .append("           },\n")
+                .append("           \"conclusion\": \"<Short conclusion and general suggestions>\"\n")
+                .append("         }\n")
                 .append("       }\n")
-                .append("     }\n")
-                .append("   ]\n")
-                .append("4. Use a professional, concise HR-style tone.\n");
-
+                .append("     ],\n")
+                .append("     \"overallEvaluation\": \"<Concise overall evaluation of the candidate's performance>\"\n")
+                .append("   }\n")
+                .append("5. Use a professional, concise HR-style tone.\n");
 
         return prompt.toString();
     }
