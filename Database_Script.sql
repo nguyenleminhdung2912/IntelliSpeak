@@ -790,3 +790,225 @@ SELECT setval('tag_tag_id_seq', (SELECT MAX(tag_id) FROM tag) + 1);
 SELECT setval('question_question_id_seq', (SELECT MAX(question_id) FROM question) + 1);
 SELECT setval('package_package_id_seq', (SELECT MAX(package_id) FROM package) + 1);
 SELECT setval('company_company_id_seq', (SELECT MAX(company_id) FROM company) + 1);
+
+-- Insert first User (HR role) for Amazon and corresponding HR
+DO $$
+DECLARE
+    new_user_id UUID;
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM public.users WHERE email = 'john.doe.hr2025@amazon.com') THEN
+        INSERT INTO public.users (user_id, first_name, last_name, email, password, role, create_at, update_at, is_deleted)
+        VALUES (gen_random_uuid(), 'John', 'Doe', 'john.doe.hr2025@amazon.com', '$2a$10$hashedPassword1', 'HR', NOW(), NOW(), FALSE)
+        RETURNING user_id INTO new_user_id;
+
+        -- Insert HR for the newly created User
+        INSERT INTO hr (hr_id, user_id, company_id, phone, country, experience_years, linkedin_url, cv_url, status, submitted_at, approved_at)
+        VALUES (nextval('hr_hr_id_seq'), new_user_id, 1, '+1-555-123-4567', 'USA', 5, 'https://linkedin.com/in/johndoehr2025', NULL, 'APPROVED', NOW(), NOW());
+    END IF;
+END $$;
+
+-- Insert second User (HR role) for FPT and corresponding HR
+DO $$
+DECLARE
+    new_user_id UUID;
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM public.users WHERE email = 'an.nguyen.hr2025@fpt.com') THEN
+        INSERT INTO public.users (user_id, first_name, last_name, email, password, role, create_at, update_at, is_deleted)
+        VALUES (gen_random_uuid(), 'Nguyen', 'Van An', 'an.nguyen.hr2025@fpt.com', '$2a$10$hashedPassword2', 'HR', NOW(), NOW(), FALSE)
+        RETURNING user_id INTO new_user_id;
+
+        -- Insert HR for the newly created User
+        INSERT INTO hr (hr_id, user_id, company_id, phone, country, experience_years, linkedin_url, cv_url, status, submitted_at, approved_at)
+        VALUES (nextval('hr_hr_id_seq'), new_user_id, 11, '+84-123-456-789', 'Vietnam', 4, 'https://linkedin.com/in/nguyenanhr2025', NULL, 'APPROVED', NOW(), NOW());
+    END IF;
+END $$;
+
+-- Insert Interview Sessions for Amazon and FPT, created by HR
+INSERT INTO interview_session (
+    interview_session_id,
+    topic_id,
+    title,
+    description,
+    total_question,
+    difficulty,
+    duration_estimate,
+    create_at,
+    update_at,
+    is_deleted,
+    source,
+    created_by,
+    company_id
+)
+SELECT
+    nextval('interview_session_interview_session_id_seq'),
+    CASE
+        WHEN c.company_id = 1 THEN 1 -- User Interface for Amazon
+        WHEN c.company_id = 11 THEN 3 -- Fullstack for FPT
+    END AS topic_id,
+    CASE
+        WHEN c.company_id = 1 THEN 'Amazon Frontend Specialist Interview 2025'
+        WHEN c.company_id = 11 THEN 'FPT Fullstack Engineer Interview 2025'
+    END AS title,
+    CASE
+        WHEN c.company_id = 1 THEN 'Evaluates advanced frontend skills for Amazon web platforms.'
+        WHEN c.company_id = 11 THEN 'Tests Fullstack capabilities for FPT software solutions.'
+    END AS description,
+    3 AS total_question,
+    'HARD' AS difficulty,
+    45 AS duration_estimate,
+    NOW() AS create_at,
+    NOW() AS update_at,
+    FALSE AS is_deleted,
+    'HR' AS source,
+    u.user_id AS created_by,
+    c.company_id
+FROM public.users u
+JOIN public.company c ON c.company_id IN (1, 11)
+WHERE u.email IN ('john.doe.hr2025@amazon.com', 'an.nguyen.hr2025@fpt.com')
+AND NOT EXISTS (
+    SELECT 1 FROM interview_session WHERE title = (
+        CASE
+            WHEN c.company_id = 1 THEN 'Amazon Frontend Specialist Interview 2025'
+            WHEN c.company_id = 11 THEN 'FPT Fullstack Engineer Interview 2025'
+        END
+    ) AND company_id = c.company_id
+);
+
+-- Insert new Questions for Amazon Frontend Specialist Interview
+INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status, is_deleted, source, source_type)
+SELECT
+    nextval('question_question_id_seq'),
+    title,
+    content,
+    suitable_answer1,
+    suitable_answer2,
+    'HARD',
+    'APPROVED',
+    FALSE,
+    'Amazon',
+    'HR'
+FROM (VALUES
+    ('What is CSS Custom Properties 2025?',
+     'Explain CSS Custom Properties and their use in modern web development.',
+     'CSS Custom Properties (CSS variables) allow storing reusable values, like colors, for dynamic styling.',
+     'They enable theme switching and reduce redundancy in CSS code, e.g., --main-color: #000;.'),
+    ('What is the Web Animations API 2025?',
+     'Describe the Web Animations API and its applications in frontend development.',
+     'Web Animations API provides JavaScript control over animations, offering precise timing and sequencing.',
+     'It is used for complex animations, like choreographed UI transitions, with better performance than CSS.'),
+    ('How to optimize browser reflows 2025?',
+     'Explain techniques to minimize browser reflows for better frontend performance.',
+     'Minimize reflows by batching DOM updates, avoiding layout-thrashing properties, and using transforms.',
+     'Use tools like Chrome DevTools to identify and optimize reflow-heavy operations.')
+) AS q(title, content, suitable_answer1, suitable_answer2)
+WHERE NOT EXISTS (
+    SELECT 1 FROM question WHERE title = q.title
+);
+
+-- Insert new Questions for FPT Fullstack Engineer Interview
+INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status, is_deleted, source, source_type)
+SELECT
+    nextval('question_question_id_seq'),
+    title,
+    content,
+    suitable_answer1,
+    suitable_answer2,
+    'HARD',
+    'APPROVED',
+    FALSE,
+    'FPT',
+    'HR'
+FROM (VALUES
+    ('What is event sourcing 2025?',
+     'Explain event sourcing and its role in Fullstack applications.',
+     'Event sourcing stores application state as a sequence of events, enabling auditability and scalability.',
+     'It supports rebuilding state by replaying events, useful in microservices architectures.'),
+    ('What is CQRS 2025?',
+     'Describe Command Query Responsibility Segregation (CQRS) in Fullstack development.',
+     'CQRS separates read and write operations into distinct models, optimizing performance and scalability.',
+     'It is often paired with event sourcing for complex, data-intensive applications.'),
+    ('How to implement distributed tracing 2025?',
+     'Explain distributed tracing and its implementation in Fullstack systems.',
+     'Distributed tracing tracks requests across microservices to diagnose latency and errors, using tools like Jaeger.',
+     'Implement with libraries like OpenTelemetry to monitor and optimize system performance.')
+) AS q(title, content, suitable_answer1, suitable_answer2)
+WHERE NOT EXISTS (
+    SELECT 1 FROM question WHERE title = q.title
+);
+
+-- Link Questions to Amazon Frontend Specialist Interview (Session 10)
+INSERT INTO interview_session_question (interview_session_id, question_id)
+SELECT
+    (SELECT interview_session_id FROM interview_session WHERE title = 'Amazon Frontend Specialist Interview 2025' AND company_id = 1 LIMIT 1),
+    q.question_id
+FROM question q
+WHERE q.title IN (
+    'What is CSS Custom Properties 2025?',
+    'What is the Web Animations API 2025?',
+    'How to optimize browser reflows 2025?'
+)
+AND NOT EXISTS (
+    SELECT 1 FROM interview_session_question
+    WHERE interview_session_id = (SELECT interview_session_id FROM interview_session WHERE title = 'Amazon Frontend Specialist Interview 2025' AND company_id = 1 LIMIT 1)
+    AND question_id = q.question_id
+);
+
+-- Link Questions to FPT Fullstack Engineer Interview (Session 11)
+INSERT INTO interview_session_question (interview_session_id, question_id)
+SELECT
+    (SELECT interview_session_id FROM interview_session WHERE title = 'FPT Fullstack Engineer Interview 2025' AND company_id = 11 LIMIT 1),
+    q.question_id
+FROM question q
+WHERE q.title IN (
+    'What is event sourcing 2025?',
+    'What is CQRS 2025?',
+    'How to implement distributed tracing 2025?'
+)
+AND NOT EXISTS (
+    SELECT 1 FROM interview_session_question
+    WHERE interview_session_id = (SELECT interview_session_id FROM interview_session WHERE title = 'FPT Fullstack Engineer Interview 2025' AND company_id = 11 LIMIT 1)
+    AND question_id = q.question_id
+);
+
+-- Insert Tags for Questions
+INSERT INTO question_tag (question_id, tag_id)
+SELECT
+    q.question_id,
+    t.tag_id
+FROM question q
+CROSS JOIN (VALUES
+    ('What is CSS Custom Properties 2025?', 2), -- JavaScript
+    ('What is the Web Animations API 2025?', 2), -- JavaScript
+    ('How to optimize browser reflows 2025?', 2), -- JavaScript
+    ('What is event sourcing 2025?', 1), -- Java
+    ('What is CQRS 2025?', 1), -- Java
+    ('What is CQRS 2025?', 6), -- Data Structures
+    ('How to implement distributed tracing 2025?', 1) -- Java
+) AS t(title, tag_id)
+WHERE q.title = t.title
+AND NOT EXISTS (
+    SELECT 1 FROM question_tag WHERE question_id = q.question_id AND tag_id = t.tag_id
+);
+
+-- Insert Tags for Interview Sessions
+INSERT INTO interview_session_tag (interview_session_id, tag_id)
+SELECT
+    i.interview_session_id,
+    t.tag_id
+FROM interview_session i
+CROSS JOIN (VALUES
+    ('Amazon Frontend Specialist Interview 2025', 2), -- JavaScript
+    ('Amazon Frontend Specialist Interview 2025', 6), -- Data Structures
+    ('FPT Fullstack Engineer Interview 2025', 1), -- Java
+    ('FPT Fullstack Engineer Interview 2025', 5), -- SQL
+    ('FPT Fullstack Engineer Interview 2025', 6) -- Data Structures
+) AS t(title, tag_id)
+WHERE i.title = t.title
+AND NOT EXISTS (
+    SELECT 1 FROM interview_session_tag WHERE interview_session_id = i.interview_session_id AND tag_id = t.tag_id
+);
+
+-- Reset Sequences
+SELECT setval('hr_hr_id_seq', (SELECT MAX(hr_id) FROM hr) + 1);
+SELECT setval('interview_session_interview_session_id_seq', (SELECT MAX(interview_session_id) FROM interview_session) + 1);
+SELECT setval('question_question_id_seq', (SELECT MAX(question_id) FROM question) + 1);
