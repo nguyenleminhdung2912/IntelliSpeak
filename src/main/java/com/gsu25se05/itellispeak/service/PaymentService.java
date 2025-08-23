@@ -2,9 +2,7 @@ package com.gsu25se05.itellispeak.service;
 
 import com.gsu25se05.itellispeak.dto.payment.CreatePaymentRequest;
 import com.gsu25se05.itellispeak.dto.payment.UrlPaymentResponse;
-import com.gsu25se05.itellispeak.entity.Transaction;
-import com.gsu25se05.itellispeak.entity.TransactionStatus;
-import com.gsu25se05.itellispeak.entity.User;
+import com.gsu25se05.itellispeak.entity.*;
 import com.gsu25se05.itellispeak.entity.Package;
 import com.gsu25se05.itellispeak.exception.auth.NotFoundException;
 import com.gsu25se05.itellispeak.repository.PackageRepository;
@@ -113,6 +111,23 @@ public class PaymentService {
 
                 Package purchasedPackage = tx.getAPackage();
                 user.setAPackage(purchasedPackage);
+
+                UserUsage usage = user.getUserUsage();
+                if (usage != null) {
+                    usage.setCvAnalyzeUsed(0);
+                    usage.setJdAnalyzeUsed(0);
+                    usage.setInterviewUsed(0);
+                    usage.setUpdateAt(LocalDateTime.now());
+                } else {
+                    usage = UserUsage.builder()
+                            .user(user)
+                            .cvAnalyzeUsed(0)
+                            .jdAnalyzeUsed(0)
+                            .interviewUsed(0)
+                            .updateAt(LocalDateTime.now())
+                            .build();
+                }
+                user.setUserUsage(usage);
                 userRepository.save(user);
 
                 return new Response<>(200, "Payment successful, package activated", "PAID");
