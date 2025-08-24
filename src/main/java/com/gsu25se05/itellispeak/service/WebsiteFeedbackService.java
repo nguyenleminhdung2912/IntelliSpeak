@@ -47,6 +47,7 @@ public class WebsiteFeedbackService {
 
         WebsiteFeedbackResponseDTO responseDTO = new WebsiteFeedbackResponseDTO();
         responseDTO.setDescription(savedFeedback.getDescription());
+        responseDTO.setWebsiteFeedbackId(savedFeedback.getWebsiteFeedbackId());
         responseDTO.setIsHandled(savedFeedback.getIsHandled());
         responseDTO.setUserID(account.getUserId());
         responseDTO.setUserEmail(account.getEmail());
@@ -91,7 +92,7 @@ public class WebsiteFeedbackService {
             websiteFeedbackRepository.save(websiteFeedback);
 
             String userEmail = websiteFeedback.getUser().getEmail();
-            String userName = websiteFeedback.getUser().getFirstName() + " " + websiteFeedback.getUser().getLastName();
+            String userName = websiteFeedback.getUser().getLastName();
 
             // gọi async gửi mail (không block)
             emailService.handleRejectHandleComplaint(userEmail, userName, reason);
@@ -108,7 +109,7 @@ public class WebsiteFeedbackService {
             websiteFeedbackRepository.save(websiteFeedback);
 
             String userEmail = websiteFeedback.getUser().getEmail();
-            String userName = websiteFeedback.getUser().getFirstName() + " " + websiteFeedback.getUser().getLastName();
+            String userName = websiteFeedback.getUser().getLastName();
 
             // gọi async gửi mail (không block)
             emailService.handleApproveHandleComplaint(userEmail, userName);
