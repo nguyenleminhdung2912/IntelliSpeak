@@ -98,18 +98,18 @@ public class InterviewSessionController {
         }
     }
 
-//    @PostMapping("/{interviewSessionId}/random-questions-by-session/vietnamese")
-//    @Operation(summary = "Get random questions by interviewSessionId with 5:3:2 ratio")
-//    public ResponseEntity<Response<SessionWithQuestionsDTO>> getRandomQuestionsBySessionVietnamese(@PathVariable Long interviewSessionId) {
-//        try {
-//            SessionWithQuestionsDTO dto = interviewSessionService.getRandomQuestionsBySessionVietnamese(interviewSessionId);
-//            return ResponseEntity.ok(new Response<>(200, "Random questions by session fetched", dto));
-//        } catch (RuntimeException e) {
-//            return ResponseEntity.badRequest().body(new Response<>(400, e.getMessage(), null));
-//        } catch (Exception e) {
-//            return ResponseEntity.status(500).body(new Response<>(500, "Internal server error: " + e.getMessage(), null));
-//        }
-//    }
+    @PostMapping("/{interviewSessionId}/random-questions-by-session/vietnamese")
+    @Operation(summary = "Get random questions by interviewSessionId with 5:3:2 ratio")
+    public ResponseEntity<Response<SessionWithQuestionsDTO>> getRandomQuestionsBySessionVietnamese(@PathVariable Long interviewSessionId) {
+        try {
+            SessionWithQuestionsDTO dto = interviewSessionService.getRandomQuestionsBySessionVietnamese(interviewSessionId);
+            return ResponseEntity.ok(new Response<>(200, "Random questions by session fetched", dto));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new Response<>(400, e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(new Response<>(500, "Internal server error: " + e.getMessage(), null));
+        }
+    }
 
     @GetMapping("/{topic-id}")
     @Operation(summary = "Lấy danh sách các buổi phỏng vấn dựa trên ID chủ đề, chỉ trả về tiêu đề, mô tả và thời lượng")

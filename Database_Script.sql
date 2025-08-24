@@ -796,14 +796,14 @@ DO $$
 DECLARE
     new_user_id UUID;
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM public.users WHERE email = 'john.doe.hr2025@amazon.com') THEN
+    IF NOT EXISTS (SELECT 1 FROM public.users WHERE email = 'john.doe.hr@amazon.com') THEN
         INSERT INTO public.users (user_id, first_name, last_name, email, password, role, create_at, update_at, is_deleted)
-        VALUES (gen_random_uuid(), 'John', 'Doe', 'john.doe.hr2025@amazon.com', '$2a$10$hashedPassword1', 'HR', NOW(), NOW(), FALSE)
+        VALUES (gen_random_uuid(), 'John', 'Doe', 'john.doe.hr@amazon.com', '$2a$10$hashedPassword1', 'HR', NOW(), NOW(), FALSE)
         RETURNING user_id INTO new_user_id;
 
         -- Insert HR for the newly created User
         INSERT INTO hr (hr_id, user_id, company_id, phone, country, experience_years, linkedin_url, cv_url, status, submitted_at, approved_at)
-        VALUES (nextval('hr_hr_id_seq'), new_user_id, 1, '+1-555-123-4567', 'USA', 5, 'https://linkedin.com/in/johndoehr2025', NULL, 'APPROVED', NOW(), NOW());
+        VALUES (nextval('hr_hr_id_seq'), new_user_id, 1, '+1-555-123-4567', 'USA', 5, 'https://linkedin.com/in/johndoehr', NULL, 'APPROVED', NOW(), NOW());
     END IF;
 END $$;
 
@@ -812,14 +812,14 @@ DO $$
 DECLARE
     new_user_id UUID;
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM public.users WHERE email = 'an.nguyen.hr2025@fpt.com') THEN
+    IF NOT EXISTS (SELECT 1 FROM public.users WHERE email = 'an.nguyen.hr@fpt.com') THEN
         INSERT INTO public.users (user_id, first_name, last_name, email, password, role, create_at, update_at, is_deleted)
-        VALUES (gen_random_uuid(), 'Nguyen', 'Van An', 'an.nguyen.hr2025@fpt.com', '$2a$10$hashedPassword2', 'HR', NOW(), NOW(), FALSE)
+        VALUES (gen_random_uuid(), 'Nguyen', 'Van An', 'an.nguyen.hr@fpt.com', '$2a$10$hashedPassword2', 'HR', NOW(), NOW(), FALSE)
         RETURNING user_id INTO new_user_id;
 
         -- Insert HR for the newly created User
         INSERT INTO hr (hr_id, user_id, company_id, phone, country, experience_years, linkedin_url, cv_url, status, submitted_at, approved_at)
-        VALUES (nextval('hr_hr_id_seq'), new_user_id, 11, '+84-123-456-789', 'Vietnam', 4, 'https://linkedin.com/in/nguyenanhr2025', NULL, 'APPROVED', NOW(), NOW());
+        VALUES (nextval('hr_hr_id_seq'), new_user_id, 11, '+84-123-456-789', 'Vietnam', 4, 'https://linkedin.com/in/nguyenanhr', NULL, 'APPROVED', NOW(), NOW());
     END IF;
 END $$;
 
@@ -842,17 +842,17 @@ INSERT INTO interview_session (
 SELECT
     nextval('interview_session_interview_session_id_seq'),
     CASE
-        WHEN c.company_id = 1 THEN 1 -- User Interface for Amazon
-        WHEN c.company_id = 11 THEN 3 -- Fullstack for FPT
-    END AS topic_id,
+        WHEN u.email = 'john.doe.hr@amazon.com' THEN 1
+        WHEN u.email = 'an.nguyen.hr@fpt.com' THEN 3
+        END AS topic_id,
     CASE
-        WHEN c.company_id = 1 THEN 'Amazon Frontend Specialist Interview 2025'
-        WHEN c.company_id = 11 THEN 'FPT Fullstack Engineer Interview 2025'
-    END AS title,
+        WHEN u.email = 'john.doe.hr@amazon.com' THEN 'Amazon Frontend Specialist Interview '
+        WHEN u.email = 'an.nguyen.hr@fpt.com' THEN 'FPT Fullstack Engineer Interview '
+        END AS title,
     CASE
-        WHEN c.company_id = 1 THEN 'Evaluates advanced frontend skills for Amazon web platforms.'
-        WHEN c.company_id = 11 THEN 'Tests Fullstack capabilities for FPT software solutions.'
-    END AS description,
+        WHEN u.email = 'john.doe.hr@amazon.com' THEN 'Evaluates advanced frontend skills for Amazon web platforms.'
+        WHEN u.email = 'an.nguyen.hr@fpt.com' THEN 'Tests Fullstack capabilities for FPT software solutions.'
+        END AS description,
     3 AS total_question,
     'HARD' AS difficulty,
     45 AS duration_estimate,
@@ -861,17 +861,26 @@ SELECT
     FALSE AS is_deleted,
     'HR' AS source,
     u.user_id AS created_by,
-    c.company_id
+    CASE
+        WHEN u.email = 'john.doe.hr@amazon.com' THEN 1
+        WHEN u.email = 'an.nguyen.hr@fpt.com' THEN 11
+        END AS company_id
 FROM public.users u
-JOIN public.company c ON c.company_id IN (1, 11)
-WHERE u.email IN ('john.doe.hr2025@amazon.com', 'an.nguyen.hr2025@fpt.com')
-AND NOT EXISTS (
-    SELECT 1 FROM interview_session WHERE title = (
+WHERE u.email IN ('john.doe.hr@amazon.com', 'an.nguyen.hr@fpt.com')
+  AND NOT EXISTS (
+    SELECT 1 FROM interview_session
+    WHERE title = (
         CASE
-            WHEN c.company_id = 1 THEN 'Amazon Frontend Specialist Interview 2025'
-            WHEN c.company_id = 11 THEN 'FPT Fullstack Engineer Interview 2025'
-        END
-    ) AND company_id = c.company_id
+            WHEN u.email = 'john.doe.hr@amazon.com' THEN 'Amazon Frontend Specialist Interview '
+            WHEN u.email = 'an.nguyen.hr@fpt.com' THEN 'FPT Fullstack Engineer Interview '
+            END
+        )
+      AND company_id = (
+        CASE
+            WHEN u.email = 'john.doe.hr@amazon.com' THEN 1
+            WHEN u.email = 'an.nguyen.hr@fpt.com' THEN 11
+            END
+        )
 );
 
 -- Insert new Questions for Amazon Frontend Specialist Interview
@@ -888,15 +897,15 @@ SELECT
     'Amazon',
     'HR'
 FROM (VALUES
-    ('What is CSS Custom Properties 2025?',
+    ('What is CSS Custom Properties ?',
      'Explain CSS Custom Properties and their use in modern web development.',
      'CSS Custom Properties (CSS variables) allow storing reusable values, like colors, for dynamic styling.',
      'They enable theme switching and reduce redundancy in CSS code, e.g., --main-color: #000;.'),
-    ('What is the Web Animations API 2025?',
+    ('What is the Web Animations API ?',
      'Describe the Web Animations API and its applications in frontend development.',
      'Web Animations API provides JavaScript control over animations, offering precise timing and sequencing.',
      'It is used for complex animations, like choreographed UI transitions, with better performance than CSS.'),
-    ('How to optimize browser reflows 2025?',
+    ('How to optimize browser reflows ?',
      'Explain techniques to minimize browser reflows for better frontend performance.',
      'Minimize reflows by batching DOM updates, avoiding layout-thrashing properties, and using transforms.',
      'Use tools like Chrome DevTools to identify and optimize reflow-heavy operations.')
@@ -919,15 +928,15 @@ SELECT
     'FPT',
     'HR'
 FROM (VALUES
-    ('What is event sourcing 2025?',
+    ('What is event sourcing ?',
      'Explain event sourcing and its role in Fullstack applications.',
      'Event sourcing stores application state as a sequence of events, enabling auditability and scalability.',
      'It supports rebuilding state by replaying events, useful in microservices architectures.'),
-    ('What is CQRS 2025?',
+    ('What is CQRS ?',
      'Describe Command Query Responsibility Segregation (CQRS) in Fullstack development.',
      'CQRS separates read and write operations into distinct models, optimizing performance and scalability.',
      'It is often paired with event sourcing for complex, data-intensive applications.'),
-    ('How to implement distributed tracing 2025?',
+    ('How to implement distributed tracing ?',
      'Explain distributed tracing and its implementation in Fullstack systems.',
      'Distributed tracing tracks requests across microservices to diagnose latency and errors, using tools like Jaeger.',
      'Implement with libraries like OpenTelemetry to monitor and optimize system performance.')
@@ -939,34 +948,34 @@ WHERE NOT EXISTS (
 -- Link Questions to Amazon Frontend Specialist Interview (Session 10)
 INSERT INTO interview_session_question (interview_session_id, question_id)
 SELECT
-    (SELECT interview_session_id FROM interview_session WHERE title = 'Amazon Frontend Specialist Interview 2025' AND company_id = 1 LIMIT 1),
+    (SELECT interview_session_id FROM interview_session WHERE title = 'Amazon Frontend Specialist Interview ' AND company_id = 1 LIMIT 1),
     q.question_id
 FROM question q
 WHERE q.title IN (
-    'What is CSS Custom Properties 2025?',
-    'What is the Web Animations API 2025?',
-    'How to optimize browser reflows 2025?'
+    'What is CSS Custom Properties ?',
+    'What is the Web Animations API ?',
+    'How to optimize browser reflows ?'
 )
 AND NOT EXISTS (
     SELECT 1 FROM interview_session_question
-    WHERE interview_session_id = (SELECT interview_session_id FROM interview_session WHERE title = 'Amazon Frontend Specialist Interview 2025' AND company_id = 1 LIMIT 1)
+    WHERE interview_session_id = (SELECT interview_session_id FROM interview_session WHERE title = 'Amazon Frontend Specialist Interview ' AND company_id = 1 LIMIT 1)
     AND question_id = q.question_id
 );
 
 -- Link Questions to FPT Fullstack Engineer Interview (Session 11)
 INSERT INTO interview_session_question (interview_session_id, question_id)
 SELECT
-    (SELECT interview_session_id FROM interview_session WHERE title = 'FPT Fullstack Engineer Interview 2025' AND company_id = 11 LIMIT 1),
+    (SELECT interview_session_id FROM interview_session WHERE title = 'FPT Fullstack Engineer Interview ' AND company_id = 11 LIMIT 1),
     q.question_id
 FROM question q
 WHERE q.title IN (
-    'What is event sourcing 2025?',
-    'What is CQRS 2025?',
-    'How to implement distributed tracing 2025?'
+    'What is event sourcing ?',
+    'What is CQRS ?',
+    'How to implement distributed tracing ?'
 )
 AND NOT EXISTS (
     SELECT 1 FROM interview_session_question
-    WHERE interview_session_id = (SELECT interview_session_id FROM interview_session WHERE title = 'FPT Fullstack Engineer Interview 2025' AND company_id = 11 LIMIT 1)
+    WHERE interview_session_id = (SELECT interview_session_id FROM interview_session WHERE title = 'FPT Fullstack Engineer Interview ' AND company_id = 11 LIMIT 1)
     AND question_id = q.question_id
 );
 
@@ -977,13 +986,13 @@ SELECT
     t.tag_id
 FROM question q
 CROSS JOIN (VALUES
-    ('What is CSS Custom Properties 2025?', 2), -- JavaScript
-    ('What is the Web Animations API 2025?', 2), -- JavaScript
-    ('How to optimize browser reflows 2025?', 2), -- JavaScript
-    ('What is event sourcing 2025?', 1), -- Java
-    ('What is CQRS 2025?', 1), -- Java
-    ('What is CQRS 2025?', 6), -- Data Structures
-    ('How to implement distributed tracing 2025?', 1) -- Java
+    ('What is CSS Custom Properties ?', 2), -- JavaScript
+    ('What is the Web Animations API ?', 2), -- JavaScript
+    ('How to optimize browser reflows ?', 2), -- JavaScript
+    ('What is event sourcing ?', 1), -- Java
+    ('What is CQRS ?', 1), -- Java
+    ('What is CQRS ?', 6), -- Data Structures
+    ('How to implement distributed tracing ?', 1) -- Java
 ) AS t(title, tag_id)
 WHERE q.title = t.title
 AND NOT EXISTS (
@@ -997,11 +1006,11 @@ SELECT
     t.tag_id
 FROM interview_session i
 CROSS JOIN (VALUES
-    ('Amazon Frontend Specialist Interview 2025', 2), -- JavaScript
-    ('Amazon Frontend Specialist Interview 2025', 6), -- Data Structures
-    ('FPT Fullstack Engineer Interview 2025', 1), -- Java
-    ('FPT Fullstack Engineer Interview 2025', 5), -- SQL
-    ('FPT Fullstack Engineer Interview 2025', 6) -- Data Structures
+    ('Amazon Frontend Specialist Interview ', 2), -- JavaScript
+    ('Amazon Frontend Specialist Interview ', 6), -- Data Structures
+    ('FPT Fullstack Engineer Interview ', 1), -- Java
+    ('FPT Fullstack Engineer Interview ', 5), -- SQL
+    ('FPT Fullstack Engineer Interview ', 6) -- Data Structures
 ) AS t(title, tag_id)
 WHERE i.title = t.title
 AND NOT EXISTS (
