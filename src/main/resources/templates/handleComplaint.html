@@ -102,7 +102,7 @@
                             </p>
 
                             <!-- Reason block (only if REJECTED and reason not blank) -->
-                            <table role="presentation" width="100%" class="mt16" th:if="${status} != 'APPROVED' and ${reason} != null and ${#strings.isNotEmpty(reason)}">
+                            <table role="presentation" width="100%" class="mt16" th:if="${status} == 'REJECTED' and ${reason} != null">
                                 <tr>
                                     <td style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px;" class="p24">
                                         <div class="h2 pb8">Reason provided</div>
@@ -117,15 +117,10 @@
                             <div class="mt24">
                                 <div class="h2">What’s next?</div>
                                 <ul class="body mt8" style="padding-left:18px; margin:0;">
-                                    <li th:if="${status} == 'APPROVED'">If you have follow-up questions, reply to this email and include your ticket number.</li>
+                                    <li th:if="${status} == 'APPROVED'">If you have follow-up questions, reply to this email.</li>
                                     <li th:if="${status} != 'APPROVED'">You can submit a new complaint with any missing details or documents.</li>
                                     <li>Our support hours are Mon–Fri, 9:00–18:00 (GMT+7).</li>
                                 </ul>
-                            </div>
-
-                            <!-- CTA (optional) -->
-                            <div class="mt24">
-                                <a class="btn" href="#" th:href="@{/support}" th:text="${status} == 'APPROVED' ? 'View ticket' : 'Resubmit complaint'}"></a>
                             </div>
 
                             <!-- Footer -->
