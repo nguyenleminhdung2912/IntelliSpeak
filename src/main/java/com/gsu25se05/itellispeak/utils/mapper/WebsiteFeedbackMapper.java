@@ -5,6 +5,8 @@ import com.gsu25se05.itellispeak.dto.website_feedback.WebsiteFeedbackResponseDTO
 import com.gsu25se05.itellispeak.entity.WebsiteFeedback;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -25,7 +27,7 @@ public class WebsiteFeedbackMapper {
                 .filter(Objects::nonNull)
                 .filter(s -> !s.isBlank())
                 .collect(Collectors.joining(" "));
-
+        dto.setCreateAt(websiteFeedback.getCreatedAt().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")));
         dto.setUserName(fullName);
         dto.setUserID(websiteFeedback.getUser().getUserId());
         dto.setIsHandled(websiteFeedback.getIsHandled());

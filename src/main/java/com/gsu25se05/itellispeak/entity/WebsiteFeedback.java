@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -32,5 +33,8 @@ public class WebsiteFeedback {
 
     @Column(name = "isHandled", nullable = true)
     private Boolean isHandled;
+
+    @Column(name = "created_at", nullable = true)
+    private LocalDateTime createdAt;
 
 }
