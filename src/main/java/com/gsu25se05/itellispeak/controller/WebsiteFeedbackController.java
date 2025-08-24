@@ -51,8 +51,8 @@ public class WebsiteFeedbackController {
     }
 
     @PostMapping("/handle-reject/{websiteFeedbackId}")
-    public ResponseEntity<Response<String>> handleRejectWebsiteFeedback(@PathVariable UUID websiteFeedbackId) {
-        String response = websiteFeedbackService.handleRejectWebsiteFeedback(websiteFeedbackId);
+    public ResponseEntity<Response<String>> handleRejectWebsiteFeedback(@PathVariable UUID websiteFeedbackId, @RequestParam String reason) {
+        String response = websiteFeedbackService.handleRejectWebsiteFeedback(websiteFeedbackId, reason);
         return ResponseEntity.ok(new Response<>(200, response, null));
     }
 
