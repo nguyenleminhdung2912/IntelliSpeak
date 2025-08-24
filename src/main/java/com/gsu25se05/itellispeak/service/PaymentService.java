@@ -78,8 +78,10 @@ public class PaymentService {
                 .orderCode(orderCode)
                 .amount(amount.intValue())
                 .description("Purchase package: " + selectedPackage.getPackageName())
-                .returnUrl("https://itelli-speak-web.vercel.app/success?orderCode=" + orderCode)
-                .cancelUrl("https://itelli-speak-web.vercel.app/cancel")
+                .returnUrl("https://endlessly-enabling-husky.ngrok-free.app/success?orderCode=" + orderCode)
+                .cancelUrl("https://endlessly-enabling-husky.ngrok-free.app/cancel?orderCode=" + orderCode)
+//                .returnUrl("http://localhost:8080/api/payment/success?orderCode=" + orderCode)
+//                .cancelUrl("http://localhost:8080/api/payment/cancel?orderCode=" + orderCode)
                 .item(item)
                 .build();
 
@@ -140,9 +142,6 @@ public class PaymentService {
     }
 
     public Response<String> cancelPayment(Long orderCode) {
-        User user = accountUtils.getCurrentAccount();
-        if (user == null) return new Response<>(401, "Please log in", null);
-
         Transaction tx = transactionRepository.findByOrderCode(orderCode)
                 .orElseThrow(() -> new NotFoundException("Transaction not found"));
 
@@ -160,6 +159,59 @@ public class PaymentService {
             return new Response<>(200, "Transaction cancelled successfully", "CANCELLED");
         } catch (Exception e) {
             return new Response<>(500, "Error while cancelling transaction: " + e.getMessage(), null);
+        }
+    }
+
+    public Response<String> successPayment(String orderCode) {
+        try {
+            Long orderCodeLong = Long.parseLong(orderCode);
+
+            Transaction tx = transactionRepository.findByOrderCode(orderCodeLong)
+                    .orElseThrow(() -> new NotFoundException("Transaction not found"));
+            User user = tx.getUser();
+
+            PayOS payOS = new PayOS(clientId, apiKey, checksumKey);
+            var paymentLinkData = payOS.getPaymentLinkInformation(orderCodeLong);
+            String status = paymentLinkData.getStatus();
+
+            if ("PAID".equalsIgnoreCase(status)) {
+                if (tx.getTransactionStatus() != TransactionStatus.PAID) {
+                    tx.setTransactionStatus(TransactionStatus.PAID);
+                    transactionRepository.save(tx);
+
+                    Package purchasedPackage = tx.getAPackage();
+                    user.setAPackage(purchasedPackage);
+
+                    UserUsage usage = user.getUserUsage();
+                    if (usage != null) {
+                        usage.setCvAnalyzeUsed(0);
+                        usage.setJdAnalyzeUsed(0);
+                        usage.setInterviewUsed(0);
+                        usage.setUpdateAt(LocalDateTime.now());
+                    } else {
+                        usage = UserUsage.builder()
+                                .user(user)
+                                .cvAnalyzeUsed(0)
+                                .jdAnalyzeUsed(0)
+                                .interviewUsed(0)
+                                .updateAt(LocalDateTime.now())
+                                .build();
+                    }
+                    user.setUserUsage(usage);
+                    userRepository.save(user);
+                }
+                return new Response<>(200, "Payment successful, package activated", "PAID");
+            } else if ("CANCELLED".equalsIgnoreCase(status) || "EXPIRED".equalsIgnoreCase(status)) {
+                tx.setTransactionStatus(TransactionStatus.FAILED);
+                transactionRepository.save(tx);
+                return new Response<>(400, "Payment failed or cancelled", "FAILED");
+            }
+
+            return new Response<>(202, "Transaction not paid yet", tx.getTransactionStatus().toString());
+        } catch (NumberFormatException e) {
+            return new Response<>(400, "Invalid order code format", null);
+        } catch (Exception e) {
+            return new Response<>(500, "Error while processing payment: " + e.getMessage(), null);
         }
     }
 }
