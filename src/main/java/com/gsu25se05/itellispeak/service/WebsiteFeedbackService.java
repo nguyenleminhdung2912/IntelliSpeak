@@ -11,10 +11,9 @@ import com.gsu25se05.itellispeak.utils.AccountUtils;
 import com.gsu25se05.itellispeak.utils.mapper.WebsiteFeedbackMapper;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -42,6 +41,7 @@ public class WebsiteFeedbackService {
         websiteFeedback.setDescription(websiteFeedbackRequestDTO.getDescription());
         websiteFeedback.setIsHandled(null);
         websiteFeedback.setUser(account);
+        websiteFeedback.setCreatedAt(LocalDateTime.now());
 
         WebsiteFeedback savedFeedback = websiteFeedbackRepository.save(websiteFeedback);
 
@@ -50,6 +50,7 @@ public class WebsiteFeedbackService {
         responseDTO.setIsHandled(savedFeedback.getIsHandled());
         responseDTO.setUserID(account.getUserId());
         responseDTO.setUserEmail(account.getEmail());
+        responseDTO.setCreateAt(savedFeedback.getCreatedAt().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")));
         String fullName = Stream.of(
                         websiteFeedback.getUser().getFirstName(),
                         websiteFeedback.getUser().getLastName()
@@ -73,7 +74,7 @@ public class WebsiteFeedbackService {
     }
 
     public List<WebsiteFeedbackResponseDTO> getAllWebsiteFeedbacks() {
-        List<WebsiteFeedback> websiteFeedbacks = websiteFeedbackRepository.findAll();
+        List<WebsiteFeedback> websiteFeedbacks = websiteFeedbackRepository.findAll().stream().sorted(Comparator.comparing(WebsiteFeedback::getCreatedAt).reversed()).toList();
         return websiteFeedbacks.stream()
                 .map(websiteFeedbackMapper::toDTO)
                 .toList();
