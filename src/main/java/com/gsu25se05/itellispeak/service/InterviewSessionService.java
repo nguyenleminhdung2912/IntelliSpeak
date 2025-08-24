@@ -11,7 +11,6 @@ import com.gsu25se05.itellispeak.exception.auth.NotLoginException;
 import com.gsu25se05.itellispeak.repository.*;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
 import com.gsu25se05.itellispeak.utils.TranslationUtil;
-import com.gsu25se05.itellispeak.utils.mapper.InterviewHistoryMapper;
 import com.gsu25se05.itellispeak.utils.mapper.InterviewSessionMapper;
 import com.gsu25se05.itellispeak.utils.mapper.QuestionMapper;
 import org.springframework.stereotype.Service;
@@ -34,7 +33,6 @@ public class InterviewSessionService {
     private final AccountUtils accountUtils;
     private final UserUsageRepository userUsageRepository;
     private final UserRepository userRepository;
-    private final InterviewHistoryMapper interviewHistoryMapper;
     private final TranslationUtil translationUtil;
 
     public InterviewSessionService(
@@ -44,7 +42,7 @@ public class InterviewSessionService {
             TagRepository tagRepository,
             TopicRepository topicRepository,
             QuestionMapper questionMapper,
-            AccountUtils accountUtils, UserUsageRepository userUsageRepository, UserRepository userRepository, InterviewHistoryMapper interviewHistoryMapper, TranslationUtil translationUtil) {
+            AccountUtils accountUtils, UserUsageRepository userUsageRepository, UserRepository userRepository, TranslationUtil translationUtil) {
         this.interviewSessionRepository = interviewSessionRepository;
         this.questionRepository = questionRepository;
         this.interviewSessionMapper = interviewSessionMapper;
@@ -54,7 +52,6 @@ public class InterviewSessionService {
         this.accountUtils = accountUtils;
         this.userUsageRepository = userUsageRepository;
         this.userRepository = userRepository;
-        this.interviewHistoryMapper = interviewHistoryMapper;
         this.translationUtil = translationUtil;
     }
 
@@ -109,7 +106,7 @@ public class InterviewSessionService {
 
     @Transactional
     public List<InterviewSession> getAllInterviewSession() {
-        return interviewSessionRepository.findAllBySourceNotOrSourceIsNull("RANDOM");
+        return interviewSessionRepository.findAllBySourceNotOrSourceIsNullAndIsDeletedFalse("RANDOM");
     }
 
     @Transactional
@@ -123,7 +120,7 @@ public class InterviewSessionService {
             throw new SecurityException("Only HR or ADMIN are allowed to view the interview sessions they created");
         }
 
-        return interviewSessionRepository.findByCreatedBy(currentUser);
+        return interviewSessionRepository.findByIsDeletedFalseAndCreatedBy(currentUser);
     }
 
     @Transactional
@@ -331,6 +328,9 @@ public class InterviewSessionService {
 
         InterviewSession session = interviewSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new RuntimeException("InterviewSession not found"));
+        if (session.getIsDeleted() == true) {
+            throw new AuthAppException(ErrorCode.INTERVIEW_SESSION_WERE_DELETED);
+        }
         int total = session.getTotalQuestion();
         int easyCount = Math.round(total * 5f / 10f);
         int mediumCount = Math.round(total * 3f / 10f);
@@ -402,7 +402,7 @@ public class InterviewSessionService {
             throw new NotLoginException("Please log in to continue");
         }
 
-        List<InterviewSession> interviewSessionList = interviewSessionRepository.findByCreatedBy(currentUser);
+        List<InterviewSession> interviewSessionList = interviewSessionRepository.findByIsDeletedFalseAndCreatedBy(currentUser);
         return interviewSessionList.stream()
                 .map(interviewSessionMapper::toEvaluationBatchResponseForGetAllDto)
                 .collect(Collectors.toList());

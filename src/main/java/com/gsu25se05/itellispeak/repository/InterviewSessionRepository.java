@@ -11,10 +11,9 @@ import java.util.List;
 @Repository
 public interface InterviewSessionRepository extends JpaRepository<InterviewSession, Long> {
     List<InterviewSession> findByTopic_TopicIdAndIsDeletedFalse(Long topicId);
-    void deleteBySourceAndCreateAtBefore(String source, LocalDateTime threshold);
-    List<InterviewSession> findAllBySourceNotOrSourceIsNull(String source);
+    List<InterviewSession> findAllBySourceNotOrSourceIsNullAndIsDeletedFalse(String source);
 
-    List<InterviewSession> findByCreatedBy(User createdBy);
+    List<InterviewSession> findByIsDeletedFalseAndCreatedBy(User createdBy);
 
 
 }

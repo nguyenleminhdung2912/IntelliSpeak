@@ -4,7 +4,6 @@ import com.gsu25se05.itellispeak.jwt.JWTService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -99,6 +98,43 @@ public class EmailService {
             detail.setRecipient(recipientEmail);
             detail.setName(hrName);
             detail.setSubject("Your HR application has been rejected");
+
+            proceedToSendMail(detail, ctx, "hr-rejection");
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Async
+    public void handleRejectHandleComplaint(String recipientEmail, String userName, String reason) {
+        try {
+            Context ctx = new Context();
+            ctx.setVariable("name", userName);
+            ctx.setVariable("status", "REJECTED");
+            ctx.setVariable("reason", (reason == null) ? "" : reason);
+
+            EmailDetail detail = new EmailDetail();
+            detail.setRecipient(recipientEmail);
+            detail.setName(userName);
+            detail.setSubject("Your complaint has been rejected.");
+
+            proceedToSendMail(detail, ctx, "hr-rejection");
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Async
+    public void handleApproveHandleComplaint(String recipientEmail, String userName) {
+        try {
+            Context ctx = new Context();
+            ctx.setVariable("name", userName);
+            ctx.setVariable("status", "APPROVED");
+
+            EmailDetail detail = new EmailDetail();
+            detail.setRecipient(recipientEmail);
+            detail.setName(userName);
+            detail.setSubject("Your complaint has been handled.");
 
             proceedToSendMail(detail, ctx, "hr-rejection");
         } catch (MessagingException e) {

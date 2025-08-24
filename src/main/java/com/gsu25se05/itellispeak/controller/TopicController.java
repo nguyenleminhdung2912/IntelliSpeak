@@ -1,5 +1,6 @@
 package com.gsu25se05.itellispeak.controller;
 
+import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.interview_topic.TopicRequest;
 import com.gsu25se05.itellispeak.entity.Tag;
 import com.gsu25se05.itellispeak.entity.Topic;
@@ -55,9 +56,9 @@ public class TopicController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTopic(@PathVariable Long id) {
-        topicService.deleteTopic(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Response<String>> deleteTopic(@PathVariable Long id) {
+        String response = topicService.deleteTopic(id);
+        return ResponseEntity.ok(new Response<>(200, response, null));
     }
 
     @Operation(

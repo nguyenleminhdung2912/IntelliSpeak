@@ -12,9 +12,5 @@ import java.util.UUID;
 @Repository // Thay @Registered bằng @Repository
 public interface WebsiteFeedbackRepository extends JpaRepository<WebsiteFeedback, UUID> {
 
-    List<WebsiteFeedback> findByUser(User user);
-
-    List<WebsiteFeedback> findByExpression(WebsiteFeedback.expressions expression);
-
     Optional<WebsiteFeedback> findById(UUID id);
 }

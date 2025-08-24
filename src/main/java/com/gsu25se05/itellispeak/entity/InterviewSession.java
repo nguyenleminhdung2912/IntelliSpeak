@@ -43,7 +43,7 @@ public class InterviewSession {
     @Column(nullable = false)
     private Difficulty difficulty;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Duration durationEstimate;
 
     @Column(nullable = false)

@@ -5,11 +5,8 @@ import com.gsu25se05.itellispeak.dto.admin.UserWithPackageDTO;
 import com.gsu25se05.itellispeak.dto.auth.reponse.UserDTO;
 import com.gsu25se05.itellispeak.dto.hr.HRAdminResponseDTO;
 import com.gsu25se05.itellispeak.email.EmailService;
-import com.gsu25se05.itellispeak.entity.HR;
-import com.gsu25se05.itellispeak.entity.HRStatus;
+import com.gsu25se05.itellispeak.entity.*;
 import com.gsu25se05.itellispeak.entity.Package;
-import com.gsu25se05.itellispeak.entity.User;
-import com.gsu25se05.itellispeak.entity.UserUsage;
 import com.gsu25se05.itellispeak.exception.ErrorCode;
 import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
 import com.gsu25se05.itellispeak.repository.*;
@@ -60,6 +57,12 @@ public class AdminService {
             result.put(p.getPackageName(), count != null ? count : 0L);
         }
         return result;
+    }
+
+    public List<Transaction> getPaidTransactions() {
+        return transactionRepository.findAll().stream()
+                .filter(t -> t.getTransactionStatus() == TransactionStatus.PAID)
+                .toList();
     }
 
     public List<Map<String, String>> getYearlyRevenueFormatted(int year) {
@@ -301,6 +304,13 @@ public class AdminService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthAppException(ErrorCode.ACCOUNT_NOT_FOUND));
         user.setIsDeleted(true);
+        userRepository.save(user);
+    }
+
+    public void unbanUser(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthAppException(ErrorCode.ACCOUNT_NOT_FOUND));
+        user.setIsDeleted(false);
         userRepository.save(user);
     }
 }

@@ -7,6 +7,7 @@ import com.gsu25se05.itellispeak.dto.topic.TagSimpleDTO;
 import com.gsu25se05.itellispeak.entity.*;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -38,7 +39,7 @@ public class InterviewSessionMapper {
         entity.setQuestions(questions != null ? questions : new HashSet<>());
         entity.setTags(tags != null ? tags : new HashSet<>());
         entity.setTopic(topic);
-        entity.setDurationEstimate(dto.getDurationEstimate());
+        entity.setDurationEstimate(Duration.ofMinutes(10));
         entity.setCreateAt(LocalDateTime.now());
         entity.setUpdateAt(LocalDateTime.now());
         entity.setIsDeleted(false);
