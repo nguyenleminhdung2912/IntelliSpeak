@@ -10,6 +10,7 @@ import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
 import com.gsu25se05.itellispeak.exception.auth.NotLoginException;
 import com.gsu25se05.itellispeak.repository.*;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
+import com.gsu25se05.itellispeak.utils.TranslationUtil;
 import com.gsu25se05.itellispeak.utils.mapper.InterviewHistoryMapper;
 import com.gsu25se05.itellispeak.utils.mapper.InterviewSessionMapper;
 import com.gsu25se05.itellispeak.utils.mapper.QuestionMapper;
@@ -34,6 +35,7 @@ public class InterviewSessionService {
     private final UserUsageRepository userUsageRepository;
     private final UserRepository userRepository;
     private final InterviewHistoryMapper interviewHistoryMapper;
+    private final TranslationUtil translationUtil;
 
     public InterviewSessionService(
             InterviewSessionRepository interviewSessionRepository,
@@ -42,7 +44,7 @@ public class InterviewSessionService {
             TagRepository tagRepository,
             TopicRepository topicRepository,
             QuestionMapper questionMapper,
-            AccountUtils accountUtils, UserUsageRepository userUsageRepository, UserRepository userRepository, InterviewHistoryMapper interviewHistoryMapper) {
+            AccountUtils accountUtils, UserUsageRepository userUsageRepository, UserRepository userRepository, InterviewHistoryMapper interviewHistoryMapper, TranslationUtil translationUtil) {
         this.interviewSessionRepository = interviewSessionRepository;
         this.questionRepository = questionRepository;
         this.interviewSessionMapper = interviewSessionMapper;
@@ -53,6 +55,7 @@ public class InterviewSessionService {
         this.userUsageRepository = userUsageRepository;
         this.userRepository = userRepository;
         this.interviewHistoryMapper = interviewHistoryMapper;
+        this.translationUtil = translationUtil;
     }
 
     @Transactional
@@ -109,7 +112,7 @@ public class InterviewSessionService {
         return interviewSessionRepository.findAllBySourceNotOrSourceIsNull("RANDOM");
     }
 
-
+    @Transactional
     public List<InterviewSession> getAllSessionsCreatedByHR() {
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) {
@@ -123,6 +126,7 @@ public class InterviewSessionService {
         return interviewSessionRepository.findByCreatedBy(currentUser);
     }
 
+    @Transactional
     public InterviewSession getSessionCreatedByHR(Long id) {
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) {
@@ -138,7 +142,6 @@ public class InterviewSessionService {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Session with ID: " + id + " not found or not owned by the current user"));
     }
-
 
     @Transactional
     public SessionWithQuestionsDTO getRandomQuestions(QuestionSelectionRequestDTO request) {
@@ -409,4 +412,60 @@ public class InterviewSessionService {
 
         return interviewSessionRepository.save(entity);
     }
+
+//    @Transactional
+//    public SessionWithQuestionsDTO getRandomQuestionsBySessionVietnamese(Long interviewSessionId) {
+//        User currentUser = accountUtils.getCurrentAccount();
+//        if (currentUser == null) {
+//            throw new NotLoginException("Please log in to continue");
+//        }
+//
+//        if (currentUser.getUserUsage().getInterviewUsed() >= currentUser.getAPackage().getInterviewCount()) {
+//            throw new AuthAppException(ErrorCode.OUT_OF_INTERVIEW_COUNT);
+//        }
+//
+//        InterviewSession session = interviewSessionRepository.findById(interviewSessionId)
+//                .orElseThrow(() -> new RuntimeException("InterviewSession not found"));
+//        int total = session.getTotalQuestion();
+//        int easyCount = Math.round(total * 5f / 10f);
+//        int mediumCount = Math.round(total * 3f / 10f);
+//        int hardCount = total - easyCount - mediumCount;
+//
+//        List<QuestionInfoDTO> result = new ArrayList<>();
+//        result.addAll(randomQuestionsBySession(session, Difficulty.EASY, easyCount));
+//        result.addAll(randomQuestionsBySession(session, Difficulty.MEDIUM, mediumCount));
+//        result.addAll(randomQuestionsBySession(session, Difficulty.HARD, hardCount));
+//        Collections.shuffle(result);
+//
+//        // Dịch các trường trong QuestionInfoDTO
+//        for (QuestionInfoDTO question : result) {
+//            question.setTitle(translationUtil.translateToVietnamese(question.getTitle()));
+//            question.setContent(translationUtil.translateToVietnamese(question.getContent()));
+//            question.setSuitableAnswer1(translationUtil.translateToVietnamese(question.getSuitableAnswer1()));
+//            question.setSuitableAnswer2(translationUtil.translateToVietnamese(question.getSuitableAnswer2()));
+//            question.setDifficulty(translationUtil.translateDifficulty(question.getDifficulty()));
+//        }
+//
+//        SessionWithQuestionsDTO dto = new SessionWithQuestionsDTO();
+//        dto.setInterviewSessionId(interviewSessionId);
+//        // Dịch title và description
+//        dto.setTitle(translationUtil.translateToVietnamese(session.getTitle()));
+//        dto.setDescription(translationUtil.translateToVietnamese(session.getDescription()));
+//        dto.setCompanyId(
+//                session.getCompany() != null ? session.getCompany().getCompanyId() : null
+//        );
+//        dto.setTotalQuestion(total);
+//        dto.setDurationEstimate(session.getDurationEstimate());
+//        dto.setQuestions(result);
+//        // Giữ nguyên tags
+//        dto.setTags(session.getTags().stream()
+//                .map(tag -> new TagSimpleDTO(tag.getTagId(), tag.getTitle()))
+//                .collect(Collectors.toList()));
+//
+//        currentUser.getUserUsage().setInterviewUsed(currentUser.getUserUsage().getInterviewUsed() + 1);
+//        userRepository.save(currentUser);
+//        userUsageRepository.save(currentUser.getUserUsage());
+//
+//        return dto;
+//    }
 }
