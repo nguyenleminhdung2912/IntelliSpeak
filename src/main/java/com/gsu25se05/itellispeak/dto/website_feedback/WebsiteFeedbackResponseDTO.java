@@ -15,6 +15,7 @@ public class WebsiteFeedbackResponseDTO {
     private UUID userID;
     private UUID websiteFeedbackId;
     private String userName;
+    private String userEmail;
     private String description;
     private Boolean isHandled;
 }
