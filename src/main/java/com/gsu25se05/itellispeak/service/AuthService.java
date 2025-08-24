@@ -263,6 +263,7 @@ public class AuthService implements UserDetailsService {
                 .role(user.getRole())
                 .phone(user.getPhone())
                 .email(email)
+                .packageName(user.getAPackage().getPackageName())
                 .avatar(user.getAvatar())
                 .website(user.getWebsite())
                 .github(user.getGithub())
@@ -398,6 +399,7 @@ public class AuthService implements UserDetailsService {
             loginResponseDTO.setMessage("Login successful");
             loginResponseDTO.setToken(token);
             loginResponseDTO.setRefreshToken(refreshToken);
+            loginResponseDTO.setPackageName(account.getAPackage().getPackageName());
             loginResponseDTO.setUser(userDTO);
 
             return new ResponseEntity<>(loginResponseDTO, HttpStatus.OK);
