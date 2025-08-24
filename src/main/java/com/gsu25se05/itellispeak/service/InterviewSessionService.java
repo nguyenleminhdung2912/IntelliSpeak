@@ -337,6 +337,29 @@ public class InterviewSessionService {
         int hardCount = total - easyCount - mediumCount;
 
         List<QuestionInfoDTO> result = new ArrayList<>();
+
+        if (session.getCompany() != null) {
+            Set<Question> questionList = session.getQuestions();
+            result.addAll(questionList.stream().map(questionMapper::toInfoDTO).collect(Collectors.toSet()));
+
+            SessionWithQuestionsDTO dto = new SessionWithQuestionsDTO();
+            dto.setInterviewSessionId(sessionId);
+            dto.setTitle(session.getTitle());
+            dto.setCompanyId(
+                    session.getCompany() != null ? session.getCompany().getCompanyId() : null
+            );
+            dto.setDescription(session.getDescription());
+            dto.setTotalQuestion(total);
+            dto.setDurationEstimate(session.getDurationEstimate());
+            dto.setQuestions(result);
+
+            currentUser.getUserUsage().setInterviewUsed(currentUser.getUserUsage().getInterviewUsed() + 1);
+            userRepository.save(currentUser);
+            userUsageRepository.save(currentUser.getUserUsage());
+
+            return dto;
+        }
+
         result.addAll(randomQuestionsBySession(session, Difficulty.EASY, easyCount));
         result.addAll(randomQuestionsBySession(session, Difficulty.MEDIUM, mediumCount));
         result.addAll(randomQuestionsBySession(session, Difficulty.HARD, hardCount));
@@ -413,59 +436,73 @@ public class InterviewSessionService {
         return interviewSessionRepository.save(entity);
     }
 
-//    @Transactional
-//    public SessionWithQuestionsDTO getRandomQuestionsBySessionVietnamese(Long interviewSessionId) {
-//        User currentUser = accountUtils.getCurrentAccount();
-//        if (currentUser == null) {
-//            throw new NotLoginException("Please log in to continue");
-//        }
-//
-//        if (currentUser.getUserUsage().getInterviewUsed() >= currentUser.getAPackage().getInterviewCount()) {
-//            throw new AuthAppException(ErrorCode.OUT_OF_INTERVIEW_COUNT);
-//        }
-//
-//        InterviewSession session = interviewSessionRepository.findById(interviewSessionId)
-//                .orElseThrow(() -> new RuntimeException("InterviewSession not found"));
-//        int total = session.getTotalQuestion();
-//        int easyCount = Math.round(total * 5f / 10f);
-//        int mediumCount = Math.round(total * 3f / 10f);
-//        int hardCount = total - easyCount - mediumCount;
-//
-//        List<QuestionInfoDTO> result = new ArrayList<>();
-//        result.addAll(randomQuestionsBySession(session, Difficulty.EASY, easyCount));
-//        result.addAll(randomQuestionsBySession(session, Difficulty.MEDIUM, mediumCount));
-//        result.addAll(randomQuestionsBySession(session, Difficulty.HARD, hardCount));
-//        Collections.shuffle(result);
-//
-//        // Dịch các trường trong QuestionInfoDTO
-//        for (QuestionInfoDTO question : result) {
-//            question.setTitle(translationUtil.translateToVietnamese(question.getTitle()));
-//            question.setContent(translationUtil.translateToVietnamese(question.getContent()));
-//            question.setSuitableAnswer1(translationUtil.translateToVietnamese(question.getSuitableAnswer1()));
-//            question.setSuitableAnswer2(translationUtil.translateToVietnamese(question.getSuitableAnswer2()));
-//            question.setDifficulty(translationUtil.translateDifficulty(question.getDifficulty()));
-//        }
-//
-//        SessionWithQuestionsDTO dto = new SessionWithQuestionsDTO();
-//        dto.setInterviewSessionId(interviewSessionId);
-//        // Dịch title và description
-//        dto.setTitle(translationUtil.translateToVietnamese(session.getTitle()));
-//        dto.setDescription(translationUtil.translateToVietnamese(session.getDescription()));
-//        dto.setCompanyId(
-//                session.getCompany() != null ? session.getCompany().getCompanyId() : null
-//        );
-//        dto.setTotalQuestion(total);
-//        dto.setDurationEstimate(session.getDurationEstimate());
-//        dto.setQuestions(result);
-//        // Giữ nguyên tags
-//        dto.setTags(session.getTags().stream()
-//                .map(tag -> new TagSimpleDTO(tag.getTagId(), tag.getTitle()))
-//                .collect(Collectors.toList()));
-//
-//        currentUser.getUserUsage().setInterviewUsed(currentUser.getUserUsage().getInterviewUsed() + 1);
-//        userRepository.save(currentUser);
-//        userUsageRepository.save(currentUser.getUserUsage());
-//
-//        return dto;
-//    }
+    @Transactional
+    public SessionWithQuestionsDTO getRandomQuestionsBySessionVietnamese(Long interviewSessionId) {
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            throw new NotLoginException("Please log in to continue");
+        }
+
+        if (currentUser.getUserUsage().getInterviewUsed() >= currentUser.getAPackage().getInterviewCount()) {
+            throw new AuthAppException(ErrorCode.OUT_OF_INTERVIEW_COUNT);
+        }
+
+        InterviewSession session = interviewSessionRepository.findById(interviewSessionId)
+                .orElseThrow(() -> new RuntimeException("InterviewSession not found"));
+        int total = session.getTotalQuestion();
+        int easyCount = Math.round(total * 5f / 10f);
+        int mediumCount = Math.round(total * 3f / 10f);
+        int hardCount = total - easyCount - mediumCount;
+
+        List<QuestionInfoDTO> result = new ArrayList<>();
+        result.addAll(randomQuestionsBySession(session, Difficulty.EASY, easyCount));
+        result.addAll(randomQuestionsBySession(session, Difficulty.MEDIUM, mediumCount));
+        result.addAll(randomQuestionsBySession(session, Difficulty.HARD, hardCount));
+        Collections.shuffle(result);
+
+        // Dịch các trường trong QuestionInfoDTO bằng batch translation
+        List<String> titles = result.stream().map(QuestionInfoDTO::getTitle).collect(Collectors.toList());
+        List<String> contents = result.stream().map(QuestionInfoDTO::getContent).collect(Collectors.toList());
+        List<String> answers1 = result.stream().map(QuestionInfoDTO::getSuitableAnswer1).collect(Collectors.toList());
+        List<String> answers2 = result.stream().map(QuestionInfoDTO::getSuitableAnswer2).collect(Collectors.toList());
+        List<String> difficulties = result.stream().map(QuestionInfoDTO::getDifficulty).collect(Collectors.toList());
+
+        List<String> translatedTitles = translationUtil.translateBatchToVietnamese(titles);
+        List<String> translatedContents = translationUtil.translateBatchToVietnamese(contents);
+        List<String> translatedAnswers1 = translationUtil.translateBatchToVietnamese(answers1);
+        List<String> translatedAnswers2 = translationUtil.translateBatchToVietnamese(answers2);
+        List<String> translatedDifficulties = translationUtil.translateBatchToVietnamese(difficulties);
+
+        for (int i = 0; i < result.size(); i++) {
+            result.get(i).setTitle(translatedTitles.get(i));
+            result.get(i).setContent(translatedContents.get(i));
+            result.get(i).setSuitableAnswer1(translatedAnswers1.get(i));
+            result.get(i).setSuitableAnswer2(translatedAnswers2.get(i));
+            result.get(i).setDifficulty(translatedDifficulties.get(i));
+        }
+
+        SessionWithQuestionsDTO dto = new SessionWithQuestionsDTO();
+        dto.setInterviewSessionId(interviewSessionId);
+        // Dịch title và description
+        List<String> sessionTexts = Arrays.asList(session.getTitle(), session.getDescription());
+        List<String> translatedSessionTexts = translationUtil.translateBatchToVietnamese(sessionTexts);
+        dto.setTitle(translatedSessionTexts.get(0));
+        dto.setDescription(translatedSessionTexts.get(1));
+        dto.setCompanyId(
+                session.getCompany() != null ? session.getCompany().getCompanyId() : null
+        );
+        dto.setTotalQuestion(total);
+        dto.setDurationEstimate(session.getDurationEstimate());
+        dto.setQuestions(result);
+        // Giữ nguyên tags
+        dto.setTags(session.getTags().stream()
+                .map(tag -> new TagSimpleDTO(tag.getTagId(), tag.getTitle()))
+                .collect(Collectors.toList()));
+
+        currentUser.getUserUsage().setInterviewUsed(currentUser.getUserUsage().getInterviewUsed() + 1);
+        userRepository.save(currentUser);
+        userUsageRepository.save(currentUser.getUserUsage());
+
+        return dto;
+    }
 }
