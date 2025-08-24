@@ -114,6 +114,7 @@ public class AuthService implements UserDetailsService {
                 .email(user.getEmail())
                 .role(user.getRole())
                 .packageId(packageId)
+                .packageName(user.getAPackage() != null ? user.getAPackage().getPackageName() : null)
                 .birthday(user.getBirthday())
                 .avatar(user.getAvatar())
                 .status(user.getStatus())
@@ -264,6 +265,7 @@ public class AuthService implements UserDetailsService {
                 .phone(user.getPhone())
                 .email(email)
                 .packageName(user.getAPackage().getPackageName())
+                .packageId(user.getAPackage().getPackageId())
                 .avatar(user.getAvatar())
                 .website(user.getWebsite())
                 .github(user.getGithub())
@@ -399,6 +401,7 @@ public class AuthService implements UserDetailsService {
             loginResponseDTO.setMessage("Login successful");
             loginResponseDTO.setToken(token);
             loginResponseDTO.setRefreshToken(refreshToken);
+            loginResponseDTO.setPackageId(account.getAPackage().getPackageId());
             loginResponseDTO.setPackageName(account.getAPackage().getPackageName());
             loginResponseDTO.setUser(userDTO);
 
