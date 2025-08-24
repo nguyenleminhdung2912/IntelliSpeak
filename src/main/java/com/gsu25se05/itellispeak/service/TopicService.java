@@ -5,7 +5,6 @@ import com.gsu25se05.itellispeak.entity.Tag;
 import com.gsu25se05.itellispeak.entity.Topic;
 import com.gsu25se05.itellispeak.repository.TagRepository;
 import com.gsu25se05.itellispeak.repository.TopicRepository;
-import com.gsu25se05.itellispeak.utils.AccountUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,15 +18,10 @@ import java.util.Set;
 public class TopicService {
 
     private final TopicRepository topicRepository;
-    private final AccountUtils accountUtils;
     private final TagRepository tagRepository;
 
 
     public List<Topic> getAllTopics() {
-//        User user = accountUtils.getCurrentAccount();
-//        if (user == null) {
-//            return null;
-//        }
         return topicRepository.findAllByIsDeletedFalse();
     }
 
@@ -38,11 +32,6 @@ public class TopicService {
 
     @Transactional
     public Topic createTopic(TopicRequest topicRequest) {
-//        User user = accountUtils.getCurrentAccount();
-//        if (user == null) {
-//            return new Topic();
-//        }
-
         Topic topic = new Topic();
         topic.setTitle(topicRequest.getTitle());
         topic.setDescription(topicRequest.getDescription());
@@ -60,7 +49,7 @@ public class TopicService {
         existingTopic.setTitle(topicRequest.getTitle());
         existingTopic.setDescription(topicRequest.getDescription());
         existingTopic.setLongDescription(topicRequest.getLongDescription());
-        if (topicRequest.getThumbnail() != "" || topicRequest.getThumbnail() != null) {
+        if (topicRequest.getThumbnail().equals("") || topicRequest.getThumbnail() != null) {
             existingTopic.setThumbnail(topicRequest.getThumbnail());
         }
         existingTopic.setUpdateAt(LocalDateTime.now());
@@ -68,11 +57,15 @@ public class TopicService {
     }
 
     @Transactional
-    public void deleteTopic(Long id) {
+    public String deleteTopic(Long id) {
         Topic topicToDelete = getTopicById(id); // Dùng lại getTopicById để kiểm tra tồn tại và isDeleted
-        topicToDelete.setIsDeleted(true);
-        topicToDelete.setUpdateAt(LocalDateTime.now());
-        topicRepository.save(topicToDelete);
+        if (topicToDelete.getInterviewSessions() == null) {
+            topicToDelete.setIsDeleted(true);
+            topicToDelete.setUpdateAt(LocalDateTime.now());
+            topicRepository.save(topicToDelete);
+            return "Topic deleted successfully!";
+        }
+        return "You can't delete this topic because this topic has many interview session related to it!";
     }
 
     public Topic updateTopicThumbnail(Long id, String thumbnailURL) {

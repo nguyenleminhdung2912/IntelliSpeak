@@ -5,15 +5,20 @@ import com.gsu25se05.itellispeak.dto.admin.CreateUserDTO;
 import com.gsu25se05.itellispeak.dto.admin.UserWithPackageDTO;
 import com.gsu25se05.itellispeak.dto.auth.reponse.UserDTO;
 import com.gsu25se05.itellispeak.dto.hr.HRAdminResponseDTO;
+import com.gsu25se05.itellispeak.entity.Transaction;
 import com.gsu25se05.itellispeak.service.AdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/admin")
@@ -45,6 +50,35 @@ public class AdminController {
         List<Map<String, String>> revenue = adminService.getYearlyRevenueFormatted(year);
         return ResponseEntity.ok(new Response<>(200, "Yearly revenue fetched", revenue));
     }
+
+    @GetMapping("/daily-revenue")
+    public ResponseEntity<Response<List<Map<String, String>>>> getDailyRevenue() {
+        List<Transaction> transactions = adminService.getPaidTransactions();
+        Map<LocalDate, Double> dailyRevenue = transactions.stream()
+                .filter(t -> t.getCreateAt() != null)
+                .collect(Collectors.groupingBy(
+                        t -> t.getCreateAt().toLocalDate(),
+                        Collectors.summingDouble(Transaction::getAmount)
+                ));
+
+        List<Map<String, String>> revenue = dailyRevenue.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> {
+                    Map<String, String> map = new HashMap<>();
+                    map.put("Date", entry.getKey().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                    map.put("Amount", String.format("%,.0f", entry.getValue()));
+                    return map;
+                })
+                .toList();
+        if (revenue.isEmpty()) {
+            Map<String, String> zeroRevenue = new HashMap<>();
+            zeroRevenue.put("Date", LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+            zeroRevenue.put("Amount", "0");
+            revenue = List.of(zeroRevenue);
+        }
+            return ResponseEntity.ok(new Response<>(200, "Daily revenue fetched", revenue));
+    }
+
 
     @Operation(summary = "Tất cả Users")
     @GetMapping("/all-users")
@@ -108,5 +142,12 @@ public class AdminController {
     public ResponseEntity<Response<Void>> banUser(@PathVariable UUID userId) {
         adminService.banUser(userId);
         return ResponseEntity.ok(new Response<>(200, "User banned successfully", null));
+    }
+
+    @PostMapping("/unban-user/{userId}")
+    @Operation(summary = "Unban a user (set isDeleted = false)")
+    public ResponseEntity<Response<Void>> unbanUser(@PathVariable UUID userId) {
+        adminService.unbanUser(userId);
+        return ResponseEntity.ok(new Response<>(200, "User unbanned successfully", null));
     }
 }

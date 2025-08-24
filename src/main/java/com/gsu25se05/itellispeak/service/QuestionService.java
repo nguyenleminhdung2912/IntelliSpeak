@@ -84,6 +84,7 @@ public class QuestionService {
 
     public List<QuestionDTO> findAll() {
         return questionRepository.findAll().stream()
+                .filter(question -> question.getIs_deleted() == false)
                 .map(questionMapper::toDTO)
                 .collect(Collectors.toList());
     }
@@ -100,6 +101,7 @@ public class QuestionService {
         }
 
         List<QuestionDTO> questions = questionRepository.findByCreatedBy(currentUser).stream()
+                .filter(question -> question.getIs_deleted() == false)
                 .map(questionMapper::toDTO)
                 .collect(Collectors.toList());
 
