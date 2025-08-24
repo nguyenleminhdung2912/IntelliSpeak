@@ -49,6 +49,7 @@ public class WebsiteFeedbackService {
         responseDTO.setDescription(savedFeedback.getDescription());
         responseDTO.setIsHandled(savedFeedback.getIsHandled());
         responseDTO.setUserID(account.getUserId());
+        responseDTO.setUserEmail(account.getEmail());
         String fullName = Stream.of(
                         websiteFeedback.getUser().getFirstName(),
                         websiteFeedback.getUser().getLastName()

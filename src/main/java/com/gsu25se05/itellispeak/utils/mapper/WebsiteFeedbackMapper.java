@@ -17,6 +17,7 @@ public class WebsiteFeedbackMapper {
         WebsiteFeedbackResponseDTO dto = new WebsiteFeedbackResponseDTO();
         dto.setWebsiteFeedbackId(websiteFeedback.getWebsiteFeedbackId());
         dto.setDescription(websiteFeedback.getDescription());
+        dto.setUserEmail(websiteFeedback.getUser().getEmail());
         String fullName = Stream.of(
                         websiteFeedback.getUser().getFirstName(),
                         websiteFeedback.getUser().getLastName()
