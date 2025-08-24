@@ -16,6 +16,7 @@ public class LoginResponseDTO {
     private String token;
     private String refreshToken;
     private UserDTO user;
+    private Long packageId;
     private String packageName;
     public LoginResponseDTO(int code, String message, String error) {
         super();

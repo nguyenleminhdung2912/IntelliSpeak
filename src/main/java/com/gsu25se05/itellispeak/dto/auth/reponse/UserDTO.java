@@ -22,6 +22,7 @@ public class UserDTO {
     private String email;
     private User.Role role;
     private Long packageId;
+    private String packageName;
     private LocalDate birthday;
     private String avatar;
     private String status;
