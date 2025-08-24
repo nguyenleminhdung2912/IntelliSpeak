@@ -118,7 +118,7 @@ public class EmailService {
             detail.setName(userName);
             detail.setSubject("Your complaint has been rejected.");
 
-            proceedToSendMail(detail, ctx, "hr-rejection");
+            proceedToSendMail(detail, ctx, "handleComplaint");
         } catch (MessagingException e) {
             e.printStackTrace();
         }
@@ -136,7 +136,7 @@ public class EmailService {
             detail.setName(userName);
             detail.setSubject("Your complaint has been handled.");
 
-            proceedToSendMail(detail, ctx, "hr-rejection");
+            proceedToSendMail(detail, ctx, "handleComplaint");
         } catch (MessagingException e) {
             e.printStackTrace();
         }

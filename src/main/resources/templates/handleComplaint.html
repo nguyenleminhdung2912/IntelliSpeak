@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8" />
+    <meta name="x-apple-disable-message-reformatting">
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title th:text="${status} == 'APPROVED' ? 'Complaint handled' : 'Complaint rejected'">Complaint status</title>
+    <style>
+        /* Basic reset */
+        body, table, td, div, p { margin:0; padding:0; }
+        img { border:0; line-height:100%; outline:none; text-decoration:none; }
+        table { border-collapse:collapse !important; }
+        /* Container */
+        .wrapper { width:100%; background:#f5f7fb; }
+        .container { width:100%; max-width:600px; margin:0 auto; }
+        /* Card */
+        .card {
+            background:#ffffff; border-radius:14px;
+            box-shadow:0 2px 12px rgba(16,24,40,.06);
+        }
+        /* Header stripe by status (fallback uses inline on td) */
+        .status-approved { background:#10b981 !important; } /* green */
+        .status-rejected { background:#ef4444 !important; } /* red */
+        /* Text */
+        .h1 { font-size:22px; font-weight:700; color:#111827; line-height:1.25; }
+        .h2 { font-size:16px; font-weight:600; color:#111827; }
+        .muted { color:#6b7280; }
+        .body { font-size:14px; color:#374151; line-height:1.6; }
+        .small { font-size:12px; color:#9ca3af; }
+        /* Badge */
+        .badge {
+            display:inline-block; font-size:12px; font-weight:700; letter-spacing:.3px;
+            padding:6px 10px; border-radius:999px; color:#fff; text-transform:uppercase;
+        }
+        /* Button */
+        .btn {
+            display:inline-block; padding:10px 16px; border-radius:10px; text-decoration:none;
+            font-weight:600; font-size:14px; background:#111827; color:#fff;
+        }
+        /* Spacing helpers */
+        .p24 { padding:24px; } .p32 { padding:32px; }
+        .pt8 { padding-top:8px; } .pt16 { padding-top:16px; }
+        .pt24 { padding-top:24px; } .pb8 { padding-bottom:8px; } .pb16 { padding-bottom:16px; }
+        .mt8 { margin-top:8px; } .mt16 { margin-top:16px; } .mt24 { margin-top:24px; }
+        /* Mobile */
+        @media (max-width: 600px) {
+            .p32 { padding:20px !important; } .p24 { padding:16px !important; }
+            .h1 { font-size:20px !important; }
+        }
+        /* Dark mode (supported clients) */
+        @media (prefers-color-scheme: dark) {
+            .wrapper { background:#0b0f14 !important; }
+            .card { background:#0f172a !important; }
+            .h1, .h2, .body { color:#e5e7eb !important; }
+            .muted, .small { color:#9ca3af !important; }
+            .btn { background:#e5e7eb !important; color:#0b0f14 !important; }
+        }
+    </style>
+</head>
+<body style="background:#f5f7fb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji','Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;">
+<center class="wrapper" style="width:100%; background:#f5f7fb; padding:24px 12px;">
+    <table role="presentation" class="container" width="100%" style="max-width:600px;">
+        <tr>
+            <td align="center" class="pb16">
+                <!-- Your logo (optional) -->
+                <a href="#" style="text-decoration:none;">
+                    <img src="https://via.placeholder.com/120x32?text=Your+Logo" width="120" height="32" alt="Company" style="display:block;">
+                </a>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <table role="presentation" width="100%" class="card">
+                    <!-- status stripe -->
+                    <tr>
+                        <td
+                                th:classappend="${status} == 'APPROVED' ? ' status-approved' : ' status-rejected'"
+                                style="height:6px; border-top-left-radius:14px; border-top-right-radius:14px; background:#ef4444;">
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="p32">
+                            <!-- Title & status badge -->
+                            <div class="h1">
+                                Hello <span th:text="${name} ?: 'there'">there</span>,
+                            </div>
+
+                            <div class="mt8">
+                  <span class="badge"
+                        th:style="${status} == 'APPROVED' ? 'background:#10b981;' : 'background:#ef4444;'"
+                        th:text="${status} ?: 'PENDING'">STATUS</span>
+                            </div>
+
+                            <!-- Intro -->
+                            <p class="body mt16" th:if="${status} == 'APPROVED'">
+                                We’re writing to let you know your complaint has been <strong>handled</strong>. Our team has reviewed the details and completed the necessary actions.
+                            </p>
+                            <p class="body mt16" th:if="${status} != 'APPROVED'">
+                                We’re sorry to inform you your complaint has been <strong>rejected</strong>. Please see the details below.
+                            </p>
+
+                            <!-- Reason block (only if REJECTED and reason not blank) -->
+                            <table role="presentation" width="100%" class="mt16" th:if="${status} != 'APPROVED' and ${reason} != null and ${#strings.isNotEmpty(reason)}">
+                                <tr>
+                                    <td style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px;" class="p24">
+                                        <div class="h2 pb8">Reason provided</div>
+                                        <div class="body" th:text="${reason}">
+                                            Your complaint lacks sufficient information for verification.
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Helpful next steps -->
+                            <div class="mt24">
+                                <div class="h2">What’s next?</div>
+                                <ul class="body mt8" style="padding-left:18px; margin:0;">
+                                    <li th:if="${status} == 'APPROVED'">If you have follow-up questions, reply to this email and include your ticket number.</li>
+                                    <li th:if="${status} != 'APPROVED'">You can submit a new complaint with any missing details or documents.</li>
+                                    <li>Our support hours are Mon–Fri, 9:00–18:00 (GMT+7).</li>
+                                </ul>
+                            </div>
+
+                            <!-- CTA (optional) -->
+                            <div class="mt24">
+                                <a class="btn" href="#" th:href="@{/support}" th:text="${status} == 'APPROVED' ? 'View ticket' : 'Resubmit complaint'}"></a>
+                            </div>
+
+                            <!-- Footer -->
+                            <div class="mt24 small">
+                                This is an automated message. Please don’t share sensitive information via email.
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <tr>
+            <td align="center" class="mt16 small muted">
+                © <span th:text="${#temporals.createNow().getYear()}">2025</span> Your Company. All rights reserved.
+            </td>
+        </tr>
+    </table>
+</center>
+</body>
+</html>

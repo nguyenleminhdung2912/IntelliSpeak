@@ -3,6 +3,7 @@ package com.gsu25se05.itellispeak.service;
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.website_feedback.WebsiteFeedbackRequestDTO;
 import com.gsu25se05.itellispeak.dto.website_feedback.WebsiteFeedbackResponseDTO;
+import com.gsu25se05.itellispeak.email.EmailService;
 import com.gsu25se05.itellispeak.entity.User;
 import com.gsu25se05.itellispeak.entity.WebsiteFeedback;
 import com.gsu25se05.itellispeak.repository.WebsiteFeedbackRepository;
@@ -23,11 +24,13 @@ public class WebsiteFeedbackService {
     private final WebsiteFeedbackRepository websiteFeedbackRepository;
     private final WebsiteFeedbackMapper websiteFeedbackMapper;
     private final AccountUtils accountUtils;
+    private final EmailService emailService;
 
-    public WebsiteFeedbackService(WebsiteFeedbackRepository websiteFeedbackRepository, WebsiteFeedbackMapper websiteFeedbackMapper, AccountUtils accountUtils) {
+    public WebsiteFeedbackService(WebsiteFeedbackRepository websiteFeedbackRepository, WebsiteFeedbackMapper websiteFeedbackMapper, AccountUtils accountUtils, EmailService emailService) {
         this.websiteFeedbackRepository = websiteFeedbackRepository;
         this.websiteFeedbackMapper = websiteFeedbackMapper;
         this.accountUtils = accountUtils;
+        this.emailService = emailService;
     }
 
     public Response<WebsiteFeedbackResponseDTO> createWebsiteFeedback(WebsiteFeedbackRequestDTO websiteFeedbackRequestDTO) {
@@ -79,13 +82,19 @@ public class WebsiteFeedbackService {
         websiteFeedbackRepository.deleteById(id);
     }
 
-    public String handleRejectWebsiteFeedback(UUID websiteFeedbackId) {
+    public String handleRejectWebsiteFeedback(UUID websiteFeedbackId, String reason) {
         WebsiteFeedback websiteFeedback = websiteFeedbackRepository.findById(websiteFeedbackId).orElse(null);
         if (websiteFeedback != null) {
             websiteFeedback.setIsHandled(false);
             websiteFeedbackRepository.save(websiteFeedback);
+
+            String userEmail = websiteFeedback.getUser().getEmail();
+            String userName = websiteFeedback.getUser().getFirstName() + " " + websiteFeedback.getUser().getLastName();
+
+            // gọi async gửi mail (không block)
+            emailService.handleRejectHandleComplaint(userEmail, userName, reason);
+
             return "Website feedback rejected successfully";
-            //Gửi mail báo từ chối xử lí
         }
         return "Something went wrong, please try again";
     }
@@ -95,8 +104,14 @@ public class WebsiteFeedbackService {
         if (websiteFeedback != null) {
             websiteFeedback.setIsHandled(true);
             websiteFeedbackRepository.save(websiteFeedback);
+
+            String userEmail = websiteFeedback.getUser().getEmail();
+            String userName = websiteFeedback.getUser().getFirstName() + " " + websiteFeedback.getUser().getLastName();
+
+            // gọi async gửi mail (không block)
+            emailService.handleApproveHandleComplaint(userEmail, userName);
+
             return "Website feedback approved successfully";
-            //Gửi mail báo đã xử lí
         }
         return "Something went wrong, please try again";
     }
