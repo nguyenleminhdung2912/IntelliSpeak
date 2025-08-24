@@ -4,6 +4,7 @@ import com.gsu25se05.itellispeak.dto.ai_evaluation.EvaluationBatchResponseDto;
 import com.gsu25se05.itellispeak.dto.ai_evaluation.EvaluationRequestDto;
 import com.gsu25se05.itellispeak.dto.question.CompareRequestDTO;
 import com.gsu25se05.itellispeak.service.EvaluationService;
+import com.gsu25se05.itellispeak.service.EvaluationVietnameseService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
@@ -19,14 +20,22 @@ public class EvaluationController {
     private final RestTemplate restTemplate = new RestTemplate();
 
     private final EvaluationService evaluationService;
+    private final EvaluationVietnameseService evaluationVietnameseService;
 
-    public EvaluationController(EvaluationService evaluationService) {
+    public EvaluationController(EvaluationService evaluationService, EvaluationVietnameseService evaluationVietnameseService) {
         this.evaluationService = evaluationService;
+        this.evaluationVietnameseService = evaluationVietnameseService;
     }
 
     @PostMapping("/evaluate-batch")
     public ResponseEntity<EvaluationBatchResponseDto> evaluateBatch(@RequestBody EvaluationRequestDto request) {
         EvaluationBatchResponseDto results = evaluationService.evaluateBatch(request);
+        return ResponseEntity.ok(results);
+    }
+
+    @PostMapping("/evaluate-batch/vietnamese")
+    public ResponseEntity<EvaluationBatchResponseDto> evaluateBatchVietnamese(@RequestBody EvaluationRequestDto request) {
+        EvaluationBatchResponseDto results = evaluationVietnameseService.evaluateBatch(request);
         return ResponseEntity.ok(results);
     }
 

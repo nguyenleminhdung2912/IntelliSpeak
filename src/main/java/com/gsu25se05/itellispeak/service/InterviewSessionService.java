@@ -455,6 +455,55 @@ public class InterviewSessionService {
         int hardCount = total - easyCount - mediumCount;
 
         List<QuestionInfoDTO> result = new ArrayList<>();
+
+        if (session.getCompany() != null) {
+            Set<Question> questionList = session.getQuestions();
+            result.addAll(questionList.stream().map(questionMapper::toInfoDTO).collect(Collectors.toSet()));
+
+            // Dịch các trường trong QuestionInfoDTO bằng batch translation
+            List<String> titles = result.stream().map(QuestionInfoDTO::getTitle).collect(Collectors.toList());
+            List<String> contents = result.stream().map(QuestionInfoDTO::getContent).collect(Collectors.toList());
+            List<String> answers1 = result.stream().map(QuestionInfoDTO::getSuitableAnswer1).collect(Collectors.toList());
+            List<String> answers2 = result.stream().map(QuestionInfoDTO::getSuitableAnswer2).collect(Collectors.toList());
+            List<String> difficulties = result.stream().map(QuestionInfoDTO::getDifficulty).collect(Collectors.toList());
+
+            List<String> translatedTitles = translationUtil.translateBatchToVietnamese(titles);
+            List<String> translatedContents = translationUtil.translateBatchToVietnamese(contents);
+            List<String> translatedAnswers1 = translationUtil.translateBatchToVietnamese(answers1);
+            List<String> translatedAnswers2 = translationUtil.translateBatchToVietnamese(answers2);
+            List<String> translatedDifficulties = translationUtil.translateBatchToVietnamese(difficulties);
+
+            for (int i = 0; i < result.size(); i++) {
+                result.get(i).setTitle(translatedTitles.get(i));
+                result.get(i).setContent(translatedContents.get(i));
+                result.get(i).setSuitableAnswer1(translatedAnswers1.get(i));
+                result.get(i).setSuitableAnswer2(translatedAnswers2.get(i));
+                result.get(i).setDifficulty(translatedDifficulties.get(i));
+            }
+
+            SessionWithQuestionsDTO dto = new SessionWithQuestionsDTO();
+            dto.setInterviewSessionId(interviewSessionId);
+            // Dịch title và description
+            List<String> sessionTexts = Arrays.asList(session.getTitle(), session.getDescription());
+            List<String> translatedSessionTexts = translationUtil.translateBatchToVietnamese(sessionTexts);
+            dto.setTitle(translatedSessionTexts.get(0));
+            dto.setDescription(translatedSessionTexts.get(1));
+            dto.setCompanyId(
+                    session.getCompany() != null ? session.getCompany().getCompanyId() : null
+            );
+            dto.setTotalQuestion(total);
+            dto.setDurationEstimate(session.getDurationEstimate());
+            dto.setQuestions(result);
+            // Giữ nguyên tags
+            dto.setTags(session.getTags().stream()
+                    .map(tag -> new TagSimpleDTO(tag.getTagId(), tag.getTitle()))
+                    .collect(Collectors.toList()));
+
+            currentUser.getUserUsage().setInterviewUsed(currentUser.getUserUsage().getInterviewUsed() + 1);
+            userRepository.save(currentUser);
+            userUsageRepository.save(currentUser.getUserUsage());
+        }
+
         result.addAll(randomQuestionsBySession(session, Difficulty.EASY, easyCount));
         result.addAll(randomQuestionsBySession(session, Difficulty.MEDIUM, mediumCount));
         result.addAll(randomQuestionsBySession(session, Difficulty.HARD, hardCount));

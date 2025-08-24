@@ -26,8 +26,8 @@ public class WebsiteFeedbackController {
 
     @PostMapping
     public ResponseEntity<Response<WebsiteFeedbackDTO>> createWebsiteFeedback(@RequestBody WebsiteFeedbackDTO websiteFeedbackDTO) {
-        WebsiteFeedbackDTO createdFeedback = websiteFeedbackService.createWebsiteFeedback(websiteFeedbackDTO);
-        return ResponseEntity.ok(new Response<>(200, "Website feedback created successfully", createdFeedback));
+        Response<WebsiteFeedbackDTO> createdFeedback = websiteFeedbackService.createWebsiteFeedback(websiteFeedbackDTO);
+        return ResponseEntity.ok(createdFeedback);
     }
 
     @GetMapping("/{id}")
