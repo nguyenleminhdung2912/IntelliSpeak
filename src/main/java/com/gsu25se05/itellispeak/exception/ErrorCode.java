@@ -63,6 +63,19 @@ public enum ErrorCode {
     OUT_OF_CV_ANALYZE_COUNT(4001, "You have reached the limit for CV analysis", HttpStatus.FORBIDDEN),
     OUT_OF_JD_ANALYZE_COUNT(4002, "You have reached the limit for JD analysis", HttpStatus.FORBIDDEN),
 
+    // PACKAGE | CODE: 6XXX
+    PACKAGE_NOT_FOUND(6001, "Package not found", HttpStatus.NOT_FOUND),
+    PACKAGE_ALREADY_ASSIGNED(6002, "User is already subscribed to this package", HttpStatus.BAD_REQUEST),
+    PACKAGE_DOWNGRADE_NOT_ALLOWED(6003, "Downgrading to a lower package is not allowed", HttpStatus.BAD_REQUEST),
+    PACKAGE_INVALID_UPGRADE(6004, "Invalid package upgrade operation", HttpStatus.BAD_REQUEST),
+    PACKAGE_ASSIGN_FAILED(6005, "Failed to assign package to user", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    // COMMON | CODE: 9XXX
+    INVALID_INPUT(9001, "Invalid input data", HttpStatus.BAD_REQUEST),
+    DUPLICATE_OPERATION(9002, "This operation is duplicated or already performed", HttpStatus.CONFLICT),
+    ACTION_FORBIDDEN(9003, "This action is not allowed", HttpStatus.FORBIDDEN),
+
+
     // BILLING | CODE: 7XXX
     BILLING_NOT_EMPTY(7001, "Billing is not empty", HttpStatus.BAD_REQUEST),
     BILLING_NOT_FOUND(7002, "Billing not found, please re-check", HttpStatus.NOT_FOUND);
