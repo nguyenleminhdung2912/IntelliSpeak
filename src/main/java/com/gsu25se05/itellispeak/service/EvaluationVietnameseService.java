@@ -177,13 +177,26 @@ public class EvaluationVietnameseService {
                     detail.setAiEvaluatedContent(objectMapper.writeValueAsString(feedback));
                     detail.setSuitableAnswer1(dto.getSuitableAnswer1());
                     detail.setSuitableAnswer2(dto.getSuitableAnswer2());
-                    detail.setDifficulty(Difficulty.valueOf(
-                            session.getQuestions().stream()
-                                    .filter(q -> q.getQuestionId() == questionId)
-                                    .findFirst()
-                                    .map(QuestionDto::getDifficulty)
-                                    .orElse("EASY")
-                    ));
+
+                    // Enforce Difficulty as HARD, MEDIUM, or EASY
+                    String difficultyStr = session.getQuestions().stream()
+                            .filter(q -> q.getQuestionId() == questionId)
+                            .findFirst()
+                            .map(QuestionDto::getDifficulty)
+                            .orElse("EASY");
+                    try {
+                        // Handle Vietnamese difficulty values and convert to English enum
+                        String normalizedDifficulty = switch (difficultyStr.toUpperCase()) {
+                            case "DỄ" -> "EASY";
+                            case "TRUNG BÌNH" -> "MEDIUM";
+                            case "KHÓ" -> "HARD";
+                            default -> difficultyStr.toUpperCase();
+                        };
+                        detail.setDifficulty(Difficulty.valueOf(normalizedDifficulty));
+                    } catch (IllegalArgumentException e) {
+                        logger.warn("Giá trị độ khó không hợp lệ '{}' cho câu hỏi ID {}. Mặc định là EASY.", difficultyStr, questionId);
+                        detail.setDifficulty(Difficulty.EASY); // Default to EASY for invalid values
+                    }
 
                     totalScore += score;
                     evaluatedQuestions++;
@@ -250,7 +263,8 @@ public class EvaluationVietnameseService {
                     .append(String.format("  - Nội dung: %s\n", q.getContent()))
                     .append(String.format("  - Câu trả lời mẫu 1: %s\n", q.getSuitableAnswer1()))
                     .append(String.format("  - Câu trả lời mẫu 2: %s\n", q.getSuitableAnswer2()))
-                    .append(String.format("  - Thẻ: %s\n", String.join(", ", q.getTags())));
+                    .append(String.format("  - Thẻ: %s\n", String.join(", ", q.getTags())))
+                    .append("  - Lưu ý: Độ khó phải là một trong DỄ, TRUNG BÌNH, hoặc KHÓ.\n");
         }
 
         // Thêm lịch sử hội thoại
@@ -262,10 +276,11 @@ public class EvaluationVietnameseService {
 
         // Yêu cầu đánh giá
         prompt.append("\nHướng dẫn:\n")
-                .append("1. Phân tích 'Lịch sử hội thoại' để xác định câu trả lời của người dùng (vai trò 'user') cho mỗi câu hỏi trong 'Danh sách câu hỏi'.\n")
+                .append("1. Phản hồi **hoàn toàn bằng tiếng Việt**, bất kể nội dung lịch sử hội thoại hoặc câu hỏi có chứa tiếng Anh hoặc ngôn ngữ khác.\n")
+                .append("2. Phân tích 'Lịch sử hội thoại' để xác định câu trả lời của người dùng (vai trò 'user') cho mỗi câu hỏi trong 'Danh sách câu hỏi'.\n")
                 .append("   - Gộp tất cả câu trả lời liên quan của người dùng cho mỗi câu hỏi.\n")
                 .append("   - Bỏ qua các tin nhắn không liên quan như yêu cầu gợi ý, 'bỏ qua', 'không biết', 'lặp lại câu hỏi', hoặc tương tự.\n")
-                .append("2. Đánh giá mỗi câu hỏi dựa trên hai câu trả lời mẫu, sử dụng câu trả lời đã gộp của người dùng.\n")
+                .append("3. Đánh giá mỗi câu hỏi dựa trên hai câu trả lời mẫu, sử dụng câu trả lời đã gộp của người dùng.\n")
                 .append("   - Nếu không có câu trả lời hợp lệ cho một câu hỏi, ghi là 'Không có câu trả lời' và chấm 0 điểm.\n")
                 .append("   - Chấm điểm từ 0 đến 10 dựa trên độ chính xác và chất lượng của câu trả lời (0 cho hoàn toàn sai hoặc không có câu trả lời, 10 cho hoàn hảo).\n")
                 .append("   - Kiến thức:\n")
@@ -277,8 +292,8 @@ public class EvaluationVietnameseService {
                 .append("     - Câu trả lời có ngắn gọn không (không quá dài dòng, hoặc 'Không đánh giá được' nếu không có câu trả lời)?\n")
                 .append("     - Câu trả lời có sử dụng thuật ngữ kỹ thuật phù hợp không (hoặc 'Không đánh giá được' nếu không có câu trả lời)?\n")
                 .append("   - Kết luận: Cung cấp tóm tắt ngắn gọn về chất lượng câu trả lời và gợi ý cải thiện chung.\n")
-                .append("3. Cung cấp một đánh giá tổng quan ngắn gọn về hiệu suất của ứng viên bằng giọng văn chuyên nghiệp, ngắn gọn (1-2 câu).\n")
-                .append("4. Trả về kết quả bằng định dạng JSON hợp lệ (chỉ JSON, không Markdown, không giải thích):\n")
+                .append("4. Cung cấp một đánh giá tổng quan ngắn gọn về hiệu suất của ứng viên bằng giọng văn chuyên nghiệp, ngắn gọn (1-2 câu).\n")
+                .append("5. Trả về kết quả bằng định dạng JSON hợp lệ (chỉ JSON, không Markdown, không giải thích):\n")
                 .append("   {\n")
                 .append("     \"results\": [\n")
                 .append("       {\n")
@@ -303,8 +318,7 @@ public class EvaluationVietnameseService {
                 .append("     ],\n")
                 .append("     \"overallEvaluation\": \"<Đánh giá tổng quan ngắn gọn về hiệu suất của ứng viên>\"\n")
                 .append("   }\n")
-                .append("5. Sử dụng giọng văn chuyên nghiệp, ngắn gọn, bằng tiếng Việt.\n")
-                .append("6. Xử lý đầu vào có thể là hỗn hợp tiếng Anh và tiếng Việt, nhưng phản hồi phải hoàn toàn bằng tiếng Việt.\n");
+                .append("6. Sử dụng giọng văn chuyên nghiệp, ngắn gọn, bằng tiếng Việt.\n");
 
         return prompt.toString();
     }
