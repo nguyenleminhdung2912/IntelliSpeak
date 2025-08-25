@@ -38,6 +38,12 @@ public class WebsiteFeedbackController {
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Response<>(404, "Website feedback not found", null)));
     }
 
+    @GetMapping("/user")
+    public ResponseEntity<Response<List<WebsiteFeedbackResponseDTO>>> getWebsiteFeedbackByUser() {
+        Response<List<WebsiteFeedbackResponseDTO>> websiteFeedbackDTO = websiteFeedbackService.getWebsiteFeedbackByUser();
+        return ResponseEntity.ok(websiteFeedbackDTO);
+    }
+
     @GetMapping
     public ResponseEntity<Response<List<WebsiteFeedbackResponseDTO>>> getAllWebsiteFeedbacks() {
         List<WebsiteFeedbackResponseDTO> websiteFeedbacks = websiteFeedbackService.getAllWebsiteFeedbacks();
