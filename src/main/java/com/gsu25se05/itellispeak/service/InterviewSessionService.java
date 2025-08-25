@@ -62,6 +62,27 @@ public class InterviewSessionService {
         if (currentUser == null) {
             throw new NotLoginException("Please log in to continue");
         }
+        if (currentUser.getHr().getStatus() == HRStatus.APPROVED) {
+            Set<Question> questions = new HashSet<>();
+            if (dto.getQuestionIds() != null && !dto.getQuestionIds().isEmpty()) {
+                questions.addAll(questionRepository.findAllById(dto.getQuestionIds()));
+            }
+            Set<Tag> tags = new HashSet<>();
+            if (dto.getTagIds() != null && !dto.getTagIds().isEmpty()) {
+                tags.addAll(tagRepository.findAllById(dto.getTagIds()));
+            }
+            Topic topic = null;
+            if (dto.getTopicId() != null) {
+                topic = topicRepository.findById(dto.getTopicId()).orElse(null);
+            }
+
+            InterviewSession entity = interviewSessionMapper.toEntityWithCompany(dto, questions, tags, topic, currentUser.getHr().getCompany());
+
+            entity.setCreatedBy(currentUser);
+            entity.setSource("ADMIN");
+
+            return interviewSessionRepository.save(entity);
+        }
         Set<Question> questions = new HashSet<>();
         if (dto.getQuestionIds() != null && !dto.getQuestionIds().isEmpty()) {
             questions.addAll(questionRepository.findAllById(dto.getQuestionIds()));

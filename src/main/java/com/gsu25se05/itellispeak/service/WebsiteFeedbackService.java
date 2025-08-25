@@ -64,7 +64,7 @@ public class WebsiteFeedbackService {
         return new Response<>(200, "Website feedback created successfully", responseDTO);
     }
 
-    public Optional<WebsiteFeedbackResponseDTO> getWebsiteFeedbackById(UUID id) {
+    public Optional<WebsiteFeedbackResponseDTO> getWebsiteFeedbackById(Long id) {
         Optional<WebsiteFeedback> websiteFeedback = websiteFeedbackRepository.findById(id);
         if (websiteFeedback.isPresent()) {
             WebsiteFeedbackResponseDTO websiteFeedbackRequestDTO = websiteFeedbackMapper.toDTO(websiteFeedback.get());
@@ -81,11 +81,11 @@ public class WebsiteFeedbackService {
                 .toList();
     }
 
-    public void deleteWebsiteFeedback(UUID id) {
+    public void deleteWebsiteFeedback(Long id) {
         websiteFeedbackRepository.deleteById(id);
     }
 
-    public String handleRejectWebsiteFeedback(UUID websiteFeedbackId, String reason) {
+    public String handleRejectWebsiteFeedback(Long websiteFeedbackId, String reason) {
         WebsiteFeedback websiteFeedback = websiteFeedbackRepository.findById(websiteFeedbackId).orElse(null);
         if (websiteFeedback != null) {
             websiteFeedback.setIsHandled(false);
@@ -102,7 +102,7 @@ public class WebsiteFeedbackService {
         return "Something went wrong, please try again";
     }
 
-    public String handleApproveWebsiteFeedback(UUID websiteFeedbackId) {
+    public String handleApproveWebsiteFeedback(Long websiteFeedbackId) {
         WebsiteFeedback websiteFeedback = websiteFeedbackRepository.findById(websiteFeedbackId).orElse(null);
         if (websiteFeedback != null) {
             websiteFeedback.setIsHandled(true);

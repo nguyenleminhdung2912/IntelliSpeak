@@ -8,7 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "website_feedback")
@@ -21,7 +20,7 @@ public class WebsiteFeedback {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "website_feedback_id")
-    private UUID websiteFeedbackId;
+    private Long websiteFeedbackId;
 
     @JsonIgnore
     @ManyToOne

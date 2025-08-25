@@ -179,7 +179,7 @@ public class AdminService {
     }
 
     @Transactional
-    public UserDTO upgradeUserPackage(UUID userId, Long targetPackageId) {
+    public UserDTO upgradeUserPackage(Long userId, Long targetPackageId) {
         if (targetPackageId == null) {
             throw new AuthAppException(ErrorCode.INVALID_INPUT);
         }
@@ -239,7 +239,7 @@ public class AdminService {
     }
 
     @Transactional
-    public UserDTO updateUserRole(UUID userId, User.Role targetRole) {
+    public UserDTO updateUserRole(Long userId, User.Role targetRole) {
         if (targetRole == null) {
             throw new AuthAppException(ErrorCode.INVALID_INPUT);
         }
@@ -409,14 +409,14 @@ public class AdminService {
                 .build();
     }
 
-    public void banUser(UUID userId) {
+    public void banUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthAppException(ErrorCode.ACCOUNT_NOT_FOUND));
         user.setIsDeleted(true);
         userRepository.save(user);
     }
 
-    public void unbanUser(UUID userId) {
+    public void unbanUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthAppException(ErrorCode.ACCOUNT_NOT_FOUND));
         user.setIsDeleted(false);

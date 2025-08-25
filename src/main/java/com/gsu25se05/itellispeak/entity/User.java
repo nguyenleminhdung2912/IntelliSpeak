@@ -23,9 +23,9 @@ import java.util.*;
 @Builder
 public class User implements UserDetails {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
-    private UUID userId;
+    private Long userId;
 
     @Column(name = "first_name", length = 50)
     private String firstName;
