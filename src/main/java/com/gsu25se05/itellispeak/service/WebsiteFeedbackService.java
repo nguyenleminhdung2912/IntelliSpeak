@@ -118,4 +118,15 @@ public class WebsiteFeedbackService {
         }
         return "Something went wrong, please try again";
     }
+
+    public Response<List<WebsiteFeedbackResponseDTO>> getWebsiteFeedbackByUser() {
+        User account = accountUtils.getCurrentAccount();
+        if (account == null) return new Response<>(401, "Please login first", null);
+
+        List<WebsiteFeedback> websiteFeedbacks = websiteFeedbackRepository.findAll().stream().sorted(Comparator.comparing(WebsiteFeedback::getCreatedAt).reversed()).toList();
+        return new Response<>(200, "Fetch data successfully", websiteFeedbacks.stream()
+                .filter(p -> p.getUser() == account)
+                .map(websiteFeedbackMapper::toDTO)
+                .toList());
+    }
 }
