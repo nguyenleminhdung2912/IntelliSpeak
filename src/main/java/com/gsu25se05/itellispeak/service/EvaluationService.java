@@ -177,13 +177,17 @@ public class EvaluationService {
                     detail.setAiEvaluatedContent(objectMapper.writeValueAsString(feedback));
                     detail.setSuitableAnswer1(dto.getSuitableAnswer1());
                     detail.setSuitableAnswer2(dto.getSuitableAnswer2());
-                    detail.setDifficulty(Difficulty.valueOf(
-                            session.getQuestions().stream()
-                                    .filter(q -> q.getQuestionId() == questionId)
-                                    .findFirst()
-                                    .map(QuestionDto::getDifficulty)
-                                    .orElse("EASY")
-                    ));
+                    String difficultyStr = session.getQuestions().stream()
+                            .filter(q -> q.getQuestionId() == questionId)
+                            .findFirst()
+                            .map(QuestionDto::getDifficulty)
+                            .orElse("EASY"); // Default to EASY if not found
+                    try {
+                        detail.setDifficulty(Difficulty.valueOf(difficultyStr.toUpperCase()));
+                    } catch (IllegalArgumentException e) {
+                        logger.warn("Invalid difficulty value '{}' for question ID {}. Defaulting to EASY.", difficultyStr, questionId);
+                        detail.setDifficulty(Difficulty.EASY); // Enforce default to EASY for invalid values
+                    }
 
                     totalScore += score;
                     evaluatedQuestions++;
@@ -232,7 +236,7 @@ public class EvaluationService {
     private String buildPrompt(InterviewSessionDto session, List<ChatMessageDto> chatHistory) {
         StringBuilder prompt = new StringBuilder();
 
-        // Thêm thông tin buổi phỏng vấn
+        // Add interview session information
         prompt.append("Interview session information:\n")
                 .append(String.format("ID: %d\n", session.getInterviewSessionId()))
                 .append(String.format("Title: %s\n", session.getTitle()))
@@ -240,7 +244,7 @@ public class EvaluationService {
                 .append(String.format("Total questions: %d\n", session.getTotalQuestion()))
                 .append(String.format("Estimated duration: %s\n", session.getDurationEstimate()));
 
-        // Thêm danh sách câu hỏi
+        // Add question list
         prompt.append("\nQuestion list:\n");
         List<QuestionDto> questions = session.getQuestions();
         for (int i = 0; i < questions.size(); i++) {
@@ -253,19 +257,20 @@ public class EvaluationService {
                     .append(String.format("  - Tags: %s\n", String.join(", ", q.getTags())));
         }
 
-        // Thêm lịch sử hội thoại
+        // Add conversation history
         prompt.append("\nConversation history:\n");
         for (ChatMessageDto message : chatHistory) {
             prompt.append(String.format("- Role: %s\n", message.getRole()))
                     .append(String.format("  - Content: %s\n", message.getContent()));
         }
 
-        // Yêu cầu đánh giá
+        // Add instructions
         prompt.append("\nInstructions:\n")
-                .append("1. Analyze the 'Conversation history' to identify the user's answers (role 'user') for each question in the 'Question list'.\n")
+                .append("1. Respond **exclusively in English**, regardless of any non-English content (e.g., Vietnamese) in the conversation history or questions.\n")
+                .append("2. Analyze the 'Conversation history' to identify the user's answers (role 'user') for each question in the 'Question list'.\n")
                 .append("   - Merge all related user answers for each question.\n")
                 .append("   - Ignore irrelevant messages such as requests for hints, 'skip', 'don't know', 'repeat question', or similar.\n")
-                .append("2. Evaluate each question based on the two sample answers, using the merged user answers.\n")
+                .append("3. Evaluate each question based on the two sample answers, using the merged user answers.\n")
                 .append("   - If there is no valid answer for a question, mark it as 'No answer' and assign a score of 0.\n")
                 .append("   - Assign a score from 0 to 10 based on the accuracy and quality of the answer (0 for completely incorrect or no answer, 10 for perfect).\n")
                 .append("   - Knowledge:\n")
@@ -277,8 +282,8 @@ public class EvaluationService {
                 .append("     - Was the answer concise (not too wordy, or 'Not assessable' if no answer)?\n")
                 .append("     - Did the answer use appropriate technical terminology (or 'Not assessable' if no answer)?\n")
                 .append("   - Conclusion: Provide a short summary of the answer quality and general improvement suggestions.\n")
-                .append("3. Provide an overall evaluation of the candidate's performance in a concise, professional HR-style tone (1-2 sentences).\n")
-                .append("4. Return the result in valid JSON format (JSON only, no Markdown, no explanation):\n")
+                .append("4. Provide an overall evaluation of the candidate's performance in a concise, professional HR-style tone (1-2 sentences).\n")
+                .append("5. Return the result in valid JSON format (JSON only, no Markdown, no explanation):\n")
                 .append("   {\n")
                 .append("     \"results\": [\n")
                 .append("       {\n")
@@ -303,7 +308,7 @@ public class EvaluationService {
                 .append("     ],\n")
                 .append("     \"overallEvaluation\": \"<Concise overall evaluation of the candidate's performance>\"\n")
                 .append("   }\n")
-                .append("5. Use a professional, concise HR-style tone.\n");
+                .append("6. Use a professional, concise HR-style tone.\n");
 
         return prompt.toString();
     }
