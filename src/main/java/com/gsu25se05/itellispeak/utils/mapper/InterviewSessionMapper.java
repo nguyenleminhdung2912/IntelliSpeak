@@ -43,6 +43,7 @@ public class InterviewSessionMapper {
         entity.setCreateAt(LocalDateTime.now());
         entity.setUpdateAt(LocalDateTime.now());
         entity.setCompany(company);
+        entity.setSource("HR");
         entity.setIsDeleted(false);
         return entity;
     }
