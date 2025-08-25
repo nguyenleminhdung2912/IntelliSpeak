@@ -22,8 +22,9 @@ public class TranslationUtil {
     private final String projectId;
 
     // Constructor để khởi tạo TranslationServiceClient với service account key
-    public TranslationUtil(@Value("${google.cloud.credentials.path}") String credentialsPath,
-                           @Value("${google.cloud.project-id}") String projectId) throws IOException {
+    public TranslationUtil() throws IOException {
+        String credentialsPath = "src\\main\\resources\\translate-key.json";
+        String projectId = "mentor-booking-3d46a";
         GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(credentialsPath))
                 .createScoped(Collections.singleton("https://www.googleapis.com/auth/cloud-platform"));
         TranslationServiceSettings settings = TranslationServiceSettings.newBuilder()
