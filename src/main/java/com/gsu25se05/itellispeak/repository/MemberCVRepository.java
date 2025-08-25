@@ -11,7 +11,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Repository
 public interface MemberCVRepository extends JpaRepository<MemberCV, Long> {
@@ -22,5 +21,5 @@ public interface MemberCVRepository extends JpaRepository<MemberCV, Long> {
 
     Optional<MemberCV> findByUserAndIsActiveTrue(User user);
 
-    List<MemberCV> findByUserUserIdAndIsDeletedFalse(UUID userId);
+    List<MemberCV> findByUserUserIdAndIsDeletedFalse(Long userId);
 }

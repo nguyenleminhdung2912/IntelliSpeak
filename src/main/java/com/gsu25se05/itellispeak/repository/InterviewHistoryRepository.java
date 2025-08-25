@@ -6,11 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.UUID;
 
 @Repository
 public interface InterviewHistoryRepository extends JpaRepository<InterviewHistory, Long> {
-    List<InterviewHistory> findByUser_UserId(UUID userId);
+    List<InterviewHistory> findByUser_UserId(Long userId);
 
     List<InterviewHistory> findByUser(User currentUser);
 }

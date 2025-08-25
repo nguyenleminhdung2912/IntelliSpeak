@@ -19,7 +19,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -120,7 +119,7 @@ public class AdminController {
     @Operation(summary = "Admin nâng cấp gói cho user bằng packageId")
     @PutMapping("/users/{userId}/upgrade-package")
     public ResponseEntity<Response<UserDTO>> upgradeUserPackage(
-            @PathVariable UUID userId,
+            @PathVariable Long userId,
             @RequestBody UpgradePackageRequest request
     ) {
         UserDTO data = adminService.upgradeUserPackage(userId, request.getTargetPackageId());
@@ -130,7 +129,7 @@ public class AdminController {
     @Operation(summary = "Admin đổi role người dùng (ví dụ: USER -> HR)")
     @PutMapping("/users/{userId}/role")
     public ResponseEntity<Response<UserDTO>> updateUserRole(
-            @PathVariable UUID userId,
+            @PathVariable Long userId,
             @RequestBody UpdateUserRoleRequest request
     ) {
         UserDTO data = adminService.updateUserRole(userId, request.getRole());
@@ -162,14 +161,14 @@ public class AdminController {
 
     @PostMapping("/ban-user/{userId}")
     @Operation(summary = "Ban a user (set isDeleted = true)")
-    public ResponseEntity<Response<Void>> banUser(@PathVariable UUID userId) {
+    public ResponseEntity<Response<Void>> banUser(@PathVariable Long userId) {
         adminService.banUser(userId);
         return ResponseEntity.ok(new Response<>(200, "User banned successfully", null));
     }
 
     @PostMapping("/unban-user/{userId}")
     @Operation(summary = "Unban a user (set isDeleted = false)")
-    public ResponseEntity<Response<Void>> unbanUser(@PathVariable UUID userId) {
+    public ResponseEntity<Response<Void>> unbanUser(@PathVariable Long userId) {
         adminService.unbanUser(userId);
         return ResponseEntity.ok(new Response<>(200, "User unbanned successfully", null));
     }

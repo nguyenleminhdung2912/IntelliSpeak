@@ -29,6 +29,23 @@ public class InterviewSessionMapper {
         return dto;
     }
 
+    public InterviewSession toEntityWithCompany(InterviewSessionDTO dto, Set<Question> questions, Set<Tag> tags, Topic topic, Company company) {
+        InterviewSession entity = new InterviewSession();
+        entity.setTitle(dto.getTitle());
+        entity.setDescription(dto.getDescription());
+        entity.setInterviewSessionThumbnail(dto.getInterviewSessionThumbnail());
+        entity.setTotalQuestion(dto.getTotalQuestion());
+        entity.setDifficulty(Enum.valueOf(Difficulty.class, dto.getDifficulty()));
+        entity.setQuestions(questions != null ? questions : new HashSet<>());
+        entity.setTags(tags != null ? tags : new HashSet<>());
+        entity.setTopic(topic);
+        entity.setDurationEstimate(Duration.ofMinutes(10));
+        entity.setCreateAt(LocalDateTime.now());
+        entity.setUpdateAt(LocalDateTime.now());
+        entity.setCompany(company);
+        entity.setIsDeleted(false);
+        return entity;
+    }
     public InterviewSession toEntity(InterviewSessionDTO dto, Set<Question> questions, Set<Tag> tags, Topic topic) {
         InterviewSession entity = new InterviewSession();
         entity.setTitle(dto.getTitle());
