@@ -79,7 +79,6 @@ public class InterviewSessionService {
             InterviewSession entity = interviewSessionMapper.toEntityWithCompany(dto, questions, tags, topic, currentUser.getHr().getCompany());
 
             entity.setCreatedBy(currentUser);
-            entity.setSource("ADMIN");
 
             return interviewSessionRepository.save(entity);
         }

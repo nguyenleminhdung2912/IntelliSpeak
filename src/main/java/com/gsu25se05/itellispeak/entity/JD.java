@@ -27,11 +27,11 @@ public class JD {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "link_to_jd")
+    @Column(name = "link_to_jd", columnDefinition = "TEXT")
     private String linkToJd;
 
     // === Thêm mới ===
-    @Column(name = "job_title")
+    @Column(name = "job_title", columnDefinition = "TEXT")
     private String jobTitle;
 
     @Column(name = "summary", columnDefinition = "TEXT")

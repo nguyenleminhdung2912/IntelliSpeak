@@ -26,10 +26,10 @@ public class MemberCV {
     @JsonIgnore
     private User user;
 
-    @Column(name = "cv_title")
+    @Column(name = "cv_title", columnDefinition = "TEXT")
     private String cvTitle;
 
-    @Column(name = "link_to_cv")
+    @Column(name = "link_to_cv", columnDefinition = "TEXT")
     private String linkToCv;
 
     @Column(name = "is_active")

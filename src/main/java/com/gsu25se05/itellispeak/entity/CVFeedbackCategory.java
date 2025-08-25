@@ -26,7 +26,7 @@ public class CVFeedbackCategory {
     @JsonBackReference
     private CVEvaluate cvEvaluate;
 
-    @Column(name = "category_name") // eg: "ATS", "content", etc
+    @Column(name = "category_name", columnDefinition = "TEXT") // eg: "ATS", "content", etc
     private String categoryName;
 
     @Column(name = "score")

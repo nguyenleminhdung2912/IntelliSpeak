@@ -1,6 +1,7 @@
 package com.gsu25se05.itellispeak.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
@@ -18,6 +19,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "interview_session")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class InterviewSession {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -70,7 +72,6 @@ public class InterviewSession {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "company_id", nullable = true)
-    @JsonIgnore
     private Company company;
 
     @ManyToMany

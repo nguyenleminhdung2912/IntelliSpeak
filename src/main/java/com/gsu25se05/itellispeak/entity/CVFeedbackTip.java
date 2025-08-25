@@ -27,7 +27,7 @@ public class CVFeedbackTip {
     @Column(name = "type") // good / improve
     private TipType type;
 
-    @Column(name = "tip")
+    @Column(name = "tip", columnDefinition = "TEXT")
     private String tip;
 
     @Column(name = "explanation", columnDefinition = "TEXT")

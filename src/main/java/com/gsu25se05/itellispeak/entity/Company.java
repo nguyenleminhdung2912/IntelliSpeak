@@ -41,6 +41,7 @@ public class Company {
     private LocalDateTime createAt;
 
     @Column(name = "update_at")
+    @JsonIgnore
     private LocalDateTime updateAt;
 
     @Column(name = "is_deleted")
@@ -48,6 +49,7 @@ public class Company {
 
     // Một công ty có nhiều HR
     @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<HR> hrList = new ArrayList<>();
 
     // Một công ty có nhiều session
