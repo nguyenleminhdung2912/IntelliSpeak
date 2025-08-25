@@ -23,7 +23,7 @@ public class TranslationUtil {
 
     // Constructor để khởi tạo TranslationServiceClient với service account key
     public TranslationUtil() throws IOException {
-        String credentialsPath = "src\\main\\resources\\translate-key.json";
+        String credentialsPath = "src/main/resources/translate-key.json";
         String projectId = "mentor-booking-3d46a";
         GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(credentialsPath))
                 .createScoped(Collections.singleton("https://www.googleapis.com/auth/cloud-platform"));
