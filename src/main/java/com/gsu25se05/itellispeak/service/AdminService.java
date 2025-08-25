@@ -238,6 +238,55 @@ public class AdminService {
                 .build();
     }
 
+    @Transactional
+    public UserDTO updateUserRole(UUID userId, User.Role targetRole) {
+        if (targetRole == null) {
+            throw new AuthAppException(ErrorCode.INVALID_INPUT);
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthAppException(ErrorCode.ACCOUNT_NOT_FOUND));
+
+        if (user.getRole() == targetRole) {
+            throw new AuthAppException(ErrorCode.DUPLICATE_OPERATION);
+        }
+
+         if (user.getRole() == User.Role.ADMIN || targetRole == User.Role.ADMIN) {
+             throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
+         }
+
+
+        user.setRole(targetRole);
+        user.setUpdateAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        String email = user.getEmail();
+        String userName = (email != null && email.contains("@")) ? email.split("@")[0] : "";
+
+        return UserDTO.builder()
+                .userId(user.getUserId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .userName(userName)
+                .email(user.getEmail())
+                .role(user.getRole())
+                .packageId(user.getAPackage() != null ? user.getAPackage().getPackageId() : null)
+                .birthday(user.getBirthday())
+                .avatar(user.getAvatar())
+                .status(user.getStatus())
+                .phone(user.getPhone())
+                .bio(user.getBio())
+                .website(user.getWebsite())
+                .github(user.getGithub())
+                .linkedin(user.getLinkedin())
+                .facebook(user.getFacebook())
+                .youtube(user.getYoutube())
+                .createAt(user.getCreateAt())
+                .updateAt(user.getUpdateAt())
+                .isDeleted(user.getIsDeleted())
+                .build();
+    }
+
 
     public List<UserWithPackageDTO> getAllUsersWithPackage() {
         return userRepository.findAll().stream().map(user -> {
