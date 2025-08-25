@@ -2,7 +2,9 @@ package com.gsu25se05.itellispeak.controller;
 
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.admin.CreateUserDTO;
+import com.gsu25se05.itellispeak.dto.admin.UpdateUserRoleRequest;
 import com.gsu25se05.itellispeak.dto.admin.UserWithPackageDTO;
+import com.gsu25se05.itellispeak.dto.apackage.UpgradePackageRequest;
 import com.gsu25se05.itellispeak.dto.auth.reponse.UserDTO;
 import com.gsu25se05.itellispeak.dto.hr.HRAdminResponseDTO;
 import com.gsu25se05.itellispeak.entity.Transaction;
@@ -112,6 +114,27 @@ public class AdminController {
             msg += " with reason: " + reason;
         }
         return ResponseEntity.ok(new Response<>(200, msg, null));
+    }
+
+
+    @Operation(summary = "Admin nâng cấp gói cho user bằng packageId")
+    @PutMapping("/users/{userId}/upgrade-package")
+    public ResponseEntity<Response<UserDTO>> upgradeUserPackage(
+            @PathVariable UUID userId,
+            @RequestBody UpgradePackageRequest request
+    ) {
+        UserDTO data = adminService.upgradeUserPackage(userId, request.getTargetPackageId());
+        return ResponseEntity.ok(new Response<>(200, "User package upgraded successfully", data));
+    }
+
+    @Operation(summary = "Admin đổi role người dùng (ví dụ: USER -> HR)")
+    @PutMapping("/users/{userId}/role")
+    public ResponseEntity<Response<UserDTO>> updateUserRole(
+            @PathVariable UUID userId,
+            @RequestBody UpdateUserRoleRequest request
+    ) {
+        UserDTO data = adminService.updateUserRole(userId, request.getRole());
+        return ResponseEntity.ok(new Response<>(200, "User role updated successfully", data));
     }
 
     @Operation(summary = "Get all users with their package info")
