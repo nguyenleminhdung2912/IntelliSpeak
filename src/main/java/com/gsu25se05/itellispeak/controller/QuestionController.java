@@ -52,6 +52,11 @@ public class QuestionController {
         return questionService.importFromCsv(file, tagId);
     }
 
+    @PostMapping("/import-csv/{tagId}/{interviewSessionId}")
+    public Response<List<QuestionDTO>> importQuestionsToInterviewSession(@RequestParam("file") MultipartFile file, @PathVariable Long tagId, @PathVariable Long interviewSessionId) {
+        return questionService.importQuestionsToInterviewSession(file, tagId, interviewSessionId);
+    }
+
     @PostMapping("/{sessionId}/questions/{questionId}/remove")
     @Operation(summary = "Remove a question from an interview session")
     public ResponseEntity<Response<Void>> removeQuestion(
