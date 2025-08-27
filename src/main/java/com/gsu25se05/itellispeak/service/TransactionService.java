@@ -1,5 +1,6 @@
 package com.gsu25se05.itellispeak.service;
 
+import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.auth.reponse.UserDTO;
 import com.gsu25se05.itellispeak.dto.transaction.PackageBriefDTO;
 import com.gsu25se05.itellispeak.dto.transaction.TransactionDTO;
@@ -8,6 +9,7 @@ import com.gsu25se05.itellispeak.entity.User;
 import com.gsu25se05.itellispeak.entity.UserUsage;
 import com.gsu25se05.itellispeak.repository.TransactionRepository;
 import com.gsu25se05.itellispeak.repository.UserUsageRepository;
+import com.gsu25se05.itellispeak.utils.AccountUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,11 +23,29 @@ public class TransactionService {
     @Autowired
     UserUsageRepository userUsageRepository;
 
+    @Autowired
+    AccountUtils accountUtils;
+
 
     public List<TransactionDTO> getAllTransactionDetails() {
         return transactionRepository.findAll().stream()
                 .map(this::mapToDetailDTO)
                 .toList();
+    }
+
+    public Response<List<TransactionDTO>> getMyTransactionHistory() {
+        User current = accountUtils.getCurrentAccount();
+        if (current == null) {
+            return new Response<>(401, "Please log in to continue", null);
+        }
+
+        List<TransactionDTO> data = transactionRepository
+                .findByUserOrderByCreateAtDesc(current)
+                .stream()
+                .map(this::mapToDetailDTO)
+                .toList();
+
+        return new Response<>(200, "Success", data);
     }
 
 

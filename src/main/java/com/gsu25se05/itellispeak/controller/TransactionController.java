@@ -31,4 +31,11 @@ public class TransactionController {
         List<TransactionDTO> data = transactionService.getAllTransactionDetails();
         return ResponseEntity.ok(new Response<>(200, "Fetched all transactions successfully", data));
     }
+
+    @Operation(summary = "Lấy lịch sử giao dịch của người dùng hiện tại")
+    @GetMapping("/my-transaction")
+    public ResponseEntity<Response<List<TransactionDTO>>> getMyTransactions() {
+        Response<List<TransactionDTO>> res = transactionService.getMyTransactionHistory();
+        return ResponseEntity.ok(res);
+    }
 }

@@ -331,6 +331,8 @@ public class QuestionService {
                     }
                 }
 
+                Integer total = (session.getQuestions() == null) ? 0 : session.getQuestions().size();
+                session.setTotalQuestion(total);
                 interviewSessionRepository.save(session);
             }
 
