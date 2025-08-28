@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface InterviewSessionRepository extends JpaRepository<InterviewSession, Long> {
@@ -27,5 +28,16 @@ public interface InterviewSessionRepository extends JpaRepository<InterviewSessi
         ORDER BY i.createAt DESC
     """)
     List<InterviewSession> findAllVisibleFetchAll(@Param("excluded") String excluded);
+
+
+    @EntityGraph(attributePaths = {"topic", "tags", "questions"})
+    @Query("""
+  select i
+  from InterviewSession i
+  where i.interviewSessionId = :id
+    and i.isDeleted = false
+    and (i.source is null or i.source <> :excluded)
+""")
+    Optional<InterviewSession> findVisibleById(@Param("id") Long id, @Param("excluded") String excluded);
 
 }
