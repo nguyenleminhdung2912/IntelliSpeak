@@ -9,22 +9,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "jd")
+@Table(name = "company_jd")
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Setter
 @Getter
 @Builder
-public class JD {
+public class CompanyJD {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "jd_id")
-    private Long jdId;
+    @Column(name = "company_jd_id")
+    private Long companyJdId;
 
     @JsonIgnore
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
 
     @Column(name = "link_to_jd", columnDefinition = "TEXT")
     private String linkToJd;
@@ -57,8 +58,6 @@ public class JD {
     @Column(name = "is_deleted")
     private boolean isDeleted = false;
 
-    @OneToMany(mappedBy = "jd", cascade = CascadeType.REFRESH, orphanRemoval = true)
-    private List<JDEvaluate> jdEvaluates = new ArrayList<>();
+    @OneToMany(mappedBy = "companyJD", cascade = CascadeType.REFRESH, orphanRemoval = true)
+    private List<CompanyJDEvaluate> companyJDEvaluates = new ArrayList<>();
 }
-
-

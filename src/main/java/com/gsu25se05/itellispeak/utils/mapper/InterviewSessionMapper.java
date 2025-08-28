@@ -34,7 +34,7 @@ public class InterviewSessionMapper {
         entity.setTitle(dto.getTitle());
         entity.setDescription(dto.getDescription());
         entity.setInterviewSessionThumbnail(dto.getInterviewSessionThumbnail());
-        entity.setTotalQuestion(dto.getTotalQuestion());
+        entity.setTotalQuestion(0);
         entity.setDifficulty(Enum.valueOf(Difficulty.class, dto.getDifficulty()));
         entity.setQuestions(questions != null ? questions : new HashSet<>());
         entity.setTags(tags != null ? tags : new HashSet<>());
@@ -52,7 +52,7 @@ public class InterviewSessionMapper {
         entity.setTitle(dto.getTitle());
         entity.setDescription(dto.getDescription());
         entity.setInterviewSessionThumbnail(dto.getInterviewSessionThumbnail());
-        entity.setTotalQuestion(dto.getTotalQuestion());
+        entity.setTotalQuestion(0);
         entity.setDifficulty(Enum.valueOf(Difficulty.class, dto.getDifficulty()));
         entity.setQuestions(questions != null ? questions : new HashSet<>());
         entity.setTags(tags != null ? tags : new HashSet<>());

@@ -23,7 +23,7 @@ public enum ErrorCode {
     ACCOUNT_NOT_FOUND(404, "Account not found", HttpStatus.NOT_FOUND),
     EMAIL_NOT_FOUND(1013, "Email not found, please register", HttpStatus.NOT_FOUND),
     ACCOUNT_NOT_INSTRUCTOR(1014, "Account is not an instructor", HttpStatus.BAD_REQUEST),
-    ACCOUNT_NOT_STUDENT(1015, "Account is not a student", HttpStatus.BAD_REQUEST),
+    ACCOUNT_NOT_HR(1015, "Account is not a HR", HttpStatus.BAD_REQUEST),
     ACCOUNT_IS_DELETED(1016, "This account has been deleted", HttpStatus.BAD_REQUEST),
     ACCOUNT_NOT_APPROVED(1017, "Account not approved by admin", HttpStatus.BAD_REQUEST),
     ACCOUNT_NOT_ADMIN(1018, "Account is not an admin", HttpStatus.BAD_REQUEST),

@@ -5,6 +5,7 @@ import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.hr.HRRequestDTO;
 import com.gsu25se05.itellispeak.dto.hr.HRResponseDTO;
 import com.gsu25se05.itellispeak.dto.interview_session.InterviewSessionDTO;
+import com.gsu25se05.itellispeak.dto.jd.GetAllJdDTO;
 import com.gsu25se05.itellispeak.entity.InterviewSession;
 import com.gsu25se05.itellispeak.service.HRService;
 import com.gsu25se05.itellispeak.service.InterviewSessionService;
