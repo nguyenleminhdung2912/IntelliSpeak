@@ -1,6 +1,8 @@
 package com.gsu25se05.itellispeak.service;
 
 import com.gsu25se05.itellispeak.dto.Response;
+import com.gsu25se05.itellispeak.dto.interview_session.InterviewSessionDTO;
+import com.gsu25se05.itellispeak.dto.question.CSVQuestionDTO;
 import com.gsu25se05.itellispeak.dto.question.QuestionDTO;
 import com.gsu25se05.itellispeak.dto.question.UpdateQuestionDTO;
 import com.gsu25se05.itellispeak.entity.*;
@@ -218,7 +220,7 @@ public class QuestionService {
         return new Response<>(200, "CSV import successful", imported);
     }
 
-    public Response<List<QuestionDTO>> importQuestionsToInterviewSession(
+    public Response<List<CSVQuestionDTO>> importQuestionsToInterviewSession(
             MultipartFile file,
             Long tagId,
             Long interviewSessionId
@@ -232,7 +234,7 @@ public class QuestionService {
             return new Response<>(403, "Only HR or ADMIN users can import questions", null);
         }
 
-        //Validate params
+        // Validate params
         if (tagId == null) {
             return new Response<>(400, "Missing required parameter: tagId", null);
         }
@@ -250,9 +252,11 @@ public class QuestionService {
             return new Response<>(400, "Interview session not found: " + interviewSessionId, null);
         }
 
-        final List<String> REQUIRED_HEADERS = List.of("title", "content", "difficulty", "suitableAnswer1", "suitableAnswer2");
+        final List<String> REQUIRED_HEADERS = List.of(
+                "title", "content", "difficulty", "suitableAnswer1", "suitableAnswer2"
+        );
 
-        List<QuestionDTO> createdDtos = new ArrayList<>();
+        List<CSVQuestionDTO> createdDtos = new ArrayList<>();
         List<String> rowErrors = new ArrayList<>();
 
         try (BufferedReader reader = new BufferedReader(
@@ -262,6 +266,7 @@ public class QuestionService {
             if (lines.isEmpty()) {
                 return new Response<>(400, "CSV file is empty", null);
             }
+            // remove UTF-8 BOM
             lines.set(0, lines.get(0).replace("\uFEFF", ""));
             String csvContent = String.join("\n", lines);
 
@@ -280,7 +285,9 @@ public class QuestionService {
                     }
                 }
 
-                Company uploaderCompany = (currentUser.getRole() == User.Role.HR) ? currentUser.getHr().getCompany() : null;
+                Company uploaderCompany = (currentUser.getRole() == User.Role.HR)
+                        ? (currentUser.getHr() != null ? currentUser.getHr().getCompany() : null)
+                        : null;
 
                 if (session.getQuestions() == null) {
                     session.setQuestions(new HashSet<>());
@@ -320,19 +327,37 @@ public class QuestionService {
                         q.setTags(new HashSet<>(Collections.singletonList(tag)));
 
                         Question saved = questionRepository.save(q);
-
                         session.getQuestions().add(saved);
 
-                        createdDtos.add(questionMapper.toDTO(saved));
+                        // Build CSVQuestionDTO
+                        CSVQuestionDTO dto = toCsvQuestionDTO(saved, session, tag);
+                        createdDtos.add(dto);
 
                     } catch (Exception rowEx) {
                         rowErrors.add("Row " + rowIndex + ": " + rowEx.getMessage());
                     }
                 }
 
+
                 Integer total = (session.getQuestions() == null) ? 0 : session.getQuestions().size();
                 session.setTotalQuestion(total);
                 interviewSessionRepository.save(session);
+
+                for (CSVQuestionDTO dto : createdDtos) {
+                    if (dto.getInterviewSessionDTO() != null) {
+                        dto.getInterviewSessionDTO().setTotalQuestion(total);
+                    }
+                }
+
+                String msg;
+                if (!rowErrors.isEmpty()) {
+                    msg = "CSV import completed with " + rowErrors.size()
+                            + " row error(s). First error: " + rowErrors.get(0);
+                } else {
+                    msg = "CSV import successful";
+                }
+
+                return new Response<>(200, msg, createdDtos);
             }
 
         } catch (IOException e) {
@@ -340,12 +365,27 @@ public class QuestionService {
         } catch (IllegalArgumentException e) {
             return new Response<>(400, "Invalid CSV format: " + e.getMessage(), null);
         }
+    }
 
-        if (!rowErrors.isEmpty()) {
-            String msg = "CSV import completed with " + rowErrors.size() + " row error(s). First error: " + rowErrors.get(0);
-            return new Response<>(200, msg, createdDtos);
-        }
-        return new Response<>(200, "CSV import successful", createdDtos);
+    private CSVQuestionDTO toCsvQuestionDTO(Question saved, InterviewSession session, Tag tag) {
+
+        InterviewSessionDTO isDto = new InterviewSessionDTO();
+        isDto.setInterviewSessionId(session.getInterviewSessionId());
+        isDto.setTitle(session.getTitle());
+        isDto.setTotalQuestion(session.getTotalQuestion());
+
+        return CSVQuestionDTO.builder()
+                .questionId(saved.getQuestionId())
+                .title(saved.getTitle())
+                .content(saved.getContent())
+                .difficulty(saved.getDifficulty() != null ? saved.getDifficulty().name() : null)
+                .suitableAnswer1(saved.getSuitableAnswer1())
+                .suitableAnswer2(saved.getSuitableAnswer2())
+                .isDeleted(Boolean.TRUE.equals(saved.getIs_deleted()))
+                .tagIds(Set.of(tag.getTagId()))
+                .tags(Set.of(tag))
+                .interviewSessionDTO(isDto)
+                .build();
     }
 
     private static String safe(CSVRecord r, String col) {
