@@ -116,4 +116,18 @@ public class JDController {
                     .body(new Response<>(400, "Error: " + e.getMessage(), null));
         }
     }
+    @GetMapping("/company/uploadedJD")
+    @Operation(summary = "Lấy danh sách JD của Company của HR đó")
+    public ResponseEntity<Response<List<CompanyJD>>> getCompanyUploadedJD() {
+        try {
+            List<CompanyJD> jds = companyJDService.getCompanyUploadedJD();
+            Response<List<CompanyJD>> response = new Response<>(200, "Fetch data successfully.", jds);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException | NotFoundException | AuthAppException e) {
+            return ResponseEntity.badRequest().body(new Response<>(400, "Error: " + e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response<>(400, "Error: " + e.getMessage(), null));
+        }
+    }
 }
