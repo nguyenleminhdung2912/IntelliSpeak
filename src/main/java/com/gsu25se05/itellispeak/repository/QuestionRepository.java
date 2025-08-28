@@ -23,5 +23,7 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
             @Param("difficulty") Difficulty difficulty
     );
 
-    List<Question> findByCreatedBy(User createdBy);
+    List<Question> findByCreatedByOrderByQuestionIdDesc(User createdBy);
+
+
 }
