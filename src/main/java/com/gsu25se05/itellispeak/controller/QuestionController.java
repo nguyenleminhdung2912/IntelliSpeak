@@ -1,6 +1,7 @@
 package com.gsu25se05.itellispeak.controller;
 
 import com.gsu25se05.itellispeak.dto.Response;
+import com.gsu25se05.itellispeak.dto.question.CSVQuestionDTO;
 import com.gsu25se05.itellispeak.dto.question.QuestionDTO;
 import com.gsu25se05.itellispeak.dto.question.UpdateQuestionDTO;
 import com.gsu25se05.itellispeak.entity.Question;
@@ -53,7 +54,7 @@ public class QuestionController {
     }
 
     @PostMapping("/import-csv/{tagId}/{interviewSessionId}")
-    public Response<List<QuestionDTO>> importQuestionsToInterviewSession(@RequestParam("file") MultipartFile file, @PathVariable Long tagId, @PathVariable Long interviewSessionId) {
+    public Response<List<CSVQuestionDTO>> importQuestionsToInterviewSession(@RequestParam("file") MultipartFile file, @PathVariable Long tagId, @PathVariable Long interviewSessionId) {
         return questionService.importQuestionsToInterviewSession(file, tagId, interviewSessionId);
     }
 
