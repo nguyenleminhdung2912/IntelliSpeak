@@ -209,17 +209,9 @@ public class CompanyJDService {
         if (user == null) {
             throw new NotLoginException("Please log in to continue");
         }
-        if (!user.getRole().equals(User.Role.HR)) {
-            throw new AuthAppException(ErrorCode.ACCOUNT_NOT_HR);
-        }
 
         CompanyJD companyJD = companyJDRepository.findById(companyJdId)
                 .orElseThrow(() -> new NotFoundException("Company JD not found with ID: " + companyJdId));
-
-        HR hr = user.getHr();
-        if (hr == null || hr.getCompany() == null || !hr.getCompany().equals(companyJD.getCompany())) {
-            throw new AuthAppException(ErrorCode.HR_NOT_FOUND);
-        }
 
         // Trigger lazy loading of evaluates
         companyJD.getCompanyJDEvaluates().size();
@@ -230,14 +222,6 @@ public class CompanyJDService {
         User user = accountUtils.getCurrentAccount();
         if (user == null) {
             throw new NotLoginException("Please log in to continue");
-        }
-        if (!user.getRole().equals(User.Role.HR)) {
-            throw new AuthAppException(ErrorCode.ACCOUNT_NOT_HR);
-        }
-
-        HR hr = user.getHr();
-        if (hr == null || hr.getCompany() == null || !hr.getCompany().getCompanyId().equals(companyId)) {
-            throw new AuthAppException(ErrorCode.HR_NOT_FOUND);
         }
 
         List<CompanyJD> jds = companyJDRepository.findByCompanyCompanyIdAndIsDeletedFalse(companyId);
@@ -267,5 +251,24 @@ public class CompanyJDService {
         } catch (Exception e) {
             throw new RuntimeException("Error occurred while calling Gemini API.");
         }
+    }
+
+    public List<CompanyJD> getCompanyUploadedJD() {
+        User user = accountUtils.getCurrentAccount();
+        if (user == null) {
+            throw new NotLoginException("Please log in to continue");
+        }
+        if (!user.getRole().equals(User.Role.HR)) {
+            throw new AuthAppException(ErrorCode.ACCOUNT_NOT_HR);
+        }
+
+        HR hr = user.getHr();
+        if (hr == null || hr.getCompany() == null) {
+            throw new AuthAppException(ErrorCode.HR_NOT_FOUND);
+        }
+        Long companyId = hr.getCompany().getCompanyId();
+
+        List<CompanyJD> jds = companyJDRepository.findByCompanyCompanyIdAndIsDeletedFalse(companyId);
+        return jds;
     }
 }
