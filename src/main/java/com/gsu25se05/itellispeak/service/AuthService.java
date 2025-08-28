@@ -251,9 +251,9 @@ public class AuthService implements UserDetailsService {
             usage = userUsageRepository.findByUser(user).orElse(null);
         }
         if (usage != null) {
-            cvUsed = usage.getCvAnalyzeUsed();
-            jdUsed = usage.getJdAnalyzeUsed();
-            interviewUsed = usage.getInterviewUsed();
+            cvUsed = user.getAPackage().getCvAnalyzeCount() - usage.getCvAnalyzeUsed();
+            jdUsed = user.getAPackage().getJdAnalyzeCount() - usage.getJdAnalyzeUsed();
+            interviewUsed = user.getAPackage().getInterviewCount() - usage.getInterviewUsed();
         }
 
         UserProfileDTO profile = UserProfileDTO.builder()

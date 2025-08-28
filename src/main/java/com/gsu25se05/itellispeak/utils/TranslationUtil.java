@@ -7,7 +7,7 @@ import com.google.cloud.translate.v3.TranslationServiceClient;
 import com.google.cloud.translate.v3.TranslationServiceSettings;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.translate.v3.Translation;
-import org.springframework.beans.factory.annotation.Value;
+import javax.annotation.PreDestroy;
 import org.springframework.stereotype.Component;
 
 import java.io.FileInputStream;
@@ -90,10 +90,14 @@ public class TranslationUtil {
         return translateToVietnamese(difficulty);
     }
 
-    // Đóng client khi ứng dụng dừng
+    @PreDestroy
     public void close() {
         if (client != null) {
-            client.close();
+            try {
+                client.close();
+            } catch (Exception e) {
+                System.err.println("Error closing TranslationServiceClient: " + e.getMessage());
+            }
         }
     }
 }

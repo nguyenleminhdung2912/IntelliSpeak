@@ -2,8 +2,13 @@ package com.gsu25se05.itellispeak.controller;
 
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.jd.GetAllJdDTO;
+import com.gsu25se05.itellispeak.entity.CompanyJD;
 import com.gsu25se05.itellispeak.entity.JD;
+import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
+import com.gsu25se05.itellispeak.exception.auth.NotFoundException;
+import com.gsu25se05.itellispeak.service.CompanyJDService;
 import com.gsu25se05.itellispeak.service.JDService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +25,11 @@ import java.util.Map;
 public class JDController {
 
     private final JDService jdService;
+    private final CompanyJDService companyJDService;
 
-    public JDController(JDService jdService) {
+    public JDController(JDService jdService, CompanyJDService companyJDService) {
         this.jdService = jdService;
+        this.companyJDService = companyJDService;
     }
 
     @PostMapping("/analyze")
@@ -63,6 +70,50 @@ public class JDController {
         } catch (Exception e) {
             Response<List<GetAllJdDTO>> errorResponse = new Response<>(400, "Error: " + e.getMessage(), null);
             return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+
+    @PostMapping("/company/upload")
+    public ResponseEntity<Response<CompanyJD>> uploadAndAnalyzeCompanyJD(@RequestParam("file") MultipartFile file) {
+        try {
+            CompanyJD companyJD = companyJDService.uploadAndAnalyzeCompanyJD(file);
+            Response<CompanyJD> response = new Response<>(200, "Fetch data successfully.", companyJD);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new Response<>(400, "Error: " + e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response<>(400, "Error: " + e.getMessage(), null));
+        }
+    }
+
+    @GetMapping("/company/jd/{company_jd_id}")
+    @Operation(summary = "Lấy 1 JD của 1 Company")
+    public ResponseEntity<Response<CompanyJD>> getCompanyJDWithEvaluates(@PathVariable Long company_jd_id) {
+        try {
+            CompanyJD companyJD = companyJDService.getCompanyJDWithEvaluates(company_jd_id);
+            Response<CompanyJD> response = new Response<>(200, "Fetch data successfully.", companyJD);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException | NotFoundException | AuthAppException e) {
+            return ResponseEntity.badRequest().body(new Response<>(400, "Error: " + e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response<>(400, "Error: " + e.getMessage(), null));
+        }
+    }
+
+    @GetMapping("/company/{companyId}")
+    @Operation(summary = "Lấy danh sách JD của 1 Company")
+    public ResponseEntity<Response<List<CompanyJD>>> getCompanyJDsByCompanyId(@PathVariable Long companyId) {
+        try {
+            List<CompanyJD> jds = companyJDService.getCompanyJDsByCompanyId(companyId);
+            Response<List<CompanyJD>> response = new Response<>(200, "Fetch data successfully.", jds);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException | NotFoundException | AuthAppException e) {
+            return ResponseEntity.badRequest().body(new Response<>(400, "Error: " + e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response<>(400, "Error: " + e.getMessage(), null));
         }
     }
 }

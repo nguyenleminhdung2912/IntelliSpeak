@@ -2,7 +2,6 @@ package com.gsu25se05.itellispeak.controller;
 
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.transaction.TransactionDTO;
-import com.gsu25se05.itellispeak.entity.Transaction;
 import com.gsu25se05.itellispeak.service.TransactionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

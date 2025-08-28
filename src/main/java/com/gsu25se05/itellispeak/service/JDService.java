@@ -3,7 +3,6 @@ package com.gsu25se05.itellispeak.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.jd.GetAllJdDTO;
 import com.gsu25se05.itellispeak.entity.JD;
@@ -193,7 +192,6 @@ public class JDService {
 
         return savedJD;
     }
-
 
     private String getJsonText(JsonNode node, String field) {
         return node.has(field) ? node.get(field).asText() : "";

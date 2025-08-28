@@ -15,10 +15,8 @@ import com.gsu25se05.itellispeak.utils.AccountUtils;
 import com.gsu25se05.itellispeak.utils.TranslationUtil;
 import com.gsu25se05.itellispeak.utils.mapper.InterviewSessionMapper;
 import com.gsu25se05.itellispeak.utils.mapper.QuestionMapper;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
