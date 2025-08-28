@@ -6,6 +6,7 @@ import com.gsu25se05.itellispeak.dto.topic.TagSimpleDTO;
 import com.gsu25se05.itellispeak.dto.topic.TopicWithTagsDTO;
 import com.gsu25se05.itellispeak.entity.*;
 import com.gsu25se05.itellispeak.exception.ErrorCode;
+import com.gsu25se05.itellispeak.exception.ForbiddenException;
 import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
 import com.gsu25se05.itellispeak.exception.auth.NotLoginException;
 import com.gsu25se05.itellispeak.repository.*;
@@ -60,48 +61,47 @@ public class InterviewSessionService {
 
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) {
+            // 401
             throw new NotLoginException("Please log in to continue");
         }
-        if (currentUser.getHr().getStatus() == HRStatus.APPROVED) {
-            Set<Question> questions = new HashSet<>();
-            if (dto.getQuestionIds() != null && !dto.getQuestionIds().isEmpty()) {
-                questions.addAll(questionRepository.findAllById(dto.getQuestionIds()));
-            }
-            Set<Tag> tags = new HashSet<>();
-            if (dto.getTagIds() != null && !dto.getTagIds().isEmpty()) {
-                tags.addAll(tagRepository.findAllById(dto.getTagIds()));
-            }
-            Topic topic = null;
-            if (dto.getTopicId() != null) {
-                topic = topicRepository.findById(dto.getTopicId()).orElse(null);
-            }
 
-            InterviewSession entity = interviewSessionMapper.toEntityWithCompany(dto, questions, tags, topic, currentUser.getHr().getCompany());
+        String roleName = (currentUser.getRole() != null) ? currentUser.getRole().name() : null;
+        boolean isAdmin = "ADMIN".equalsIgnoreCase(roleName);
+        boolean isHrApproved = currentUser.getHr() != null
+                && currentUser.getHr().getStatus() == HRStatus.APPROVED;
 
-            entity.setCreatedBy(currentUser);
-
-            return interviewSessionRepository.save(entity);
-        }
-        Set<Question> questions = new HashSet<>();
-        if (dto.getQuestionIds() != null && !dto.getQuestionIds().isEmpty()) {
-            questions.addAll(questionRepository.findAllById(dto.getQuestionIds()));
-        }
-        Set<Tag> tags = new HashSet<>();
-        if (dto.getTagIds() != null && !dto.getTagIds().isEmpty()) {
-            tags.addAll(tagRepository.findAllById(dto.getTagIds()));
-        }
-        Topic topic = null;
-        if (dto.getTopicId() != null) {
-            topic = topicRepository.findById(dto.getTopicId()).orElse(null);
+        if (!(isAdmin || isHrApproved)) {
+            // 403
+            throw new ForbiddenException("Only ADMIN or APPROVED HR can create interview sessions");
         }
 
-        InterviewSession entity = interviewSessionMapper.toEntity(dto, questions, tags, topic);
+        Set<Question> questions = (dto.getQuestionIds() == null || dto.getQuestionIds().isEmpty())
+                ? java.util.Collections.emptySet()
+                : new java.util.HashSet<>(questionRepository.findAllById(dto.getQuestionIds()));
+
+        Set<Tag> tags = (dto.getTagIds() == null || dto.getTagIds().isEmpty())
+                ? java.util.Collections.emptySet()
+                : new java.util.HashSet<>(tagRepository.findAllById(dto.getTagIds()));
+
+        Topic topic = (dto.getTopicId() == null) ? null
+                : topicRepository.findById(dto.getTopicId())
+                .orElseThrow(() -> new IllegalArgumentException("Topic not found: " + dto.getTopicId()));
+
+        InterviewSession entity;
+        if (isHrApproved) {
+            entity = interviewSessionMapper.toEntityWithCompany(
+                    dto, questions, tags, topic, currentUser.getHr().getCompany()
+            );
+            entity.setSource("HR");
+        } else {
+            entity = interviewSessionMapper.toEntity(dto, questions, tags, topic);
+            entity.setSource("ADMIN");
+        }
 
         entity.setCreatedBy(currentUser);
-        entity.setSource("ADMIN");
-
         return interviewSessionRepository.save(entity);
     }
+
 
     @Transactional
     public InterviewSession addQuestionToSession(Long sessionId, Long questionId) {
