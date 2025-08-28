@@ -1,8 +1,6 @@
 package com.gsu25se05.itellispeak.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -43,8 +41,6 @@ public class Topic {
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL)
     @JsonIgnore
-    @JsonManagedReference
-    @JsonBackReference
     private List<InterviewSession> interviewSessions;
 
     @ManyToMany(mappedBy = "topics")

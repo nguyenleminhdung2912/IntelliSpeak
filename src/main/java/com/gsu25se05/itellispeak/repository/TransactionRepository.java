@@ -1,11 +1,13 @@
 package com.gsu25se05.itellispeak.repository;
 
 import com.gsu25se05.itellispeak.entity.Transaction;
+import com.gsu25se05.itellispeak.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -14,5 +16,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     @Query("SELECT SUM(t.amount) FROM Transaction t WHERE t.createAt BETWEEN :start AND :end AND t.transactionStatus = com.gsu25se05.itellispeak.entity.TransactionStatus.PAID")
     Double sumAmountByCreateAtBetween(LocalDateTime start, LocalDateTime end);
+
+    List<Transaction> findByUserOrderByCreateAtDesc(User user);
 
 }

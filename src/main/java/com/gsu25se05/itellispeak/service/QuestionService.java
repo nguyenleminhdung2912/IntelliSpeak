@@ -9,7 +9,6 @@ import com.gsu25se05.itellispeak.repository.QuestionRepository;
 import com.gsu25se05.itellispeak.repository.TagRepository;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
 import com.gsu25se05.itellispeak.utils.mapper.QuestionMapper;
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import org.apache.commons.csv.CSVFormat;
@@ -109,7 +108,7 @@ public class QuestionService {
             return new Response<>(403, "Only HR or ADMIN users can view the question list", null);
         }
 
-        List<QuestionDTO> questions = questionRepository.findByCreatedBy(currentUser).stream()
+        List<QuestionDTO> questions = questionRepository.findByCreatedByOrderByQuestionIdDesc(currentUser).stream()
                 .filter(question -> question.getIs_deleted() == false)
                 .map(questionMapper::toDTO)
                 .collect(Collectors.toList());
@@ -331,6 +330,8 @@ public class QuestionService {
                     }
                 }
 
+                Integer total = (session.getQuestions() == null) ? 0 : session.getQuestions().size();
+                session.setTotalQuestion(total);
                 interviewSessionRepository.save(session);
             }
 
