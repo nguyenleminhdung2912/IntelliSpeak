@@ -56,6 +56,7 @@ public class Question {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "created_by", nullable = true)
+    @JsonIgnore
     private User createdBy;
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL)
@@ -64,6 +65,7 @@ public class Question {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "company_id", nullable = true)
+    @JsonIgnore
     private Company company;
 
     @ManyToMany
@@ -72,11 +74,11 @@ public class Question {
             joinColumns = @JoinColumn(name = "question_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
-    @JsonBackReference
+    @JsonIgnore
     private Set<Tag> tags = new HashSet<>();
 
     @ManyToMany(mappedBy = "questions")
-    @JsonBackReference
+    @JsonIgnore
     private Set<InterviewSession> interviewSessions = new HashSet<>();
 }
 

@@ -124,9 +124,9 @@ public class InterviewSessionService {
         return interviewSessionRepository.save(session);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<InterviewSession> getAllInterviewSession() {
-        return interviewSessionRepository.findAllBySourceNotOrSourceIsNullAndIsDeletedFalse("RANDOM");
+        return interviewSessionRepository.findAllVisibleFetchAll("RANDOM");
     }
 
     @Transactional

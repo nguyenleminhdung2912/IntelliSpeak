@@ -13,6 +13,7 @@ import com.gsu25se05.itellispeak.entity.Question;
 import com.gsu25se05.itellispeak.service.InterviewSessionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,7 +52,7 @@ public class InterviewSessionController {
         return ResponseEntity.ok(new Response<>(200, "Questions added to session", session));
     }
 
-    @GetMapping("/sessions/get-all")
+    @GetMapping(value = "/sessions/get-all", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Tạm thời bỏ đi, không dùng tới, chỉ cần admin dùng thôi")
     public ResponseEntity<Response<List<InterviewSession>>> getAllSessions() {
         List<InterviewSession> sessions = interviewSessionService.getAllInterviewSession();

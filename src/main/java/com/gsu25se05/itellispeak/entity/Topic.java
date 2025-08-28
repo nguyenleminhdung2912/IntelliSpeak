@@ -43,8 +43,6 @@ public class Topic {
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL)
     @JsonIgnore
-    @JsonManagedReference
-    @JsonBackReference
     private List<InterviewSession> interviewSessions;
 
     @ManyToMany(mappedBy = "topics")

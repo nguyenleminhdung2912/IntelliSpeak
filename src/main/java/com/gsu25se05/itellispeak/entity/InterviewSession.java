@@ -62,7 +62,6 @@ public class InterviewSession {
 
     @OneToMany(mappedBy = "interviewSession", cascade = CascadeType.ALL)
     @JsonIgnore
-    @JsonManagedReference
     private List<InterviewHistory> interviewHistories;
 
     @ManyToOne
@@ -72,6 +71,7 @@ public class InterviewSession {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "company_id", nullable = true)
+    @JsonIgnore
     private Company company;
 
     @ManyToMany
@@ -80,7 +80,7 @@ public class InterviewSession {
             joinColumns = @JoinColumn(name = "interview_session_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
-    @JsonManagedReference
+
     private Set<Tag> tags = new HashSet<>();
 
     @ManyToMany
@@ -89,7 +89,7 @@ public class InterviewSession {
             joinColumns = @JoinColumn(name = "interview_session_id"),
             inverseJoinColumns = @JoinColumn(name = "question_id")
     )
-    @JsonManagedReference
+
     private Set<Question> questions = new HashSet<>();
 
 }
