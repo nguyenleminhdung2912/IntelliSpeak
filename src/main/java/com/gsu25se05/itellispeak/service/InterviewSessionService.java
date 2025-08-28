@@ -8,14 +8,17 @@ import com.gsu25se05.itellispeak.entity.*;
 import com.gsu25se05.itellispeak.exception.ErrorCode;
 import com.gsu25se05.itellispeak.exception.ForbiddenException;
 import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
+import com.gsu25se05.itellispeak.exception.auth.NotFoundException;
 import com.gsu25se05.itellispeak.exception.auth.NotLoginException;
 import com.gsu25se05.itellispeak.repository.*;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
 import com.gsu25se05.itellispeak.utils.TranslationUtil;
 import com.gsu25se05.itellispeak.utils.mapper.InterviewSessionMapper;
 import com.gsu25se05.itellispeak.utils.mapper.QuestionMapper;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -129,6 +132,11 @@ public class InterviewSessionService {
         return interviewSessionRepository.findAllVisibleFetchAll("RANDOM");
     }
 
+    @Transactional(readOnly = true)
+    public InterviewSession getInterviewSessionById(Long id) {
+        return interviewSessionRepository.findVisibleById(id, "RANDOM")
+                .orElseThrow(() -> new NotFoundException("Interview session not found or unavailable"));
+    }
     @Transactional
     public List<InterviewSession> getAllSessionsCreatedByHR() {
         User currentUser = accountUtils.getCurrentAccount();

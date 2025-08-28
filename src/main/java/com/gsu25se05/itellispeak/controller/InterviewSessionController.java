@@ -59,6 +59,12 @@ public class InterviewSessionController {
         return ResponseEntity.ok(new Response<>(200, "All interview sessions fetched", sessions));
     }
 
+    @GetMapping(value = "/sessions/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Response<InterviewSession>> getSessionById(@PathVariable Long id) {
+        InterviewSession s = interviewSessionService.getInterviewSessionById(id);
+        return ResponseEntity.ok(new Response<>(200, "Interview session fetched", s));
+    }
+
     @GetMapping("/get-random-generated-questions-session")
     @Operation(summary = "Lấy danh sách các session random question mà người dùng đó đã tạo")
     public ResponseEntity<Response<List<EvaluationBatchResponseDto>>> getRandomSession() {
