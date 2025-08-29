@@ -1,5 +1,6 @@
 package com.gsu25se05.itellispeak.controller;
 
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.auth.reponse.*;
 import com.gsu25se05.itellispeak.dto.auth.request.*;
@@ -13,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +39,10 @@ public class AuthController {
 
     @Autowired
     private JWTService jwtService;
+
+
+    @Value("${app.urls.frontend:https://intelli-speak-web.vercel.app}")
+    private String frontendBaseUrl;
 
     @Autowired
     @Lazy
@@ -70,12 +76,23 @@ public class AuthController {
     }
 
     @GetMapping("/verify/{token}")
-    public ResponseEntity<Void> activateAccount(@PathVariable String token) throws Exception {
-        if (authService.verifyAccount(token)) {
-            return ResponseEntity.status(HttpStatus.FOUND).location(URI.create("http://localhost:5173/login")).build();
+    public ResponseEntity<Void> activateAccount(@PathVariable String token) {
+        try {
+            if (authService.verifyAccount(token)) {
+                return ResponseEntity.status(HttpStatus.FOUND)
+                        .location(URI.create(frontendBaseUrl + "/login"))
+                        .build();
+            }
+            return ResponseEntity.badRequest().build();
+        } catch (TokenExpiredException ex) {
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .location(URI.create(frontendBaseUrl + "/verify?status=expired"))
+                    .build();
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().build();
         }
-        return null;
     }
+
 
     @PostMapping("/forgot-password")
     public ResponseEntity<ForgotPasswordResponse> forgotPassword(@RequestBody ForgotPasswordRequest forgotPasswordRequest) {

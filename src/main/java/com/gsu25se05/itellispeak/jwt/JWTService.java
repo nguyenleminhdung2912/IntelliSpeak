@@ -17,6 +17,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.security.Key;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
@@ -131,6 +132,20 @@ public class JWTService {
         } catch (Exception e) {
             throw new InvalidToken("Error parsing token: " + e.getMessage());
         }
+    }
+
+    public String extractPurpose(String token) {
+        return extractClaim(token, claims -> claims.get("purpose", String.class));
+    }
+
+    public String generateEmailVerifyToken(String email) {
+        return Jwts.builder()
+                .setSubject(email)
+                .claim("purpose", "email_verify")
+                .setIssuedAt(new Date())
+                .setExpiration(Date.from(Instant.now().plus(24, ChronoUnit.HOURS)))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
     }
 
     private Boolean isTokenExpired(String token) {

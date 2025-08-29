@@ -4,6 +4,7 @@ import com.gsu25se05.itellispeak.jwt.JWTService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -23,26 +24,29 @@ public class EmailService {
     @Autowired
     private JWTService jwtService;
 
+    @Value("${app.urls.backend:bug-adapting-especially.ngrok-free.app}")
+    private String backendBaseUrl;
+
     private String url;
 
     @Async
     public void sendVerifyEmail(EmailDetail emailDetail) {
         try {
             Context context = new Context();
-
             context.setVariable("name", emailDetail.getName());
-            String token = jwtService.generateToken(emailDetail.getRecipient());
 
-            String link = url + "/auth/verify/" + token;
+            String token = jwtService.generateEmailVerifyToken(emailDetail.getRecipient());
+
+            String link = String.format("%s/auth/verify/%s", backendBaseUrl, token);
             context.setVariable("link", link);
-
             context.setVariable("button", "Verify");
 
             proceedToSendMail(emailDetail, context, "VerifyAccount");
-        } catch (MessagingException messagingException) {
-            messagingException.printStackTrace();
+        } catch (MessagingException e) {
+            e.printStackTrace();
         }
     }
+
 
     public void sendForgotPasswordEmail(EmailDetail emailDetail) {
         try {

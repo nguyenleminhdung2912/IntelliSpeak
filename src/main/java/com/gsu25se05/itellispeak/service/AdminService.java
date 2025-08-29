@@ -1,5 +1,6 @@
 package com.gsu25se05.itellispeak.service;
 
+import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.admin.CreateUserDTO;
 import com.gsu25se05.itellispeak.dto.admin.UserWithPackageDTO;
 import com.gsu25se05.itellispeak.dto.auth.reponse.UserDTO;
@@ -10,6 +11,7 @@ import com.gsu25se05.itellispeak.entity.Package;
 import com.gsu25se05.itellispeak.exception.ErrorCode;
 import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
 import com.gsu25se05.itellispeak.repository.*;
+import com.gsu25se05.itellispeak.utils.AccountUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,9 +31,10 @@ public class AdminService {
     private final UserUsageRepository userUsageRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final AccountUtils accountUtils;
 
 
-    public AdminService(TransactionRepository transactionRepository, UserRepository userRepository, HRRepository hrRepository, PackageRepository packageRepository, UserUsageRepository userUsageRepository, PasswordEncoder passwordEncoder, EmailService emailService) {
+    public AdminService(TransactionRepository transactionRepository, UserRepository userRepository, HRRepository hrRepository, PackageRepository packageRepository, UserUsageRepository userUsageRepository, PasswordEncoder passwordEncoder, EmailService emailService, AccountUtils accountUtils) {
         this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
         this.hrRepository = hrRepository;
@@ -39,6 +42,7 @@ public class AdminService {
         this.userUsageRepository = userUsageRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+        this.accountUtils = accountUtils;
     }
 
     public Double getMonthlyRevenue(int year, int month) {
@@ -224,7 +228,7 @@ public class AdminService {
                 .packageId(target.getPackageId())
                 .birthday(user.getBirthday())
                 .avatar(user.getAvatar())
-                .status(user.getStatus())
+                .status(user.getStatus().name())
                 .phone(user.getPhone())
                 .bio(user.getBio())
                 .website(user.getWebsite())
@@ -240,28 +244,33 @@ public class AdminService {
 
     @Transactional
     public UserDTO updateUserRole(Long userId, User.Role targetRole) {
-        if (targetRole == null) {
+
+        User current = accountUtils.getCurrentAccount();
+        if (current == null) {
+            throw new AuthAppException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        if (current.getRole() != User.Role.ADMIN) {
+            throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
+        }
+
+        if (targetRole == null || targetRole != User.Role.ADMIN) {
             throw new AuthAppException(ErrorCode.INVALID_INPUT);
         }
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthAppException(ErrorCode.ACCOUNT_NOT_FOUND));
 
-        if (user.getRole() == targetRole) {
+        if (user.getRole() == User.Role.ADMIN) {
             throw new AuthAppException(ErrorCode.DUPLICATE_OPERATION);
         }
 
-         if (user.getRole() == User.Role.ADMIN || targetRole == User.Role.ADMIN) {
-             throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
-         }
-
-
-        user.setRole(targetRole);
+        user.setRole(User.Role.ADMIN);
         user.setUpdateAt(LocalDateTime.now());
         userRepository.save(user);
 
         String email = user.getEmail();
-        String userName = (email != null && email.contains("@")) ? email.split("@")[0] : "";
+        String userName = (email != null && email.contains("@")) ? email.substring(0, email.indexOf('@')) : "";
 
         return UserDTO.builder()
                 .userId(user.getUserId())
@@ -273,7 +282,7 @@ public class AdminService {
                 .packageId(user.getAPackage() != null ? user.getAPackage().getPackageId() : null)
                 .birthday(user.getBirthday())
                 .avatar(user.getAvatar())
-                .status(user.getStatus())
+                .status(user.getStatus() != null ? user.getStatus().name() : null)
                 .phone(user.getPhone())
                 .bio(user.getBio())
                 .website(user.getWebsite())
@@ -296,7 +305,7 @@ public class AdminService {
             dto.setLastName(user.getLastName());
             dto.setEmail(user.getEmail());
             dto.setAvatar(user.getAvatar());
-            dto.setStatus(user.getStatus());
+            dto.setStatus(user.getStatus().name());
             if (user.getAPackage() != null) {
                 dto.setPackageId(user.getAPackage().getPackageId());
                 dto.setPackageName(user.getAPackage().getPackageName());
@@ -319,7 +328,7 @@ public class AdminService {
                     .packageId(user.getAPackage() != null ? user.getAPackage().getPackageId() : null)
                     .birthday(user.getBirthday())
                     .avatar(user.getAvatar())
-                    .status(user.getStatus())
+                    .status(user.getStatus().name())
                     .phone(user.getPhone())
                     .bio(user.getBio())
                     .website(user.getWebsite())
@@ -378,7 +387,7 @@ public class AdminService {
                 .role(dto.getRole())
                 .avatar("https://firebasestorage.googleapis.com/v0/b/mentor-booking-3d46a.appspot.com/o/76f15d2d-9f0b-4051-8177-812d5ee785a1.jpg?alt=media")
                 .isDeleted(false)
-                .status("VERIFIED")
+                .status(User.Status.VERIFIED)
                 .createAt(LocalDateTime.now())
                 .aPackage(welcomePackage)
                 .build();
@@ -402,7 +411,7 @@ public class AdminService {
                 .email(savedUser.getEmail())
                 .role(savedUser.getRole())
                 .avatar(savedUser.getAvatar())
-                .status(savedUser.getStatus())
+                .status(savedUser.getStatus().name())
                 .createAt(savedUser.getCreateAt())
                 .isDeleted(savedUser.getIsDeleted())
                 .packageId(welcomePackage.getPackageId())
