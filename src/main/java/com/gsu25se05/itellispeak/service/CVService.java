@@ -259,6 +259,45 @@ public class CVService {
                 .toList();
     }
 
+    private boolean isNotBlank(String s) {
+        return s != null && !s.trim().isEmpty();
+    }
+
+    private boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty();
+    }
+
+
+    private void updateProfileFromExtracted(User user, CVExtractedInfo extracted) {
+        if (extracted == null) return;
+
+        if (isNotBlank(extracted.getFullName())) {
+            String[] parts = extracted.getFullName().trim().split("\\s+");
+            if (parts.length > 1) {
+                String lastName = parts[parts.length - 1];
+                String firstName = String.join(" ", Arrays.copyOf(parts, parts.length - 1));
+                if (isBlank(user.getFirstName())) user.setFirstName(firstName);
+                if (isBlank(user.getLastName())) user.setLastName(lastName);
+            } else {
+                if (isBlank(user.getLastName())) user.setLastName(parts[0]);
+            }
+        }
+
+        // Phone
+        if (isNotBlank(extracted.getPhone()) && isBlank(user.getPhone())) {
+            user.setPhone(extracted.getPhone());
+        }
+
+        // Website, LinkedIn, GitHub
+        if (isNotBlank(extracted.getUniversity()) && isBlank(user.getBio())) {
+            user.setBio("Studied at " + extracted.getUniversity());
+        }
+
+        if (isNotBlank(extracted.getCareerGoals()) && isBlank(user.getBio())) {
+            user.setBio(extracted.getCareerGoals());
+        }
+    }
+
     @Transactional
     public Response<CVAnalysisResponseDTO> analyzeAndSaveEvaluation(String cvText, String imageURLs, String cvTitle, User user) throws Exception {
         String prompt = preparePrompt(cvText);
@@ -385,6 +424,12 @@ public class CVService {
                 recommended
         );
 
+        if (!memberCV.isProfileSynced()) {
+            updateProfileFromExtracted(user, extracted);
+            userRepository.save(user);
+            memberCV.setProfileSynced(true);
+            memberCVRepository.save(memberCV);
+        }
         user.getUserUsage().setCvAnalyzeUsed(user.getUserUsage().getCvAnalyzeUsed() + 1);
         userRepository.save(user);
         userUsageRepository.save(user.getUserUsage());

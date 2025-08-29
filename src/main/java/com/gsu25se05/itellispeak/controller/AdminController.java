@@ -126,7 +126,7 @@ public class AdminController {
         return ResponseEntity.ok(new Response<>(200, "User package upgraded successfully", data));
     }
 
-    @Operation(summary = "Admin đổi role người dùng (ví dụ: USER -> HR)")
+    @Operation(summary = "Admin đổi role người dùng (USER -> ADMIN)")
     @PutMapping("/users/{userId}/role")
     public ResponseEntity<Response<UserDTO>> updateUserRole(
             @PathVariable Long userId,

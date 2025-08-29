@@ -60,8 +60,10 @@ public class User implements UserDetails {
     @Column(length = 255)
     private String avatar;
 
-    @Column(length = 20)
-    private String status;
+    public enum Status { PENDING, VERIFIED }
+
+    @Enumerated(EnumType.STRING)
+    private Status status;
 
     @Column(length = 1000)
     private String bio;

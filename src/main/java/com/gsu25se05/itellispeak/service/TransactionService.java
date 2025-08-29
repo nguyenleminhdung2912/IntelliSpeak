@@ -111,7 +111,7 @@ public class TransactionService {
                 .packageName(packageName)
                 .birthday(user.getBirthday())
                 .avatar(user.getAvatar())
-                .status(user.getStatus())
+                .status(user.getStatus().name())
                 .phone(user.getPhone())
                 .bio(user.getBio())
                 .website(user.getWebsite())

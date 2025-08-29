@@ -35,6 +35,9 @@ public class MemberCV {
     @Column(name = "is_active")
     private boolean isActive;
 
+    @Column(name = "is_profile_synced")
+    private boolean profileSynced;
+
     @Column(name = "create_at")
     private LocalDateTime createAt;
 

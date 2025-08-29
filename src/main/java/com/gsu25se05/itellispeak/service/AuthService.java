@@ -117,7 +117,7 @@ public class AuthService implements UserDetailsService {
                 .packageName(user.getAPackage() != null ? user.getAPackage().getPackageName() : null)
                 .birthday(user.getBirthday())
                 .avatar(user.getAvatar())
-                .status(user.getStatus())
+                .status(user.getStatus().name())
                 .phone(user.getPhone())
                 .bio(user.getBio())
                 .website(user.getWebsite())
@@ -342,7 +342,6 @@ public class AuthService implements UserDetailsService {
 
     public ResponseEntity<LoginResponseDTO> checkLogin(LoginRequestDTO loginRequestDTO, HttpServletResponse response) {
         try {
-            // Validate email
             User account = findUserByEmail(loginRequestDTO.getEmail());
             if (account == null) {
                 throw new AuthAppException(ErrorCode.EMAIL_NOT_FOUND);
@@ -351,7 +350,6 @@ public class AuthService implements UserDetailsService {
                 throw new AuthAppException(ErrorCode.ACCOUNT_IS_DELETED);
             }
 
-            // Authenticate user
             Authentication authentication;
             try {
                 authentication = authenticationManager.authenticate(
@@ -364,12 +362,14 @@ public class AuthService implements UserDetailsService {
                 throw new AuthAppException(ErrorCode.USERNAME_PASSWORD_NOT_CORRECT);
             }
 
-            // Set authentication in SecurityContext
+            String status = (account.getStatus() == null) ? null : account.getStatus().toString();
+            if (!"VERIFIED".equalsIgnoreCase(status)) {
+                throw new AuthAppException(ErrorCode.EMAIL_WAIT_VERIFY);
+            }
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // Generate JWT tokens and set cookies
             String token = jwtService.generateToken(loginRequestDTO.getEmail());
-            // Sau khi tạo cookie
             Cookie tokenCookie = jwtService.createTokenCookie(token);
             response.addCookie(tokenCookie);
             response.addHeader("Set-Cookie",
@@ -393,16 +393,17 @@ public class AuthService implements UserDetailsService {
                     )
             );
 
-            // Build response
-            UserDTO userDTO = convertToUserDTO(account); // Convert User -> UserDTO
+            UserDTO userDTO = convertToUserDTO(account);
 
             LoginResponseDTO loginResponseDTO = new LoginResponseDTO();
             loginResponseDTO.setCode(200);
             loginResponseDTO.setMessage("Login successful");
             loginResponseDTO.setToken(token);
             loginResponseDTO.setRefreshToken(refreshToken);
-            loginResponseDTO.setPackageId(account.getAPackage().getPackageId());
-            loginResponseDTO.setPackageName(account.getAPackage().getPackageName());
+            if (account.getAPackage() != null) {
+                loginResponseDTO.setPackageId(account.getAPackage().getPackageId());
+                loginResponseDTO.setPackageName(account.getAPackage().getPackageName());
+            }
             loginResponseDTO.setUser(userDTO);
 
             return new ResponseEntity<>(loginResponseDTO, HttpStatus.OK);
@@ -425,6 +426,10 @@ public class AuthService implements UserDetailsService {
             //Check if the email exist
             User tempAccount = findUserByEmail(registerRequestDTO.getEmail());
             if (tempAccount != null) {
+                if (tempAccount.getStatus() == User.Status.VERIFIED
+                        || "VERIFIED".equalsIgnoreCase(String.valueOf(tempAccount.getStatus()))) {
+                    throw new AuthAppException(ErrorCode.EMAIL_EXISTED);
+                }
                 throw new AuthAppException(ErrorCode.EMAIL_WAIT_VERIFY);
 
             }
@@ -439,6 +444,7 @@ public class AuthService implements UserDetailsService {
             account.setRole(User.Role.USER);
             account.setCreateAt(LocalDateTime.now());
             account.setAPackage(packageRepository.findById(1L).orElse(null));
+            account.setStatus(User.Status.PENDING);
             User savedUser = userRepository.save(account);
 
             // Tạo UserUsage mặc định
@@ -451,6 +457,8 @@ public class AuthService implements UserDetailsService {
 
             userUsageRepository.save(usage);
 
+            String verifyToken = jwtService.generateEmailVerifyToken(savedUser.getEmail());
+            String link = "bug-adapting-especially.ngrok-free.app/auth/verify" + verifyToken;
             String responseMessage = "Registration successful, please check your email to verify";
             RegisterResponseDTO response = new RegisterResponseDTO(responseMessage, null, 201, registerRequestDTO.getEmail());
 
@@ -460,6 +468,7 @@ public class AuthService implements UserDetailsService {
                     .msgBody("Please verify your account to continue.")
                     .subject("Please verify your account!")
                     .name(account.getUsername())
+                    .attachment(link)
                     .build();
             emailService.sendVerifyEmail(emailDetail);
 
@@ -478,19 +487,31 @@ public class AuthService implements UserDetailsService {
 
     public boolean verifyAccount(String token) {
         try {
-            String email = jwtService.extractEmail(token);
+            String purpose = jwtService.extractPurpose(token);
+            if (!"email_verify".equals(purpose)) {
+                throw new TokenExpiredException("Invalid token purpose!", Instant.now());
+            }
 
+            String email = jwtService.extractEmail(token);
             User account = userRepository.findByEmail(email).orElse(null);
             if (account == null) {
                 throw new AuthAppException(ErrorCode.EMAIL_NOT_FOUND);
             }
-            account.setStatus("VERIFIED");
+
+            if (account.getStatus() == User.Status.VERIFIED
+                    || "VERIFIED".equalsIgnoreCase(String.valueOf(account.getStatus()))) {
+                return true;
+            }
+
+            account.setStatus(User.Status.VERIFIED);
             userRepository.save(account);
             return true;
+
         } catch (Exception e) {
             throw new TokenExpiredException("Token is invalid or has expired!", Instant.now());
         }
     }
+
 
     public ResponseEntity<ForgotPasswordResponse> forgotPassword(ForgotPasswordRequest forgotPasswordRequest) {
         try {
