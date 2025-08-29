@@ -573,6 +573,7 @@ public class CVService {
             dto.setMemberCvLinkToCv(sub.getMemberCV().getLinkToCv());
             dto.setCompanyId(sub.getCompany().getCompanyId());
             dto.setCompanyName(sub.getCompany().getName());
+            dto.setIsViewed(sub.getIsViewed());
             dto.setCompanyLogoUrl(sub.getCompany().getLogoUrl());
             return dto;
         }).toList();

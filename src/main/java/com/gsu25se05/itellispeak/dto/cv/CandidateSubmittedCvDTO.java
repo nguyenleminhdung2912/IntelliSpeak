@@ -10,4 +10,5 @@ public class CandidateSubmittedCvDTO {
     private Long companyId;
     private String companyName;
     private String companyLogoUrl;
+    private Boolean isViewed;
 }
