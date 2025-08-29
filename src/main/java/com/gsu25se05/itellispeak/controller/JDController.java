@@ -1,11 +1,13 @@
 package com.gsu25se05.itellispeak.controller;
 
 import com.gsu25se05.itellispeak.dto.Response;
+import com.gsu25se05.itellispeak.dto.jd.CvJdMatchResultDTO;
 import com.gsu25se05.itellispeak.dto.jd.GetAllJdDTO;
 import com.gsu25se05.itellispeak.entity.CompanyJD;
 import com.gsu25se05.itellispeak.entity.JD;
 import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
 import com.gsu25se05.itellispeak.exception.auth.NotFoundException;
+import com.gsu25se05.itellispeak.exception.auth.NotLoginException;
 import com.gsu25se05.itellispeak.service.CompanyJDService;
 import com.gsu25se05.itellispeak.service.JDService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,6 +46,25 @@ public class JDController {
                     .body(Map.of("error", "System error: " + e.getMessage()));
         }
     }
+
+    @GetMapping("/{jdId}/match-cv")
+    @io.swagger.v3.oas.annotations.Operation(summary = "So khớp JD với CV active")
+    public ResponseEntity<Response<CvJdMatchResultDTO>> matchJdWithActiveCv(@PathVariable Long jdId) {
+        try {
+            Response<CvJdMatchResultDTO> result = jdService.matchCurrentUsersActiveCvWithJdAI(jdId);
+            return ResponseEntity.ok(new Response<>(200, "AI match computed successfully.", result.getData()));
+        } catch (NotLoginException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new Response<>(401, e.getMessage(), null));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new Response<>(404, e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new Response<>(400, "Error: " + e.getMessage(), null));
+        }
+    }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getJDById(@PathVariable Long id) {
