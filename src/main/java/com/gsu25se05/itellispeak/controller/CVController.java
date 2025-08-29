@@ -8,6 +8,7 @@ import com.gsu25se05.itellispeak.dto.cv.GetAllCvDTO;
 import com.gsu25se05.itellispeak.entity.CVEvaluate;
 import com.gsu25se05.itellispeak.entity.CVSubmission;
 import com.gsu25se05.itellispeak.service.CVService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -80,6 +81,7 @@ public class CVController {
     }
 
     @GetMapping("/candidate/view-submitted-cv")
+    @Operation(summary = "Người dùng xem danh sách CV đã nộp, isViewed = null là công ty đó chưa xem, isViewed = false là công ty từ chối, isViewed = true là công ty chấp nhận và sẽ liên lạc sớm")
     public ResponseEntity<Response<List<CandidateSubmittedCvDTO>>> candidateViewSubmittedCV() {
         try {
             List<CandidateSubmittedCvDTO> dtos = cvService.getSubmittedCvsForCurrentUser();
