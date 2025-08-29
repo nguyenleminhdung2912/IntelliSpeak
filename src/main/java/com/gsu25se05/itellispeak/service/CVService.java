@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.cv.CVAnalysisResponseDTO;
 import com.gsu25se05.itellispeak.dto.cv.GetAllCvDTO;
+import com.gsu25se05.itellispeak.dto.interview_session.InterviewSessionDTO;
 import com.gsu25se05.itellispeak.entity.*;
 import com.gsu25se05.itellispeak.exception.ErrorCode;
 import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
@@ -14,11 +15,14 @@ import com.gsu25se05.itellispeak.utils.AccountUtils;
 import com.gsu25se05.itellispeak.utils.CloudinaryUtils;
 import com.gsu25se05.itellispeak.utils.FileUtils;
 import com.gsu25se05.itellispeak.utils.PdfToImageConverter;
+import com.gsu25se05.itellispeak.utils.mapper.InterviewSessionMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.data.jpa.domain.Specification;
+import jakarta.persistence.criteria.*;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -39,6 +43,8 @@ public class CVService {
     private final CloudinaryUtils cloudinaryUtils;
     private final UserRepository userRepository;
     private final UserUsageRepository userUsageRepository;
+    private final InterviewSessionRepository interviewSessionRepository;
+    private final InterviewSessionMapper interviewSessionMapper;
 
     public CVService(
             @Value("${genai.api.key}") String apiKey,
@@ -49,7 +55,9 @@ public class CVService {
             MemberCVRepository memberCVRepository,
             AccountUtils accountUtils,
             CloudinaryUtils cloudinaryUtils,
-            UserRepository userRepository, UserUsageRepository userUsageRepository) {
+            UserRepository userRepository, UserUsageRepository userUsageRepository,
+            InterviewSessionRepository interviewSessionRepository,
+            InterviewSessionMapper interviewSessionMapper) {
         this.webClient = WebClient.builder()
                 .baseUrl(API_URL + "?key=" + apiKey)
                 .defaultHeader("Content-Type", "application/json")
@@ -63,6 +71,8 @@ public class CVService {
         this.cloudinaryUtils = cloudinaryUtils;
         this.userRepository = userRepository;
         this.userUsageRepository = userUsageRepository;
+        this.interviewSessionRepository = interviewSessionRepository;
+        this.interviewSessionMapper = interviewSessionMapper;
     }
 
     private String sanitizeText(String text) {
@@ -108,6 +118,142 @@ public class CVService {
         return analyzeAndSaveEvaluation(cleanText, imageUrls.toString(), cvTitle, currentUser);
     }
 
+    private static String normalizeDomain(String d) {
+        if (d == null) return null;
+        d = d.toLowerCase();
+        // Ánh xạ nhanh alias ↔ domain chuẩn
+        if (d.contains("backend")) return "backend";
+        if (d.contains("front")) return "frontend";
+        if (d.contains("full")) return "fullstack";
+        if (d.contains("devops") || d.contains("sre")) return "devops";
+        if (d.contains("cloud")) return "cloud";
+        if (d.contains("data") && !d.contains("database")) return "data";
+        if (d.contains("ml") || d.contains("machine learning") || d.contains("ai")) return "ml";
+        if (d.contains("qa") || d.contains("test") || d.contains("automation")) return "qa";
+        if (d.contains("security") || d.contains("sec")) return "security";
+        if (d.contains("mobile") || d.contains("android") || d.contains("ios")) return "mobile";
+        if (d.contains("architect")) return "architect";
+        if (d.contains("product") || d.contains("po")) return "product";
+        if (d.contains("ba") || d.contains("business analyst")) return "ba";
+        return d;
+    }
+
+    private List<InterviewSessionDTO> recommendSessions(String detectedDomain, List<String> skills, int limit) {
+        // 1) Chuẩn hoá domain theo Topic thực tế trong DB (ví dụ "backend system" | "user interface" | "fullstack")
+        final String domain = normalizeDomain(detectedDomain);
+        final String domainLower = (domain == null) ? "" : domain.toLowerCase();
+
+        // 2) Gom keyword từ skills (+ tách domain thành từ đơn), hạ chữ, distinct
+        List<String> kw = new ArrayList<>();
+        if (skills != null) {
+            kw.addAll(
+                    skills.stream()
+                            .filter(Objects::nonNull)
+                            .map(String::trim)
+                            .map(String::toLowerCase)
+                            .filter(s -> !s.isEmpty())
+                            .distinct()
+                            .toList()
+            );
+        }
+        if (!domainLower.isBlank()) {
+            Arrays.stream(domainLower.split("\\s+"))
+                    .filter(s -> s.length() >= 3) // bỏ từ quá ngắn
+                    .forEach(kw::add);
+        }
+        final List<String> keywords = kw.stream().distinct().toList();     // effectively final
+        final Set<String> kwSet = new HashSet<>(keywords);                  // for scoring
+
+        // 3) Specification: isDeleted=false AND (match theo topic/title/desc OR tags)
+        Specification<InterviewSession> spec = (root, query, cb) -> {
+            List<Predicate> ands = new ArrayList<>();
+            ands.add(cb.isFalse(root.get("isDeleted")));
+
+            // join topic luôn dùng
+            Join<?, ?> tp = root.join("topic", JoinType.LEFT);
+
+            List<Predicate> ors = new ArrayList<>();
+
+            // 3.1 match theo TOPIC + DOMAIN + TITLE/DESCRIPTION chứa domain
+            if (!domainLower.isBlank()) {
+                String likeDomain = "%" + domainLower + "%";
+                ors.add(cb.like(cb.lower(tp.get("title")), likeDomain));            // topic.title LIKE %domain%
+                ors.add(cb.like(cb.lower(root.get("title")), likeDomain));          // title LIKE %domain%
+                ors.add(cb.like(cb.lower(root.get("description")), likeDomain));    // description LIKE %domain%
+            }
+
+            // 3.2 match theo TITLE/DESCRIPTION với nhiều KEYWORDS
+            if (!keywords.isEmpty()) {
+                List<Predicate> kwOrs = new ArrayList<>();
+                for (String k : keywords) {
+                    String likeK = "%" + k + "%";
+                    kwOrs.add(cb.like(cb.lower(root.get("title")), likeK));
+                    kwOrs.add(cb.like(cb.lower(root.get("description")), likeK));
+                }
+                ors.add(cb.or(kwOrs.toArray(new Predicate[0])));
+
+                // 3.3 match theo TAGS
+                Join<?, ?> tg = root.join("tags", JoinType.LEFT);
+                CriteriaBuilder.In<String> in = cb.in(cb.lower(tg.get("title")));
+                for (String k : keywords) in.value(k);
+                ors.add(in);
+            }
+
+            if (!ors.isEmpty()) {
+                ands.add(cb.or(ors.toArray(new Predicate[0])));
+            }
+            return cb.and(ands.toArray(new Predicate[0]));
+        };
+
+        // 4) Lấy rộng hơn rồi chấm điểm để ưu tiên KHỚP TITLE
+        var page = org.springframework.data.domain.PageRequest.of(0, Math.max(15, Math.max(5, limit)));
+        List<InterviewSession> pool = interviewSessionRepository.findAll(spec, page).getContent();
+
+        Comparator<InterviewSession> byScoreDesc = Comparator
+                .comparingInt((InterviewSession s) -> {
+                    int score = 0;
+                    String title = Optional.ofNullable(s.getTitle()).orElse("").toLowerCase();
+                    String desc  = Optional.ofNullable(s.getDescription()).orElse("").toLowerCase();
+                    String topic = Optional.ofNullable(s.getTopic()).map(Topic::getTitle).orElse("").toLowerCase();
+
+                    // domain ưu tiên: title > topic > description
+                    if (!domainLower.isBlank() && title.contains(domainLower)) score += 6;
+                    if (!domainLower.isBlank() && topic.contains(domainLower)) score += 4;
+                    if (!domainLower.isBlank() && desc.contains(domainLower))  score += 3;
+
+                    // mỗi keyword: title +2, description +1
+                    for (String k : kwSet) {
+                        if (k.isBlank()) continue;
+                        if (title.contains(k)) score += 2;
+                        if (desc.contains(k))  score += 1;
+                    }
+
+                    // cộng thêm nếu tag trùng keyword
+                    if (s.getTags() != null) {
+                        for (Tag t : s.getTags()) {
+                            String tt = Optional.ofNullable(t.getTitle()).orElse("").toLowerCase();
+                            if (kwSet.contains(tt)) score += 2;
+                        }
+                    }
+                    return score;
+                })
+                .reversed()
+                .thenComparing(InterviewSession::getUpdateAt, Comparator.nullsLast(Comparator.reverseOrder()))
+                .thenComparing(InterviewSession::getCreateAt, Comparator.nullsLast(Comparator.reverseOrder()));
+
+        List<InterviewSession> ranked = pool.stream()
+                .sorted(byScoreDesc)
+                .limit(limit)
+                .toList();
+
+        return ranked.stream()
+                .map(interviewSessionMapper::toDTO)
+                .toList();
+    }
+
+
+
+
     @Transactional
     public Response<CVAnalysisResponseDTO> analyzeAndSaveEvaluation(String cvText, String imageURLs, String cvTitle, User user) throws Exception {
         String prompt = preparePrompt(cvText);
@@ -130,13 +276,23 @@ public class CVService {
             return new Response<>(422, String.format("%s Detected domain: %s.", msg, detectedDomain), null);
         }
 
-        // 2) Kiểm tra đủ cấu trúc trước khi dùng
+        JsonNode infoNode = root.path("extractedInfo");
         JsonNode feedbackNode = root.path("feedback");
+        // LẤY domain & skills từ JSON
+        String detectedDomain = root.path("detectedDomain").asText(null);
+
+        List<String> skills = new ArrayList<>();
+        if (infoNode.has("skills") && infoNode.get("skills").isArray()) {
+            infoNode.get("skills").forEach(n -> {
+                if (n.isTextual()) skills.add(n.asText());
+            });
+        }
+
+        // 2) Kiểm tra đủ cấu trúc trước khi dùng
         if (feedbackNode.isMissingNode()) {
             return new Response<>(502, "AI response missing 'feedback' object", null);
         }
 
-        JsonNode infoNode = root.path("extractedInfo");
         if (infoNode.isMissingNode()) {
             return new Response<>(502, "AI response missing 'extractedInfo' object", null);
         }
@@ -214,9 +370,14 @@ public class CVService {
         extracted.setCreateAt(LocalDateTime.now());
         extracted.setUpdateAt(LocalDateTime.now());
 
+
+        // GỢI Ý SESSION (vd: 8 session)
+        List<InterviewSessionDTO> recommended = recommendSessions(detectedDomain, skills, 8);
+
         CVAnalysisResponseDTO dto = new CVAnalysisResponseDTO(
                 getCV(cvEvaluate.getId()).getData(),
-                cvExtractedInfoRepository.save(extracted)
+                extracted,
+                recommended
         );
 
         user.getUserUsage().setCvAnalyzeUsed(user.getUserUsage().getCvAnalyzeUsed() + 1);
@@ -249,6 +410,8 @@ public class CVService {
             - If supported (IT), return exactly this structure:
               {
                 "supported": true,
+                            "detectedDomain": "<short domain like: backend | frontend | fullstack | mobile | devops | cloud | data | ml | ai | qa | security | sysadmin | network | product | ba | po | architect | sre | ...>",
+                                "suggestedRoles": ["<short role1>", "<short role2>", "..."],
                 "feedback": {
                   "overallScore": <0-100>,
                   "ATS": {
