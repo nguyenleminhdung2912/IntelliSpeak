@@ -40,7 +40,7 @@ public enum ErrorCode {
     // ACCOUNTS | HR | CODE: 16XX
     HR_ALREADY_APPLIED(1600, "You have already submitted a request to become HR", HttpStatus.CONFLICT),
     HR_NOT_FOUND(1601, "You have not submitted a request to become HR", HttpStatus.NOT_FOUND),
-
+    COMPANY_NOT_FOUND(1602, "Company not found", HttpStatus.NOT_FOUND),
     SUCCESS(200, "Success", HttpStatus.OK),
 
     // TOPICS | CODE: 2XXX

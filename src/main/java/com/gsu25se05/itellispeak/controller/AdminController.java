@@ -7,6 +7,7 @@ import com.gsu25se05.itellispeak.dto.admin.UserWithPackageDTO;
 import com.gsu25se05.itellispeak.dto.apackage.UpgradePackageRequest;
 import com.gsu25se05.itellispeak.dto.auth.reponse.UserDTO;
 import com.gsu25se05.itellispeak.dto.hr.HRAdminResponseDTO;
+import com.gsu25se05.itellispeak.dto.hr.UpdateRoleHRRequest;
 import com.gsu25se05.itellispeak.entity.Transaction;
 import com.gsu25se05.itellispeak.service.AdminService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -135,6 +136,17 @@ public class AdminController {
         UserDTO data = adminService.updateUserRole(userId, request.getRole());
         return ResponseEntity.ok(new Response<>(200, "User role updated successfully", data));
     }
+
+    @Operation(summary = "Promote a user to HR and assign a company (ADMIN only)")
+    @PostMapping("/users/{userId}/promote-hr")
+    public ResponseEntity<Response<UserDTO>> promoteUserToHR(
+            @PathVariable Long userId,
+            @RequestBody UpdateRoleHRRequest request
+    ) {
+        UserDTO data = adminService.updateUserToHR(userId, request.getCompanyId());
+        return ResponseEntity.ok(new Response<>(200, "Promoted to HR and company assigned", data));
+    }
+
 
     @Operation(summary = "Get all users with their package info")
     @GetMapping("/users-with-package")

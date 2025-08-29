@@ -32,9 +32,10 @@ public class AdminService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final AccountUtils accountUtils;
+    private final CompanyRepository companyRepository;
 
 
-    public AdminService(TransactionRepository transactionRepository, UserRepository userRepository, HRRepository hrRepository, PackageRepository packageRepository, UserUsageRepository userUsageRepository, PasswordEncoder passwordEncoder, EmailService emailService, AccountUtils accountUtils) {
+    public AdminService(TransactionRepository transactionRepository, UserRepository userRepository, HRRepository hrRepository, PackageRepository packageRepository, UserUsageRepository userUsageRepository, PasswordEncoder passwordEncoder, EmailService emailService, AccountUtils accountUtils, CompanyRepository companyRepository) {
         this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
         this.hrRepository = hrRepository;
@@ -43,6 +44,7 @@ public class AdminService {
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.accountUtils = accountUtils;
+        this.companyRepository = companyRepository;
     }
 
     public Double getMonthlyRevenue(int year, int month) {
@@ -134,7 +136,7 @@ public class AdminService {
         userRepository.save(user);
 
         String email = user.getEmail();
-        String name  = (user.getUsername() != null && !user.getUsername().isBlank())
+        String name = (user.getUsername() != null && !user.getUsername().isBlank())
                 ? user.getUsername()
                 : extractUsernameFromEmail(email);
 
@@ -164,7 +166,7 @@ public class AdminService {
 
         User user = hr.getUser();
         String email = user.getEmail();
-        String name  = (user.getUsername() != null && !user.getUsername().isBlank())
+        String name = (user.getUsername() != null && !user.getUsername().isBlank())
                 ? user.getUsername()
                 : extractUsernameFromEmail(email);
 
@@ -207,13 +209,13 @@ public class AdminService {
         userRepository.save(user);
 
 
-            userUsageRepository.findByUser(user).ifPresent(usage -> {
-                usage.setCvAnalyzeUsed(0);
-                usage.setJdAnalyzeUsed(0);
-                usage.setInterviewUsed(0);
-                usage.setUpdateAt(LocalDateTime.now());
-                userUsageRepository.save(usage);
-            });
+        userUsageRepository.findByUser(user).ifPresent(usage -> {
+            usage.setCvAnalyzeUsed(0);
+            usage.setJdAnalyzeUsed(0);
+            usage.setInterviewUsed(0);
+            usage.setUpdateAt(LocalDateTime.now());
+            userUsageRepository.save(usage);
+        });
 
 
         String email = user.getEmail();
@@ -295,6 +297,90 @@ public class AdminService {
                 .isDeleted(user.getIsDeleted())
                 .build();
     }
+
+    @Transactional
+    public UserDTO updateUserToHR(Long userId, Long companyId) {
+
+        User current = accountUtils.getCurrentAccount();
+        if (current == null) {
+            throw new AuthAppException(ErrorCode.NOT_LOGIN);
+        }
+
+        if (current.getRole() != User.Role.ADMIN) {
+            throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
+        }
+
+        if (userId == null || companyId == null) {
+            throw new AuthAppException(ErrorCode.INVALID_INPUT);
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthAppException(ErrorCode.ACCOUNT_NOT_FOUND));
+
+        if (user.getRole() == User.Role.ADMIN) {
+            throw new AuthAppException(ErrorCode.DUPLICATE_OPERATION);
+        }
+
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new AuthAppException(ErrorCode.COMPANY_NOT_FOUND));
+
+        HR hr = hrRepository.findByUser(user).orElse(null);
+        if (hr == null) {
+            hr = new HR();
+            hr.setUser(user);
+            hr.setApprovedAt(LocalDateTime.now());
+        }
+        hr.setCompany(company);
+        hr.setStatus(HRStatus.APPROVED);
+        hrRepository.save(hr);
+
+        if (user.getRole() != User.Role.HR) {
+            user.setRole(User.Role.HR);
+            user.setUpdateAt(LocalDateTime.now());
+            userRepository.save(user);
+        }
+
+        String email = user.getEmail();
+        String name = (user.getFirstName() != null && !user.getFirstName().isBlank())
+                ? user.getFirstName()
+                : extractUsernameFromEmail(email);
+        String companyName = company.getName();
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                emailService.sendHrApprovalEmail(email, name);
+            }
+        });
+
+        // Map DTO trả về
+        String userName = (email != null && email.contains("@")) ? email.substring(0, email.indexOf('@')) : "";
+
+        return UserDTO.builder()
+                .userId(user.getUserId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .userName(userName)
+                .email(user.getEmail())
+                .role(user.getRole())
+                .packageId(user.getAPackage() != null ? user.getAPackage().getPackageId() : null)
+                .birthday(user.getBirthday())
+                .avatar(user.getAvatar())
+                .status(user.getStatus() != null ? user.getStatus().name() : null)
+                .phone(user.getPhone())
+                .bio(user.getBio())
+                .website(user.getWebsite())
+                .github(user.getGithub())
+                .linkedin(user.getLinkedin())
+                .facebook(user.getFacebook())
+                .youtube(user.getYoutube())
+                .createAt(user.getCreateAt())
+                .updateAt(user.getUpdateAt())
+                .isDeleted(user.getIsDeleted())
+                .build();
+    }
+
+
 
 
     public List<UserWithPackageDTO> getAllUsersWithPackage() {
