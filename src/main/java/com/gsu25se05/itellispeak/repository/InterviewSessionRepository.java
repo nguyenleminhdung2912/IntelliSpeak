@@ -4,6 +4,7 @@ import com.gsu25se05.itellispeak.entity.InterviewSession;
 import com.gsu25se05.itellispeak.entity.User;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface InterviewSessionRepository extends JpaRepository<InterviewSession, Long> {
+public interface InterviewSessionRepository extends JpaRepository<InterviewSession, Long>, JpaSpecificationExecutor<InterviewSession> {
     List<InterviewSession> findByTopic_TopicIdAndIsDeletedFalse(Long topicId);
     List<InterviewSession> findAllBySourceNotOrSourceIsNullAndIsDeletedFalse(String source);
 
