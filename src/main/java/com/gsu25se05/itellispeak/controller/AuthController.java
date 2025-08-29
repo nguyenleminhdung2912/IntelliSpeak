@@ -9,8 +9,6 @@ import com.gsu25se05.itellispeak.repository.UserRepository;
 import com.gsu25se05.itellispeak.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +20,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -34,14 +30,7 @@ public class AuthController {
     @Autowired
     AuthService authService;
 
-    @Autowired
-    private UserRepository accountRepository;
-
-    @Autowired
-    private JWTService jwtService;
-
-
-    @Value("${app.urls.frontend:https://intelli-speak-web.vercel.app}")
+    @Value("${BASE_FRONTEND_URL}")
     private String frontendBaseUrl;
 
     @Autowired
