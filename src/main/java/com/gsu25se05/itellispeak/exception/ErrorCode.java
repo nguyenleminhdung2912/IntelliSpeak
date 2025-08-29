@@ -29,6 +29,7 @@ public enum ErrorCode {
     ACCOUNT_NOT_ADMIN(1018, "Account is not an admin", HttpStatus.BAD_REQUEST),
     NOT_PURCHASED_COURSE(1019, "Account has not purchased the course", HttpStatus.BAD_REQUEST),
     UNEXPECTED_ERROR(1020, "An unexpected error occurred", HttpStatus.BAD_REQUEST),
+    DOMAIN_NOT_VALID(1021, "Email domain is not allowed. Please use a valid email domain.", HttpStatus.UNPROCESSABLE_ENTITY),
 
     // ACCOUNTS | EMAILS | CODE: 15XX
     INVALID_OTP(1500, "Invalid OTP", HttpStatus.BAD_REQUEST),
