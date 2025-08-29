@@ -392,7 +392,6 @@ public class CVService {
         return new Response<>(200, "Analysis successful", dto);
     }
 
-
     private String preparePrompt(String cvText) {
         return String.format("""
             You are an expert in ATS (Applicant Tracking System) and CV/Resume analysis for the **IT/technology domain only**.
@@ -465,8 +464,6 @@ public class CVService {
             """, cvText);
     }
 
-
-
     private String callGemini(String prompt) {
         try {
             Map<String, Object> requestBody = Map.of(
@@ -519,6 +516,7 @@ public class CVService {
         return new Response<>(200, "Thành công", dtos);
     }
 
+    @Transactional
     public String submitCvToCompany(Long companyId) {
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) throw new AuthAppException(ErrorCode.NOT_LOGIN);
@@ -640,5 +638,31 @@ public class CVService {
         CVSubmission submission = getAndVerifySubmissionForHr(submissionId);
         submission.setIsViewed(false);
         cVSubmissionRepository.save(submission);
+    }
+
+    @Transactional
+    public void setActiveCv(Long cvId) {
+        // 1. Get current user
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            throw new AuthAppException(ErrorCode.NOT_LOGIN);
+        }
+
+        // 2. Find the target MemberCV
+        MemberCV cvToActivate = memberCVRepository.findById(cvId)
+                .orElseThrow(() -> new AuthAppException(ErrorCode.CV_NOT_FOUND));
+
+        // 3. Verify ownership
+        if (!cvToActivate.getUser().getUserId().equals(currentUser.getUserId())) {
+            throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
+        }
+
+        // 4. Deactivate all other CVs for the user
+        memberCVRepository.deactivateOldCVsByUser(currentUser);
+
+        // 5. Activate the target CV and save
+        cvToActivate.setActive(true);
+        cvToActivate.setUpdateAt(LocalDateTime.now());
+        memberCVRepository.save(cvToActivate);
     }
 }
