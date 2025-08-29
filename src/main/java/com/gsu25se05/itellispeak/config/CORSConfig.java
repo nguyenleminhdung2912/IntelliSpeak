@@ -10,13 +10,14 @@ public class CORSConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**") // Áp dụng cho tất cả các endpoint
-                .allowedOrigins("http://localhost:3000",
-                        "http://localhost:8080",
-                        "http://localhost:5173",
-                        "https://itelli-speak-web.vercel.app",
-                        "https://intelli-speak-web.vercel.app",
-                        "https://intellispeak-admin.vercel.app/",
-                        "https://endlessly-enabling-husky.ngrok-free.app/") // Thêm các domain được phép truy cập
+//                .allowedOrigins("http://localhost:3000",
+//                        "http://localhost:8080",
+//                        "http://localhost:5173",
+//                        "https://itelli-speak-web.vercel.app",
+//                        "https://intelli-speak-web.vercel.app",
+//                        "https://intellispeak-admin.vercel.app/",
+//                        "https://endlessly-enabling-husky.ngrok-free.app/") // Thêm các domain được phép truy cập
+                .allowedOriginPatterns("*")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Cho phép các phương thức
                 .allowedHeaders("*") // Cho phép tất cả các header
                 .allowCredentials(true); // Cho phép gửi thông tin xác thực (cookie, auth headers)

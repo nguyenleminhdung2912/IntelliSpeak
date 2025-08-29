@@ -37,4 +37,11 @@ public class TransactionController {
         Response<List<TransactionDTO>> res = transactionService.getMyTransactionHistory();
         return ResponseEntity.ok(res);
     }
+
+    @Operation(summary = "Lấy tổng doanh thu của các transaction thành công")
+        @GetMapping("/total-revenue")
+        public ResponseEntity<Response<Double>> getTotalRevenue() {
+            double totalRevenue = transactionService.getTotalRevenueOfSuccessfulTransactions();
+            return ResponseEntity.ok(new Response<>(200, "Fetched total revenue successfully", totalRevenue));
+        }
 }
