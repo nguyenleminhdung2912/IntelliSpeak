@@ -48,7 +48,7 @@ public class JDController {
     }
 
     @GetMapping("/{jdId}/match-cv")
-    @io.swagger.v3.oas.annotations.Operation(summary = "So khớp JD với CV active")
+    @Operation(summary = "So khớp JD với CV active")
     public ResponseEntity<Response<CvJdMatchResultDTO>> matchJdWithActiveCv(@PathVariable Long jdId) {
         try {
             Response<CvJdMatchResultDTO> result = jdService.matchCurrentUsersActiveCvWithJdAI(jdId);
