@@ -4,6 +4,8 @@ import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.auth.reponse.*;
 import com.gsu25se05.itellispeak.dto.auth.request.*;
+import com.gsu25se05.itellispeak.exception.ErrorCode;
+import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
 import com.gsu25se05.itellispeak.jwt.JWTService;
 import com.gsu25se05.itellispeak.repository.UserRepository;
 import com.gsu25se05.itellispeak.service.AuthService;
@@ -20,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/auth")
@@ -51,6 +54,19 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<RegisterResponseDTO> registerAccount(@Valid @RequestBody RegisterRequestDTO registerRequestDTO, HttpServletResponse response) {
+        String email = registerRequestDTO.getEmail();
+        String domain = email.substring(email.indexOf("@") + 1);
+
+        List<String> allowedDomains = List.of(
+                "gmail.com", "outlook.com", "hotmail.com",
+                "yahoo.com", "icloud.com", "protonmail.com",
+                "fpt.edu.vn", "stu.edu.vn", "hust.edu.vn"
+        );
+
+
+        if (!allowedDomains.contains(domain)) {
+            throw new AuthAppException(ErrorCode.DOMAIN_NOT_VALID);
+        }
         return authService.registerAccount(registerRequestDTO);
     }
 
@@ -95,7 +111,6 @@ public class AuthController {
     ) {
         return authService.resetPassword(resetPasswordRequest, token);
     }
-
 
 
 //    @GetMapping("/cookies")
