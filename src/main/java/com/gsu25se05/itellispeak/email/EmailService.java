@@ -24,7 +24,7 @@ public class EmailService {
     @Autowired
     private JWTService jwtService;
 
-    @Value("${app.urls.backend:bug-adapting-especially.ngrok-free.app}")
+    @Value("${BASE_BACKEND_URL}")
     private String backendBaseUrl;
 
     private String url;
