@@ -12,9 +12,10 @@ import java.util.Optional;
 
 @Repository
 public interface CVSubmissionRepository extends JpaRepository<CVSubmission, Long> {
-    boolean existsByCompanyAndMemberCV(Company company, MemberCV memberCV);
 
     Optional<CVSubmission> findByCompanyAndMemberCV(Company company, MemberCV memberCV);
 
     List<CVSubmission> findByMemberCV_User(User user);
+
+    List<CVSubmission> findByCompany(Company company);
 }

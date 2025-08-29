@@ -5,6 +5,7 @@ import com.gsu25se05.itellispeak.dto.auth.reponse.UserDTO;
 import com.gsu25se05.itellispeak.dto.transaction.PackageBriefDTO;
 import com.gsu25se05.itellispeak.dto.transaction.TransactionDTO;
 import com.gsu25se05.itellispeak.entity.Transaction;
+import com.gsu25se05.itellispeak.entity.TransactionStatus;
 import com.gsu25se05.itellispeak.entity.User;
 import com.gsu25se05.itellispeak.entity.UserUsage;
 import com.gsu25se05.itellispeak.repository.TransactionRepository;
@@ -85,8 +86,8 @@ public class TransactionService {
 
         // Lấy usage
         var usageOpt = userUsageRepository.findByUser(user);
-        int cvUsed  = usageOpt.map(UserUsage::getCvAnalyzeUsed).orElse(0);
-        int jdUsed  = usageOpt.map(UserUsage::getJdAnalyzeUsed).orElse(0);
+        int cvUsed = usageOpt.map(UserUsage::getCvAnalyzeUsed).orElse(0);
+        int jdUsed = usageOpt.map(UserUsage::getJdAnalyzeUsed).orElse(0);
         int itvUsed = usageOpt.map(UserUsage::getInterviewUsed).orElse(0);
 
         String email = user.getEmail();
@@ -125,5 +126,16 @@ public class TransactionService {
                 .jdAnalyzeUsed(jdUsed)
                 .interviewUsed(itvUsed)
                 .build();
+    }
+
+    public double getTotalRevenueOfSuccessfulTransactions() {
+        List<Transaction> transactions = transactionRepository.findAll();
+        double totalRevenue = 0.0;
+        for (Transaction t : transactions) {
+            if (t.getTransactionStatus() == TransactionStatus.PAID) {
+                totalRevenue += t.getAmount();
+            }
+        }
+        return totalRevenue;
     }
 }

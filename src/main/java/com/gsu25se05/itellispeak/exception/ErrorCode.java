@@ -64,7 +64,8 @@ public enum ErrorCode {
     OUT_OF_JD_ANALYZE_COUNT(4002, "You have reached the limit for JD analysis", HttpStatus.FORBIDDEN),
     NO_CV_UPLOADED(4003, "You have not uploaded any CV yet", HttpStatus.BAD_REQUEST),
     CV_IS_PENDING(4004, "CV is pending review and cannot be resubmitted", HttpStatus.BAD_REQUEST),
-    CV_IS_ALREADY_ACCEPTED(4004, "CV is pending review and cannot be resubmitted", HttpStatus.BAD_REQUEST),
+    CV_IS_ALREADY_ACCEPTED(4005, "CV is pending review and cannot be resubmitted", HttpStatus.BAD_REQUEST),
+    CV_SUBMISSION_NOT_FOUND(4006, "CV submission not found", HttpStatus.NOT_FOUND),
 
     // PACKAGE | CODE: 6XXX
     PACKAGE_NOT_FOUND(6001, "Package not found", HttpStatus.NOT_FOUND),
