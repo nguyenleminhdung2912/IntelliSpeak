@@ -50,13 +50,13 @@ public class PaymentController {
         Response<String> response = paymentService.successPayment(orderCode);
         if (response.getCode() == 200 && "PAID".equals(response.getData())) {
             return ResponseEntity.status(HttpStatus.FOUND)
-//                    .header("Location", "https://intelli-speak-web.vercel.app/payment-success")
-                    .header("Location", "http://localhost:5173/payment-success")
+                    .header("Location", "https://intelli-speak-web.vercel.app/payment-success")
+//                    .header("Location", "http://localhost:5173/payment-success")
                     .build();
         } else if ("CANCELLED".equalsIgnoreCase(status) || "EXPIRED".equalsIgnoreCase(status)) {
             return ResponseEntity.status(HttpStatus.FOUND)
-//                    .header("Location", "https://intelli-speak-web.vercel.app/payment-failed")
-                    .header("Location", "http://localhost:5173/payment-failed")
+                    .header("Location", "https://intelli-speak-web.vercel.app/payment-failed")
+//                    .header("Location", "http://localhost:5173/payment-failed")
                     .build();
         }
         return ResponseEntity.status(response.getCode()).body(response);
@@ -76,8 +76,8 @@ public class PaymentController {
                 Response<String> response = paymentService.cancelPayment(orderCodeLong);
                 if (response.getCode() == 200 && "CANCELLED".equals(response.getData())) {
                     return ResponseEntity.status(HttpStatus.FOUND)
-//                            .header("Location", "https://intelli-speak-web.vercel.app/payment-failed")
-                            .header("Location", "http://localhost:5173/payment-failed")
+                            .header("Location", "https://intelli-speak-web.vercel.app/payment-failed")
+//                            .header("Location", "http://localhost:5173/payment-failed")
                             .build();
                 }
                 return ResponseEntity.status(response.getCode()).body(response);
