@@ -369,7 +369,7 @@ public class CVService {
         extracted.setWorkExperience(infoNode.path("workExperience").asText(""));
         extracted.setCreateAt(LocalDateTime.now());
         extracted.setUpdateAt(LocalDateTime.now());
-
+        cvExtractedInfoRepository.save(extracted);
 
         // GỢI Ý SESSION (vd: 8 session)
         List<InterviewSessionDTO> recommended = recommendSessions(detectedDomain, skills, 8);
