@@ -3,8 +3,10 @@ package com.gsu25se05.itellispeak.controller;
 
 import com.gsu25se05.itellispeak.dto.cv.CVAnalysisResponseDTO;
 import com.gsu25se05.itellispeak.dto.Response;
+import com.gsu25se05.itellispeak.dto.cv.CandidateSubmittedCvDTO;
 import com.gsu25se05.itellispeak.dto.cv.GetAllCvDTO;
 import com.gsu25se05.itellispeak.entity.CVEvaluate;
+import com.gsu25se05.itellispeak.entity.CVSubmission;
 import com.gsu25se05.itellispeak.service.CVService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
@@ -64,4 +66,27 @@ public class CVController {
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
+
+    @PostMapping("/submit-for-company")
+    public ResponseEntity<Response<String>> submitCvToCompany(
+            @RequestParam Long companyId) {
+        try {
+            // Assume you have a method to get the current user
+            String result = cvService.submitCvToCompany(companyId);
+            return ResponseEntity.ok(new Response<>(200, "CV submitted successfully!", result));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new Response<>(400, "Error: " + e.getMessage(), null));
+        }
+    }
+
+    @GetMapping("/candidate/view-submitted-cv")
+    public ResponseEntity<Response<List<CandidateSubmittedCvDTO>>> candidateViewSubmittedCV() {
+        try {
+            List<CandidateSubmittedCvDTO> dtos = cvService.getSubmittedCvsForCurrentUser();
+            return ResponseEntity.ok(new Response<>(200, "Submitted CVs fetched successfully!", dtos));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new Response<>(400, "Error: " + e.getMessage(), null));
+        }
+    }
+
 }

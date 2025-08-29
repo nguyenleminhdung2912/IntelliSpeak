@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.cv.CVAnalysisResponseDTO;
+import com.gsu25se05.itellispeak.dto.cv.CandidateSubmittedCvDTO;
 import com.gsu25se05.itellispeak.dto.cv.GetAllCvDTO;
 import com.gsu25se05.itellispeak.dto.interview_session.InterviewSessionDTO;
 import com.gsu25se05.itellispeak.entity.*;
@@ -45,6 +46,8 @@ public class CVService {
     private final UserUsageRepository userUsageRepository;
     private final InterviewSessionRepository interviewSessionRepository;
     private final InterviewSessionMapper interviewSessionMapper;
+    private final CompanyRepository companyRepository;
+    private final CVSubmissionRepository cVSubmissionRepository;
 
     public CVService(
             @Value("${genai.api.key}") String apiKey,
@@ -57,7 +60,9 @@ public class CVService {
             CloudinaryUtils cloudinaryUtils,
             UserRepository userRepository, UserUsageRepository userUsageRepository,
             InterviewSessionRepository interviewSessionRepository,
-            InterviewSessionMapper interviewSessionMapper) {
+            InterviewSessionMapper interviewSessionMapper,
+            CompanyRepository companyRepository,
+            CVSubmissionRepository cVSubmissionRepository) {
         this.webClient = WebClient.builder()
                 .baseUrl(API_URL + "?key=" + apiKey)
                 .defaultHeader("Content-Type", "application/json")
@@ -73,6 +78,8 @@ public class CVService {
         this.userUsageRepository = userUsageRepository;
         this.interviewSessionRepository = interviewSessionRepository;
         this.interviewSessionMapper = interviewSessionMapper;
+        this.companyRepository = companyRepository;
+        this.cVSubmissionRepository = cVSubmissionRepository;
     }
 
     private String sanitizeText(String text) {
@@ -512,5 +519,62 @@ public class CVService {
         }).sorted(Comparator.comparing(GetAllCvDTO::getCvTitle, Comparator.nullsLast(String::compareTo)))
                 .collect(Collectors.toList());
         return new Response<>(200, "Thành công", dtos);
+    }
+
+    public String submitCvToCompany(Long companyId) {
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) throw new AuthAppException(ErrorCode.NOT_LOGIN);
+
+        MemberCV memberCV = memberCVRepository.findByUserAndIsDeletedFalseAndIsActiveTrue(currentUser).orElse(null);
+        if (memberCV == null) {
+            throw new AuthAppException(ErrorCode.NO_CV_UPLOADED);
+        }
+
+        // Validate company existence
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new IllegalArgumentException("Company not found with ID: " + companyId));
+
+        // Check if the CV is already submitted to the company
+        // Check if the CV is already submitted to the company and its status
+        Optional<CVSubmission> existingSubmission = cVSubmissionRepository.findByCompanyAndMemberCV(company, memberCV);
+        if (existingSubmission.isPresent()) {
+            Boolean isViewed = existingSubmission.get().getIsViewed();
+            if (isViewed == null) {
+                throw new AuthAppException(ErrorCode.CV_IS_PENDING);
+            } else if (Boolean.TRUE.equals(isViewed)) {
+                throw new AuthAppException(ErrorCode.CV_IS_ALREADY_ACCEPTED);
+            }
+            // If isViewed == false (rejected), allow resubmission
+        }
+
+        // Save the submission record
+        CVSubmission submission = CVSubmission.builder()
+                .company(company)
+                .memberCV(memberCV)
+                .submittedAt(LocalDateTime.now())
+                .isViewed(null)
+                .build();
+        cVSubmissionRepository.save(submission);
+
+        return "CV " + memberCV.getCvTitle() + " successfully submitted to " + company.getName();
+    }
+
+    public List<CandidateSubmittedCvDTO> getSubmittedCvsForCurrentUser() {
+        // Assume you have a method to get the current user
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) throw new AuthAppException(ErrorCode.NOT_LOGIN);
+
+        List<CVSubmission> submissions = cVSubmissionRepository.findByMemberCV_User(currentUser);
+
+        return submissions.stream().map(sub -> {
+            CandidateSubmittedCvDTO dto = new CandidateSubmittedCvDTO();
+            dto.setCvSubmissionId(sub.getId());
+            dto.setMemberCvTitle(sub.getMemberCV().getCvTitle());
+            dto.setMemberCvLinkToCv(sub.getMemberCV().getLinkToCv());
+            dto.setCompanyId(sub.getCompany().getCompanyId());
+            dto.setCompanyName(sub.getCompany().getName());
+            dto.setCompanyLogoUrl(sub.getCompany().getLogoUrl());
+            return dto;
+        }).toList();
     }
 }
