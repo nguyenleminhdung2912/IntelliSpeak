@@ -66,6 +66,7 @@ public enum ErrorCode {
     CV_IS_PENDING(4004, "CV is pending review and cannot be resubmitted", HttpStatus.BAD_REQUEST),
     CV_IS_ALREADY_ACCEPTED(4005, "CV is pending review and cannot be resubmitted", HttpStatus.BAD_REQUEST),
     CV_SUBMISSION_NOT_FOUND(4006, "CV submission not found", HttpStatus.NOT_FOUND),
+    CV_NOT_FOUND(4007, "CV not found", HttpStatus.NOT_FOUND),
 
     // PACKAGE | CODE: 6XXX
     PACKAGE_NOT_FOUND(6001, "Package not found", HttpStatus.NOT_FOUND),

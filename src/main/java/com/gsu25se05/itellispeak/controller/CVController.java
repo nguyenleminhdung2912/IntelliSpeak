@@ -115,4 +115,11 @@ public class CVController {
         cvService.rejectCvSubmission(submissionId);
         return ResponseEntity.ok(new Response<>(200, "CV submission rejected successfully.", null));
     }
+
+    @PutMapping("/{cvId}/set-active")
+    @Operation(summary = "Người dùng đặt một CV làm CV chính (active), các CV khác sẽ bị vô hiệu hóa")
+    public ResponseEntity<Response<Void>> setActiveCv(@PathVariable Long cvId) {
+        cvService.setActiveCv(cvId);
+        return ResponseEntity.ok(new Response<>(200, "CV has been set as active successfully.", null));
+    }
 }
