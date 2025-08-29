@@ -45,11 +45,17 @@ public class TopicService {
 
     @Transactional
     public Topic updateTopic(Long id, TopicRequest topicRequest) {
-        Topic existingTopic = getTopicById(id); // Dùng lại getTopicById để kiểm tra tồn tại và isDeleted
-        existingTopic.setTitle(topicRequest.getTitle());
-        existingTopic.setDescription(topicRequest.getDescription());
-        existingTopic.setLongDescription(topicRequest.getLongDescription());
-        if (topicRequest.getThumbnail().equals("") || topicRequest.getThumbnail() != null) {
+        Topic existingTopic = getTopicById(id);
+        if (topicRequest.getTitle() != null || !topicRequest.getTitle().isEmpty() || !topicRequest.getTitle().equals("")) {
+            existingTopic.setTitle(topicRequest.getTitle());
+        }
+        if (!topicRequest.getDescription().isEmpty() || !topicRequest.getDescription().equals("")) {
+            existingTopic.setDescription(topicRequest.getDescription());
+        }
+        if (!topicRequest.getLongDescription().isEmpty() || !topicRequest.getLongDescription().equals("")) {
+            existingTopic.setLongDescription(topicRequest.getLongDescription());
+        }
+        if (!topicRequest.getThumbnail().isEmpty() || !topicRequest.getThumbnail().equals("")) {
             existingTopic.setThumbnail(topicRequest.getThumbnail());
         }
         existingTopic.setUpdateAt(LocalDateTime.now());
