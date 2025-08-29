@@ -28,5 +28,6 @@ public class CVSubmission {
     @Column(name = "is_viewed")
     private Boolean isViewed = null;
 
+    @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
 }

@@ -6,6 +6,7 @@ import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.cv.CVAnalysisResponseDTO;
 import com.gsu25se05.itellispeak.dto.cv.CandidateSubmittedCvDTO;
 import com.gsu25se05.itellispeak.dto.cv.GetAllCvDTO;
+import com.gsu25se05.itellispeak.dto.cv.HRViewSubmittedCvDTO;
 import com.gsu25se05.itellispeak.dto.interview_session.InterviewSessionDTO;
 import com.gsu25se05.itellispeak.entity.*;
 import com.gsu25se05.itellispeak.exception.ErrorCode;
@@ -258,9 +259,6 @@ public class CVService {
                 .toList();
     }
 
-
-
-
     @Transactional
     public Response<CVAnalysisResponseDTO> analyzeAndSaveEvaluation(String cvText, String imageURLs, String cvTitle, User user) throws Exception {
         String prompt = preparePrompt(cvText);
@@ -394,7 +392,6 @@ public class CVService {
         return new Response<>(200, "Analysis successful", dto);
     }
 
-
     private String preparePrompt(String cvText) {
         return String.format("""
             You are an expert in ATS (Applicant Tracking System) and CV/Resume analysis for the **IT/technology domain only**.
@@ -467,8 +464,6 @@ public class CVService {
             """, cvText);
     }
 
-
-
     private String callGemini(String prompt) {
         try {
             Map<String, Object> requestBody = Map.of(
@@ -521,6 +516,7 @@ public class CVService {
         return new Response<>(200, "Thành công", dtos);
     }
 
+    @Transactional
     public String submitCvToCompany(Long companyId) {
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) throw new AuthAppException(ErrorCode.NOT_LOGIN);
@@ -577,5 +573,96 @@ public class CVService {
             dto.setCompanyLogoUrl(sub.getCompany().getLogoUrl());
             return dto;
         }).toList();
+    }
+
+    public List<HRViewSubmittedCvDTO> getSubmittedCvsForCompany() {
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) throw new AuthAppException(ErrorCode.NOT_LOGIN);
+
+        if (!currentUser.getRole().equals(User.Role.HR)) {
+            throw new AuthAppException(ErrorCode.ACCOUNT_NOT_HR);
+        }
+
+        if (currentUser.getHr().getCompany() == null) {
+            throw new AuthAppException(ErrorCode.HR_NOT_FOUND);
+        }
+
+        Company company = currentUser.getHr().getCompany();
+        List<CVSubmission> submissions = cVSubmissionRepository.findByCompany(company);
+        return submissions.stream().map(sub -> {
+            HRViewSubmittedCvDTO dto = new HRViewSubmittedCvDTO();
+            dto.setUserId(sub.getMemberCV().getUser().getUserId());
+            dto.setUserEmail(sub.getMemberCV().getUser().getEmail());
+            dto.setUserPhone(sub.getMemberCV().getUser().getPhone());
+            dto.setMemberCvTitle(sub.getMemberCV().getCvTitle());
+            dto.setMemberCvLinkToCv(sub.getMemberCV().getLinkToCv());
+            dto.setIsViewed(sub.getIsViewed());
+            dto.setSubmittedAt(sub.getSubmittedAt());
+            return dto;
+        }).toList();
+    }
+
+    private CVSubmission getAndVerifySubmissionForHr(Long submissionId) {
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            throw new AuthAppException(ErrorCode.NOT_LOGIN);
+        }
+        if (!currentUser.getRole().equals(User.Role.HR)) {
+            throw new AuthAppException(ErrorCode.ACCOUNT_NOT_HR);
+        }
+        Company hrCompany = currentUser.getHr().getCompany();
+        if (hrCompany == null) {
+            throw new AuthAppException(ErrorCode.HR_NOT_FOUND);
+        }
+
+        CVSubmission submission = cVSubmissionRepository.findById(submissionId)
+                .orElseThrow(() -> new AuthAppException(ErrorCode.CV_SUBMISSION_NOT_FOUND));
+
+        // Security check: ensure the HR belongs to the company the CV was submitted to.
+        if (!submission.getCompany().getCompanyId().equals(hrCompany.getCompanyId())) {
+            throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
+        }
+
+        return submission;
+    }
+
+    @Transactional
+    public void approveCvSubmission(Long submissionId) {
+        CVSubmission submission = getAndVerifySubmissionForHr(submissionId);
+        submission.setIsViewed(true);
+        cVSubmissionRepository.save(submission);
+    }
+
+    @Transactional
+    public void rejectCvSubmission(Long submissionId) {
+        CVSubmission submission = getAndVerifySubmissionForHr(submissionId);
+        submission.setIsViewed(false);
+        cVSubmissionRepository.save(submission);
+    }
+
+    @Transactional
+    public void setActiveCv(Long cvId) {
+        // 1. Get current user
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            throw new AuthAppException(ErrorCode.NOT_LOGIN);
+        }
+
+        // 2. Find the target MemberCV
+        MemberCV cvToActivate = memberCVRepository.findById(cvId)
+                .orElseThrow(() -> new AuthAppException(ErrorCode.CV_NOT_FOUND));
+
+        // 3. Verify ownership
+        if (!cvToActivate.getUser().getUserId().equals(currentUser.getUserId())) {
+            throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
+        }
+
+        // 4. Deactivate all other CVs for the user
+        memberCVRepository.deactivateOldCVsByUser(currentUser);
+
+        // 5. Activate the target CV and save
+        cvToActivate.setActive(true);
+        cvToActivate.setUpdateAt(LocalDateTime.now());
+        memberCVRepository.save(cvToActivate);
     }
 }

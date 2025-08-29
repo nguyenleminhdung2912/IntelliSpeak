@@ -5,8 +5,8 @@ import com.gsu25se05.itellispeak.dto.cv.CVAnalysisResponseDTO;
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.cv.CandidateSubmittedCvDTO;
 import com.gsu25se05.itellispeak.dto.cv.GetAllCvDTO;
+import com.gsu25se05.itellispeak.dto.cv.HRViewSubmittedCvDTO;
 import com.gsu25se05.itellispeak.entity.CVEvaluate;
-import com.gsu25se05.itellispeak.entity.CVSubmission;
 import com.gsu25se05.itellispeak.service.CVService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -31,7 +31,7 @@ public class CVController {
     public ResponseEntity<Response<CVAnalysisResponseDTO>> uploadCV(@PathVariable("cvTitle") String cvTitle,
                                                                     @RequestParam("file") MultipartFile file) {
         try {
-            Response<CVAnalysisResponseDTO> response = cvService.analyzeAndSaveFromFile(cvTitle ,file);
+            Response<CVAnalysisResponseDTO> response = cvService.analyzeAndSaveFromFile(cvTitle, file);
             return ResponseEntity.status(response.getCode() == 200 ? 200 : 400).body(response);
         } catch (Exception e) {
             Response<CVAnalysisResponseDTO> errorResponse = new Response<>(400, "Error: " + e.getMessage(), null);
@@ -91,4 +91,35 @@ public class CVController {
         }
     }
 
+    @GetMapping("/hr/view-submitted-cv")
+    @Operation(summary = "HR xem danh sách CV đã nộp, isViewed = null là công ty đó chưa xem, isViewed = false là công ty đã từ chối, isViewed = true là công ty đã chấp nhận và sẽ liên lạc sớm")
+    public ResponseEntity<Response<List<HRViewSubmittedCvDTO>>> hrViewSubmittedCV() {
+        try {
+            List<HRViewSubmittedCvDTO> dtos = cvService.getSubmittedCvsForCompany();
+            return ResponseEntity.ok(new Response<>(200, "Submitted CVs fetched successfully!", dtos));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new Response<>(400, "Error: " + e.getMessage(), null));
+        }
+    }
+
+    @PutMapping("/hr/submission/{submissionId}/approve")
+    @Operation(summary = "HR duyệt CV của ứng viên (đặt isViewed = true)")
+    public ResponseEntity<Response<Void>> approveCvSubmission(@PathVariable Long submissionId) {
+        cvService.approveCvSubmission(submissionId);
+        return ResponseEntity.ok(new Response<>(200, "CV submission approved successfully.", null));
+    }
+
+    @PutMapping("/hr/submission/{submissionId}/reject")
+    @Operation(summary = "HR từ chối CV của ứng viên (đặt isViewed = false)")
+    public ResponseEntity<Response<Void>> rejectCvSubmission(@PathVariable Long submissionId) {
+        cvService.rejectCvSubmission(submissionId);
+        return ResponseEntity.ok(new Response<>(200, "CV submission rejected successfully.", null));
+    }
+
+    @PutMapping("/{cvId}/set-active")
+    @Operation(summary = "Người dùng đặt một CV làm CV chính (active), các CV khác sẽ bị vô hiệu hóa")
+    public ResponseEntity<Response<Void>> setActiveCv(@PathVariable Long cvId) {
+        cvService.setActiveCv(cvId);
+        return ResponseEntity.ok(new Response<>(200, "CV has been set as active successfully.", null));
+    }
 }
