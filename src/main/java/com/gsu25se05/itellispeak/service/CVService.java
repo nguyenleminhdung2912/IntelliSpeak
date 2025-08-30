@@ -589,7 +589,6 @@ public class CVService {
 
 
     public Response<List<GetAllCvDTO>> getAllCvDTOsByUser() {
-
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) return new Response<>(401, "Please log in to continue", null);
 
@@ -603,11 +602,22 @@ public class CVService {
 
                     String overallScore = latestEvaluation.map(e -> e.getOverallScore().toString()).orElse("N/A");
 
-                    return new GetAllCvDTO(cv.getMemberCvId(), overallScore, cv.getLinkToCv(), cv.getCvTitle(), cv.getCreateAt(), cv.isActive());
-                }).sorted(Comparator.comparing(GetAllCvDTO::getCvTitle, Comparator.nullsLast(String::compareTo)))
+                    return new GetAllCvDTO(
+                            cv.getMemberCvId(),
+                            overallScore,
+                            cv.getLinkToCv(),
+                            cv.getCvTitle(),
+                            cv.getCreateAt(),
+                            cv.isActive()
+                    );
+                })
+                // sắp xếp theo ngày tạo, mới nhất trước
+                .sorted(Comparator.comparing(GetAllCvDTO::getCreateAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .collect(Collectors.toList());
+
         return new Response<>(200, "Thành công", dtos);
     }
+
 
     @Transactional
     public String submitCvToCompany(Long companyId, Long companyJDId) {
