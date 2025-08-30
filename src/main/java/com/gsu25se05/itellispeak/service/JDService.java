@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -431,6 +432,8 @@ public class JDService {
                         .summary(jd.getSummary())
                         .createAt(jd.getCreateAt())
                         .build())
+                // sắp xếp theo ngày tạo giảm dần (mới nhất trước)
+                .sorted(Comparator.comparing(GetAllJdDTO::getCreateAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
 
         return new Response<>(200, "JD list retrieved successfully", dtos);
