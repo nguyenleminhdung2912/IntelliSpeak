@@ -62,5 +62,6 @@ public class CompanyJD {
     private List<CompanyJDEvaluate> companyJDEvaluates = new ArrayList<>();
 
     @OneToMany(mappedBy = "companyJD", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<CVSubmission> cvSubmissions = new ArrayList<>();
 }

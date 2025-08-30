@@ -1,5 +1,6 @@
 package com.gsu25se05.itellispeak.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,15 +20,18 @@ public class CVSubmission {
 
     @ManyToOne
     @JoinColumn(name = "company_id", nullable = false)
+    @JsonIgnore
     private Company company;
 
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_jd_id", nullable = false)
+    @JsonIgnore
     private CompanyJD companyJD;
 
     @ManyToOne
     @JoinColumn(name = "member_cv_id", nullable = false)
+    @JsonIgnore
     private MemberCV memberCV;
 
     @Column(name = "is_viewed")
