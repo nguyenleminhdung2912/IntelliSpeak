@@ -593,7 +593,7 @@ public class CVService {
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) return new Response<>(401, "Please log in to continue", null);
 
-        List<MemberCV> cvs = memberCVRepository.findByUserUserIdAndIsDeletedFalse(currentUser.getUserId()).reversed();
+        List<MemberCV> cvs = memberCVRepository.findByUserUserIdAndIsDeletedFalseOrderByCreateAtDesc(currentUser.getUserId());
 
         List<GetAllCvDTO> dtos = cvs.stream().map(cv -> {
                     // Lấy CVEvaluate mới nhất nếu có
