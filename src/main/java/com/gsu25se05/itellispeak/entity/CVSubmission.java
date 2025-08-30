@@ -21,6 +21,11 @@ public class CVSubmission {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_jd_id", nullable = false)
+    private CompanyJD companyJD;
+
     @ManyToOne
     @JoinColumn(name = "member_cv_id", nullable = false)
     private MemberCV memberCV;

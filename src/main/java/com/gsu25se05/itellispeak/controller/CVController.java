@@ -77,10 +77,11 @@ public class CVController {
 
     @PostMapping("/submit-for-company")
     public ResponseEntity<Response<String>> submitCvToCompany(
-            @RequestParam Long companyId) {
+            @RequestParam Long companyId,
+            @RequestParam Long companyJD_ID) {
         try {
             // Assume you have a method to get the current user
-            String result = cvService.submitCvToCompany(companyId);
+            String result = cvService.submitCvToCompany(companyId, companyJD_ID);
             return ResponseEntity.ok(new Response<>(200, "CV submitted successfully!", result));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(new Response<>(400, "Error: " + e.getMessage(), null));
