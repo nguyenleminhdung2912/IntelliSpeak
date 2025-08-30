@@ -128,11 +128,17 @@ public class EvaluationVietnameseService {
             // Chuyển đổi phản hồi thành DTO và lưu vào database
             if (resultsJson.isArray()) {
                 for (JsonNode jsonObj : resultsJson) {
+                    String userAnswer = jsonObj.get("userAnswer").asText();
+                    // Bỏ qua nếu userAnswer là "Không có câu trả lời"
+                    if ("Không có câu trả lời".equalsIgnoreCase(userAnswer)) {
+                        continue;
+                    }
+
                     EvaluationResponseDto dto = new EvaluationResponseDto();
                     Long questionId = jsonObj.get("questionId").asLong();
                     dto.setQuestionId(questionId);
                     dto.setQuestion(jsonObj.get("question").asText());
-                    dto.setUserAnswer(jsonObj.get("userAnswer").asText());
+                    dto.setUserAnswer(userAnswer);
                     Double score = jsonObj.get("score").asDouble();
                     dto.setLevel(score.toString()); // Lưu score dưới dạng chuỗi cho DTO
 
@@ -194,13 +200,12 @@ public class EvaluationVietnameseService {
                         };
                         detail.setDifficulty(Difficulty.valueOf(normalizedDifficulty));
                     } catch (IllegalArgumentException e) {
-                        logger.warn("Giá trị độ khó không hợp lệ '{}' cho câu hỏi ID {}. Mặc định là EASY.", difficultyStr, questionId);
+                        logger.warn("Giá trị độ khó không hợp lệ '{}' cho câu hỏi ID {}. Mặc định là DỄ.", difficultyStr, questionId);
                         detail.setDifficulty(Difficulty.EASY); // Default to EASY for invalid values
                     }
 
                     totalScore += score;
                     evaluatedQuestions++;
-
                     details.add(detail);
                     results.add(dto);
                 }
@@ -292,7 +297,7 @@ public class EvaluationVietnameseService {
                 .append("     - Câu trả lời có ngắn gọn không (không quá dài dòng, hoặc 'Không đánh giá được' nếu không có câu trả lời)?\n")
                 .append("     - Câu trả lời có sử dụng thuật ngữ kỹ thuật phù hợp không (hoặc 'Không đánh giá được' nếu không có câu trả lời)?\n")
                 .append("   - Kết luận: Cung cấp tóm tắt ngắn gọn về chất lượng câu trả lời và gợi ý cải thiện chung.\n")
-                .append("4. Cung cấp một đánh giá tổng quan ngắn gọn về hiệu suất của ứng viên bằng giọng văn chuyên nghiệp, ngắn gọn (1-2 câu).\n")
+                .append("4. Cung cấp một đánh giá tổng quan ngắn gọn về hiệu suất của ứng viên bằng giọng văn chuyên nghiệp, ngắn gọn (1-2 câu), bao gồm số câu hỏi đã trả lời trên tổng số câu (ví dụ: 'Đã trả lời X/Y câu').\n")
                 .append("5. Trả về kết quả bằng định dạng JSON hợp lệ (chỉ JSON, không Markdown, không giải thích):\n")
                 .append("   {\n")
                 .append("     \"results\": [\n")
@@ -316,7 +321,7 @@ public class EvaluationVietnameseService {
                 .append("         }\n")
                 .append("       }\n")
                 .append("     ],\n")
-                .append("     \"overallEvaluation\": \"<Đánh giá tổng quan ngắn gọn về hiệu suất của ứng viên>\"\n")
+                .append("     \"overallEvaluation\": \"<Đánh giá tổng quan ngắn gọn về hiệu suất của ứng viên, bao gồm 'Đã trả lời X/Y câu'>\"\n")
                 .append("   }\n")
                 .append("6. Sử dụng giọng văn chuyên nghiệp, ngắn gọn, bằng tiếng Việt.\n");
 
