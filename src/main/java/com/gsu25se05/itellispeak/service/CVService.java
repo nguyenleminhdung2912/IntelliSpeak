@@ -3,10 +3,7 @@ package com.gsu25se05.itellispeak.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gsu25se05.itellispeak.dto.Response;
-import com.gsu25se05.itellispeak.dto.cv.CVAnalysisResponseDTO;
-import com.gsu25se05.itellispeak.dto.cv.CandidateSubmittedCvDTO;
-import com.gsu25se05.itellispeak.dto.cv.GetAllCvDTO;
-import com.gsu25se05.itellispeak.dto.cv.HRViewSubmittedCvDTO;
+import com.gsu25se05.itellispeak.dto.cv.*;
 import com.gsu25se05.itellispeak.dto.interview_session.InterviewSessionDTO;
 import com.gsu25se05.itellispeak.entity.*;
 import com.gsu25se05.itellispeak.exception.ErrorCode;
@@ -419,7 +416,7 @@ public class CVService {
         List<InterviewSessionDTO> recommended = recommendSessions(detectedDomain, skills, 8);
 
         CVAnalysisResponseDTO dto = new CVAnalysisResponseDTO(
-                getCV(cvEvaluate.getId()).getData(),
+                cvEvaluate,
                 extracted,
                 recommended
         );
@@ -535,10 +532,60 @@ public class CVService {
         return text.replaceAll("(?i)```json", "").replaceAll("(?i)```", "").trim();
     }
 
-    public Response<CVEvaluate> getCV(Long id) {
+    public Response<CVEvaluateResponseDTO> getCV(Long id) {
         CVEvaluate cvEvaluate = cvEvaluateRepository.findById(id).orElse(null);
-        return new Response<>(200, "Success", cvEvaluate);
+        if (cvEvaluate == null) {
+            return new Response<>(404, "CV evaluation not found", null);
+        }
+
+        // Lấy extracted info mới nhất
+        MemberCV memberCV = cvEvaluate.getMemberCV();
+        CVExtractedInfo extracted = cvExtractedInfoRepository
+                .findFirstByMemberCVOrderByCreateAtDesc(memberCV);
+
+        List<InterviewSessionDTO> recommended = List.of();
+        if (extracted != null) {
+            // Không có detectedDomain thì để null hoặc đoán từ CV title/careerGoals
+            String detectedDomain = null;
+
+            if (extracted.getCareerGoals() != null && !extracted.getCareerGoals().isBlank()) {
+                detectedDomain = extracted.getCareerGoals();
+            } else if (memberCV.getCvTitle() != null && !memberCV.getCvTitle().isBlank()) {
+                detectedDomain = memberCV.getCvTitle();
+            }
+
+            // Parse skills JSON đã lưu
+            List<String> skills = parseSkillsJson(extracted.getSkills());
+
+            recommended = recommendSessions(detectedDomain, skills, 8);
+        }
+
+
+        CVEvaluateResponseDTO dto = new CVEvaluateResponseDTO(cvEvaluate, recommended);
+
+        return new Response<>(200, "Success", dto);
     }
+
+    private List<String> parseSkillsJson(String json) {
+        try {
+            if (json == null || json.isBlank()) return List.of();
+            List<String> arr = objectMapper.readValue(
+                    json,
+                    new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {}
+            );
+            return arr.stream()
+                    .filter(Objects::nonNull)
+                    .map(String::trim).map(String::toLowerCase)
+                    .filter(s -> !s.isEmpty())
+                    .distinct()
+                    .toList();
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
+
+
+
 
     public Response<List<GetAllCvDTO>> getAllCvDTOsByUser() {
 
