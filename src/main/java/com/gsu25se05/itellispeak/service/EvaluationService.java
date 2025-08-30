@@ -128,11 +128,17 @@ public class EvaluationService {
             // Chuyển đổi phản hồi thành DTO và lưu vào database
             if (resultsJson.isArray()) {
                 for (JsonNode jsonObj : resultsJson) {
+                    String userAnswer = jsonObj.get("userAnswer").asText();
+                    // Bỏ qua nếu userAnswer là "No answer"
+                    if ("No answer".equalsIgnoreCase(userAnswer)) {
+                        continue;
+                    }
+
                     EvaluationResponseDto dto = new EvaluationResponseDto();
                     Long questionId = jsonObj.get("questionId").asLong();
                     dto.setQuestionId(questionId);
                     dto.setQuestion(jsonObj.get("question").asText());
-                    dto.setUserAnswer(jsonObj.get("userAnswer").asText());
+                    dto.setUserAnswer(userAnswer);
                     Double score = jsonObj.get("score").asDouble();
                     dto.setLevel(score.toString()); // Lưu score dưới dạng chuỗi cho DTO
 
@@ -191,7 +197,6 @@ public class EvaluationService {
 
                     totalScore += score;
                     evaluatedQuestions++;
-
                     details.add(detail);
                     results.add(dto);
                 }
@@ -282,7 +287,7 @@ public class EvaluationService {
                 .append("     - Was the answer concise (not too wordy, or 'Not assessable' if no answer)?\n")
                 .append("     - Did the answer use appropriate technical terminology (or 'Not assessable' if no answer)?\n")
                 .append("   - Conclusion: Provide a short summary of the answer quality and general improvement suggestions.\n")
-                .append("4. Provide an overall evaluation of the candidate's performance in a concise, professional HR-style tone (1-2 sentences).\n")
+                .append("4. Provide an overall evaluation of the candidate's performance in a concise, professional HR-style tone (1-2 sentences in English), including the number of questions answered out of the total (e.g., 'Answered X/Y questions').\n")
                 .append("5. Return the result in valid JSON format (JSON only, no Markdown, no explanation):\n")
                 .append("   {\n")
                 .append("     \"results\": [\n")
@@ -306,7 +311,7 @@ public class EvaluationService {
                 .append("         }\n")
                 .append("       }\n")
                 .append("     ],\n")
-                .append("     \"overallEvaluation\": \"<Concise overall evaluation of the candidate's performance>\"\n")
+                .append("     \"overallEvaluation\": \"<Concise overall evaluation in English, followed by 'Đã trả lời X/Y câu' in Vietnamese>\"\n")
                 .append("   }\n")
                 .append("6. Use a professional, concise HR-style tone.\n");
 
