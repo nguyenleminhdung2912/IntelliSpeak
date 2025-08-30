@@ -46,6 +46,7 @@ public class CVService {
     private final InterviewSessionMapper interviewSessionMapper;
     private final CompanyRepository companyRepository;
     private final CVSubmissionRepository cVSubmissionRepository;
+    private final CompanyJDRepository companyJDRepository;
 
     public CVService(
             @Value("${genai.api.key}") String apiKey,
@@ -60,7 +61,7 @@ public class CVService {
             InterviewSessionRepository interviewSessionRepository,
             InterviewSessionMapper interviewSessionMapper,
             CompanyRepository companyRepository,
-            CVSubmissionRepository cVSubmissionRepository) {
+            CVSubmissionRepository cVSubmissionRepository, CompanyJDRepository companyJDRepository) {
         this.webClient = WebClient.builder()
                 .baseUrl(API_URL + "?key=" + apiKey)
                 .defaultHeader("Content-Type", "application/json")
@@ -78,6 +79,7 @@ public class CVService {
         this.interviewSessionMapper = interviewSessionMapper;
         this.companyRepository = companyRepository;
         this.cVSubmissionRepository = cVSubmissionRepository;
+        this.companyJDRepository = companyJDRepository;
     }
 
     private String sanitizeText(String text) {
@@ -218,19 +220,19 @@ public class CVService {
                 .comparingInt((InterviewSession s) -> {
                     int score = 0;
                     String title = Optional.ofNullable(s.getTitle()).orElse("").toLowerCase();
-                    String desc  = Optional.ofNullable(s.getDescription()).orElse("").toLowerCase();
+                    String desc = Optional.ofNullable(s.getDescription()).orElse("").toLowerCase();
                     String topic = Optional.ofNullable(s.getTopic()).map(Topic::getTitle).orElse("").toLowerCase();
 
                     // domain ưu tiên: title > topic > description
                     if (!domainLower.isBlank() && title.contains(domainLower)) score += 6;
                     if (!domainLower.isBlank() && topic.contains(domainLower)) score += 4;
-                    if (!domainLower.isBlank() && desc.contains(domainLower))  score += 3;
+                    if (!domainLower.isBlank() && desc.contains(domainLower)) score += 3;
 
                     // mỗi keyword: title +2, description +1
                     for (String k : kwSet) {
                         if (k.isBlank()) continue;
                         if (title.contains(k)) score += 2;
-                        if (desc.contains(k))  score += 1;
+                        if (desc.contains(k)) score += 1;
                     }
 
                     // cộng thêm nếu tag trùng keyword
@@ -436,74 +438,74 @@ public class CVService {
 
     private String preparePrompt(String cvText) {
         return String.format("""
-            You are an expert in ATS (Applicant Tracking System) and CV/Resume analysis for the **IT/technology domain only**.
-
-            ✅ Your task:
-            - Detect whether the CV belongs to the IT domain (e.g., Software Engineer, Backend/Frontend, Full-stack, Mobile, DevOps/SRE, Cloud, Data Engineer/Scientist/Analyst, ML/AI, QA/QC/Automation, Security, System/Network Admin, Product/BA/PO in tech, Tech Lead/Architect).
-            - If and only if the CV is IT-related, evaluate and score it and provide actionable tips.
-
-            ❌ If the CV is **not IT-related**, DO NOT evaluate. Instead, return a minimal JSON indicating that the domain is unsupported.
-
-            🔒 Output format rules:
-            - Return **JSON only** (no extra text).
-            - If unsupported (non-IT), return:
-              {
-                "supported": false,
-                "detectedDomain": "<short domain>",
-                "message": "This service only supports IT resumes."
-              }
-
-            - If supported (IT), return exactly this structure:
-              {
-                "supported": true,
-                            "detectedDomain": "<short domain like: backend | frontend | fullstack | mobile | devops | cloud | data | ml | ai | qa | security | sysadmin | network | product | ba | po | architect | sre | ...>",
-                                "suggestedRoles": ["<short role1>", "<short role2>", "..."],
-                "feedback": {
-                  "overallScore": <0-100>,
-                  "ATS": {
-                    "score": <0-100>,
-                    "tips": [
-                      { "type": "<good|improve|warning|dangerous|neutral|note>", "tip": "<short tip>", "explanation": "<short reason>" }
-                    ]
-                  },
-                  "toneAndStyle": {
-                    "score": <0-100>,
-                    "tips": [ ... ]
-                  },
-                  "content": {
-                    "score": <0-100>,
-                    "tips": [ ... ]
-                  },
-                  "structure": {
-                    "score": <0-100>,
-                    "tips": [ ... ]
-                  },
-                  "skills": {
-                    "score": <0-100>,
-                    "tips": [ ... ]
+                You are an expert in ATS (Applicant Tracking System) and CV/Resume analysis for the **IT/technology domain only**.
+                
+                ✅ Your task:
+                - Detect whether the CV belongs to the IT domain (e.g., Software Engineer, Backend/Frontend, Full-stack, Mobile, DevOps/SRE, Cloud, Data Engineer/Scientist/Analyst, ML/AI, QA/QC/Automation, Security, System/Network Admin, Product/BA/PO in tech, Tech Lead/Architect).
+                - If and only if the CV is IT-related, evaluate and score it and provide actionable tips.
+                
+                ❌ If the CV is **not IT-related**, DO NOT evaluate. Instead, return a minimal JSON indicating that the domain is unsupported.
+                
+                🔒 Output format rules:
+                - Return **JSON only** (no extra text).
+                - If unsupported (non-IT), return:
+                  {
+                    "supported": false,
+                    "detectedDomain": "<short domain>",
+                    "message": "This service only supports IT resumes."
                   }
-                },
-                "extractedInfo": {
-                  "fullName": "<string>",
-                  "email": "<string>",
-                  "phone": "<string>",
-                  "totalYearsExperience": <int>,
-                  "educationLevel": "<string>",
-                  "university": "<string>",
-                  "skills": ["<skill1>", "<skill2>", "..."],
-                  "certifications": "<string>",
-                  "careerGoals": "<string>",
-                  "workExperience": "<string or brief bullets>"
-                }
-              }
-
-            Analysis guidance (when supported = true):
-            - Be detailed and candid; low-quality CVs should receive low scores with clear reasons.
-            - Use concise, actionable tips focused on IT hiring best practices and ATS passability.
-
-            Here is the CV content to analyze:
-            %s
-            """, cvText);
+                
+                - If supported (IT), return exactly this structure:
+                  {
+                    "supported": true,
+                                "detectedDomain": "<short domain like: backend | frontend | fullstack | mobile | devops | cloud | data | ml | ai | qa | security | sysadmin | network | product | ba | po | architect | sre | ...>",
+                                    "suggestedRoles": ["<short role1>", "<short role2>", "..."],
+                    "feedback": {
+                      "overallScore": <0-100>,
+                      "ATS": {
+                        "score": <0-100>,
+                        "tips": [
+                          { "type": "<good|improve|warning|dangerous|neutral|note>", "tip": "<short tip>", "explanation": "<short reason>" }
+                        ]
+                      },
+                      "toneAndStyle": {
+                        "score": <0-100>,
+                        "tips": [ ... ]
+                      },
+                      "content": {
+                        "score": <0-100>,
+                        "tips": [ ... ]
+                      },
+                      "structure": {
+                        "score": <0-100>,
+                        "tips": [ ... ]
+                      },
+                      "skills": {
+                        "score": <0-100>,
+                        "tips": [ ... ]
+                      }
+                    },
+                    "extractedInfo": {
+                      "fullName": "<string>",
+                      "email": "<string>",
+                      "phone": "<string>",
+                      "totalYearsExperience": <int>,
+                      "educationLevel": "<string>",
+                      "university": "<string>",
+                      "skills": ["<skill1>", "<skill2>", "..."],
+                      "certifications": "<string>",
+                      "careerGoals": "<string>",
+                      "workExperience": "<string or brief bullets>"
+                    }
+                  }
+                
+                Analysis guidance (when supported = true):
+                - Be detailed and candid; low-quality CVs should receive low scores with clear reasons.
+                - Use concise, actionable tips focused on IT hiring best practices and ATS passability.
+                
+                Here is the CV content to analyze:
+                %s
+                """, cvText);
     }
 
     private String callGemini(String prompt) {
@@ -571,7 +573,8 @@ public class CVService {
             if (json == null || json.isBlank()) return List.of();
             List<String> arr = objectMapper.readValue(
                     json,
-                    new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {}
+                    new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {
+                    }
             );
             return arr.stream()
                     .filter(Objects::nonNull)
@@ -585,66 +588,78 @@ public class CVService {
     }
 
 
-
-
     public Response<List<GetAllCvDTO>> getAllCvDTOsByUser() {
 
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) return new Response<>(401, "Please log in to continue", null);
 
-        List<MemberCV> cvs = memberCVRepository.findByUserUserIdAndIsDeletedFalse(currentUser.getUserId());
+        List<MemberCV> cvs = memberCVRepository.findByUserUserIdAndIsDeletedFalse(currentUser.getUserId()).reversed();
 
         List<GetAllCvDTO> dtos = cvs.stream().map(cv -> {
-            // Lấy CVEvaluate mới nhất nếu có
-            Optional<CVEvaluate> latestEvaluation = cv.getCvEvaluations().stream()
-                    .filter(e -> !e.isDeleted())
-                    .max(Comparator.comparing(CVEvaluate::getCreateAt));
+                    // Lấy CVEvaluate mới nhất nếu có
+                    Optional<CVEvaluate> latestEvaluation = cv.getCvEvaluations().stream()
+                            .filter(e -> !e.isDeleted())
+                            .max(Comparator.comparing(CVEvaluate::getCreateAt));
 
-            String overallScore = latestEvaluation.map(e -> e.getOverallScore().toString()).orElse("N/A");
+                    String overallScore = latestEvaluation.map(e -> e.getOverallScore().toString()).orElse("N/A");
 
-            return new GetAllCvDTO(cv.getMemberCvId(), overallScore, cv.getLinkToCv(), cv.getCvTitle(), cv.getCreateAt(), cv.isActive());
-        }).sorted(Comparator.comparing(GetAllCvDTO::getCvTitle, Comparator.nullsLast(String::compareTo)))
+                    return new GetAllCvDTO(cv.getMemberCvId(), overallScore, cv.getLinkToCv(), cv.getCvTitle(), cv.getCreateAt(), cv.isActive());
+                }).sorted(Comparator.comparing(GetAllCvDTO::getCvTitle, Comparator.nullsLast(String::compareTo)))
                 .collect(Collectors.toList());
         return new Response<>(200, "Thành công", dtos);
     }
 
     @Transactional
-    public String submitCvToCompany(Long companyId) {
+    public String submitCvToCompany(Long companyId, Long companyJDId) {
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) throw new AuthAppException(ErrorCode.NOT_LOGIN);
 
-        MemberCV memberCV = memberCVRepository.findByUserAndIsDeletedFalseAndIsActiveTrue(currentUser).orElse(null);
-        if (memberCV == null) {
-            throw new AuthAppException(ErrorCode.NO_CV_UPLOADED);
+        // 1. Get active CV
+        MemberCV memberCV = memberCVRepository.findByUserAndIsDeletedFalseAndIsActiveTrue(currentUser)
+                .orElseThrow(() -> new AuthAppException(ErrorCode.NO_CV_UPLOADED));
+
+        // 2. Get CompanyJD
+        CompanyJD companyJD = companyJDRepository.findById(companyJDId)
+                .orElseThrow(() -> new AuthAppException(ErrorCode.JD_NOT_FOUND));
+
+        // 3. Get Company and validate
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new AuthAppException(ErrorCode.COMPANY_NOT_FOUND));
+
+        // 4. Security/Integrity check: Ensure the JD belongs to the specified company
+        if (!companyJD.getCompany().getCompanyId().equals(company.getCompanyId())) {
+            throw new AuthAppException(ErrorCode.JD_NOT_FROM_COMPANY);
         }
 
-        // Validate company existence
-        Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new IllegalArgumentException("Company not found with ID: " + companyId));
+        // 5. Check for existing submission for this CV to this specific JD
+        Optional<CVSubmission> existingSubmissionOpt = cVSubmissionRepository.findByCompanyJDAndMemberCV(companyJD, memberCV);
 
-        // Check if the CV is already submitted to the company
-        // Check if the CV is already submitted to the company and its status
-        Optional<CVSubmission> existingSubmission = cVSubmissionRepository.findByCompanyAndMemberCV(company, memberCV);
-        if (existingSubmission.isPresent()) {
-            Boolean isViewed = existingSubmission.get().getIsViewed();
-            if (isViewed == null) {
+        if (existingSubmissionOpt.isPresent()) {
+            CVSubmission existingSubmission = existingSubmissionOpt.get();
+            Boolean isViewed = existingSubmission.getIsViewed();
+            if (isViewed == null) { // Pending
                 throw new AuthAppException(ErrorCode.CV_IS_PENDING);
-            } else if (Boolean.TRUE.equals(isViewed)) {
+            } else if (Boolean.TRUE.equals(isViewed)) { // Accepted
                 throw new AuthAppException(ErrorCode.CV_IS_ALREADY_ACCEPTED);
             }
-            // If isViewed == false (rejected), allow resubmission
+            // If isViewed is false (rejected), allow resubmission by updating the existing record.
+            existingSubmission.setSubmittedAt(LocalDateTime.now());
+            existingSubmission.setIsViewed(null); // Reset status to pending
+            cVSubmissionRepository.save(existingSubmission);
+            return "CV " + memberCV.getCvTitle() + " successfully re-submitted for job: " + companyJD.getJobTitle();
         }
 
-        // Save the submission record
+        // 6. No existing submission, create a new one, setting both company and companyJD
         CVSubmission submission = CVSubmission.builder()
-                .company(company)
+                .company(company) // As requested
+                .companyJD(companyJD) // The new link
                 .memberCV(memberCV)
                 .submittedAt(LocalDateTime.now())
                 .isViewed(null)
                 .build();
         cVSubmissionRepository.save(submission);
 
-        return "CV " + memberCV.getCvTitle() + " successfully submitted to " + company.getName();
+        return "CV " + memberCV.getCvTitle() + " successfully submitted for job: " + companyJD.getJobTitle();
     }
 
     public List<CandidateSubmittedCvDTO> getSubmittedCvsForCurrentUser() {
@@ -652,7 +667,7 @@ public class CVService {
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) throw new AuthAppException(ErrorCode.NOT_LOGIN);
 
-        List<CVSubmission> submissions = cVSubmissionRepository.findByMemberCV_User(currentUser);
+        List<CVSubmission> submissions = cVSubmissionRepository.findByMemberCV_UserOrderBySubmittedAtDesc(currentUser);
 
         return submissions.stream().map(sub -> {
             CandidateSubmittedCvDTO dto = new CandidateSubmittedCvDTO();
@@ -663,6 +678,10 @@ public class CVService {
             dto.setCompanyName(sub.getCompany().getName());
             dto.setIsViewed(sub.getIsViewed());
             dto.setCompanyLogoUrl(sub.getCompany().getLogoUrl());
+            if (sub.getCompanyJD() != null) {
+                dto.setJobTitle(sub.getCompanyJD().getJobTitle());
+            }
+            dto.setSubmittedAt(sub.getSubmittedAt());
             return dto;
         }).toList();
     }
@@ -675,19 +694,23 @@ public class CVService {
             throw new AuthAppException(ErrorCode.ACCOUNT_NOT_HR);
         }
 
-        if (currentUser.getHr().getCompany() == null) {
+        if (currentUser.getHr() == null || currentUser.getHr().getCompany() == null) {
             throw new AuthAppException(ErrorCode.HR_NOT_FOUND);
         }
 
         Company company = currentUser.getHr().getCompany();
-        List<CVSubmission> submissions = cVSubmissionRepository.findByCompany(company);
+        List<CVSubmission> submissions = cVSubmissionRepository.findByCompanyOrderBySubmittedAtDesc(company);
         return submissions.stream().map(sub -> {
             HRViewSubmittedCvDTO dto = new HRViewSubmittedCvDTO();
+            dto.setCvSubmissionId(sub.getId());
             dto.setUserId(sub.getMemberCV().getUser().getUserId());
             dto.setUserEmail(sub.getMemberCV().getUser().getEmail());
             dto.setUserPhone(sub.getMemberCV().getUser().getPhone());
             dto.setMemberCvTitle(sub.getMemberCV().getCvTitle());
             dto.setMemberCvLinkToCv(sub.getMemberCV().getLinkToCv());
+            if (sub.getCompanyJD() != null) {
+                dto.setJobTitle(sub.getCompanyJD().getJobTitle());
+            }
             dto.setIsViewed(sub.getIsViewed());
             dto.setSubmittedAt(sub.getSubmittedAt());
             return dto;

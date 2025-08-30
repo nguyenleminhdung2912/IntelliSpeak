@@ -60,4 +60,7 @@ public class CompanyJD {
 
     @OneToMany(mappedBy = "companyJD", cascade = CascadeType.REFRESH, orphanRemoval = true)
     private List<CompanyJDEvaluate> companyJDEvaluates = new ArrayList<>();
+
+    @OneToMany(mappedBy = "companyJD", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CVSubmission> cvSubmissions = new ArrayList<>();
 }

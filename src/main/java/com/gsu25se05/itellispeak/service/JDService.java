@@ -421,7 +421,7 @@ public class JDService {
         if (currentUser == null)
             return new Response<>(401, "Please log in to continue", null);
 
-        List<JD> jds = jdRepository.findByUserAndIsDeletedFalse(currentUser);
+        List<JD> jds = jdRepository.findByUserAndIsDeletedFalse(currentUser).reversed();
 
         List<GetAllJdDTO> dtos = jds.stream()
                 .map(jd -> GetAllJdDTO.builder()

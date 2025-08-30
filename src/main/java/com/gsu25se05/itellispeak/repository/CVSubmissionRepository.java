@@ -1,9 +1,6 @@
 package com.gsu25se05.itellispeak.repository;
 
-import com.gsu25se05.itellispeak.entity.CVSubmission;
-import com.gsu25se05.itellispeak.entity.Company;
-import com.gsu25se05.itellispeak.entity.MemberCV;
-import com.gsu25se05.itellispeak.entity.User;
+import com.gsu25se05.itellispeak.entity.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,9 +10,9 @@ import java.util.Optional;
 @Repository
 public interface CVSubmissionRepository extends JpaRepository<CVSubmission, Long> {
 
-    Optional<CVSubmission> findByCompanyAndMemberCV(Company company, MemberCV memberCV);
+    Optional<CVSubmission> findByCompanyJDAndMemberCV(CompanyJD companyJD, MemberCV memberCV);
 
-    List<CVSubmission> findByMemberCV_User(User user);
+    List<CVSubmission> findByMemberCV_UserOrderBySubmittedAtDesc(User user);
 
-    List<CVSubmission> findByCompany(Company company);
+    List<CVSubmission> findByCompanyOrderBySubmittedAtDesc(Company company);
 }
