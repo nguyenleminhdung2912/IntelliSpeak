@@ -1,15 +1,13 @@
 package com.gsu25se05.itellispeak.controller;
 
 
-import com.gsu25se05.itellispeak.dto.cv.CVAnalysisResponseDTO;
+import com.gsu25se05.itellispeak.dto.cv.*;
 import com.gsu25se05.itellispeak.dto.Response;
-import com.gsu25se05.itellispeak.dto.cv.CandidateSubmittedCvDTO;
-import com.gsu25se05.itellispeak.dto.cv.GetAllCvDTO;
-import com.gsu25se05.itellispeak.dto.cv.HRViewSubmittedCvDTO;
 import com.gsu25se05.itellispeak.entity.CVEvaluate;
 import com.gsu25se05.itellispeak.service.CVService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,12 +38,21 @@ public class CVController {
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<Response<CVEvaluate>> getCV(@PathVariable Long id) {
+    public ResponseEntity<Response<CVEvaluateResponseDTO>> getCV(@PathVariable Long id) {
         try {
-            Response<CVEvaluate> response = cvService.getCV(id);
-            return ResponseEntity.status(response.getCode() == 200 ? 200 : 400).body(response);
+            Response<CVEvaluateResponseDTO> response = cvService.getCV(id);
+
+            HttpStatus status = switch (response.getCode()) {
+                case 200 -> HttpStatus.OK;
+                case 401 -> HttpStatus.UNAUTHORIZED;
+                case 404 -> HttpStatus.NOT_FOUND;
+                default -> HttpStatus.BAD_REQUEST;
+            };
+
+            return ResponseEntity.status(status).body(response);
         } catch (Exception e) {
-            Response<CVEvaluate> errorResponse = new Response<>(400, "Error: " + e.getMessage(), null);
+            Response<CVEvaluateResponseDTO> errorResponse =
+                    new Response<>(400, "Error: " + e.getMessage(), null);
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
