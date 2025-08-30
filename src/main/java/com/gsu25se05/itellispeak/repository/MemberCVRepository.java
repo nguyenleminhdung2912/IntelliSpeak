@@ -21,7 +21,7 @@ public interface MemberCVRepository extends JpaRepository<MemberCV, Long> {
 
     Optional<MemberCV> findByUserAndIsActiveTrue(User user);
 
-    List<MemberCV> findByUserUserIdAndIsDeletedFalse(Long userId);
+    List<MemberCV> findByUserUserIdAndIsDeletedFalseOrderByCreateAtDesc(Long userId);
 
     MemberCV findFirstByUserAndIsDeletedFalseAndIsActiveTrueOrderByUpdateAtDesc(User user);
 

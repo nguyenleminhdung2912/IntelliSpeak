@@ -10,6 +10,6 @@ import java.util.List;
 @Repository
 public interface JDRepository extends JpaRepository<JD, Long> {
 
-    List<JD> findByUserAndIsDeletedFalse(User user);
+    List<JD> findByUserAndIsDeletedFalseOrderByCreateAtDesc(User user);
 
 }
