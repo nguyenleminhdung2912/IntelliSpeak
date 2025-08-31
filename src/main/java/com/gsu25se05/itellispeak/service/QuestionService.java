@@ -1,6 +1,7 @@
 package com.gsu25se05.itellispeak.service;
 
 import com.gsu25se05.itellispeak.dto.Response;
+import com.gsu25se05.itellispeak.dto.interview_session.ConfirmCsvRequest;
 import com.gsu25se05.itellispeak.dto.interview_session.InterviewSessionDTO;
 import com.gsu25se05.itellispeak.dto.question.CSVQuestionDTO;
 import com.gsu25se05.itellispeak.dto.question.QuestionDTO;
@@ -12,12 +13,17 @@ import com.gsu25se05.itellispeak.repository.TagRepository;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
 import com.gsu25se05.itellispeak.utils.mapper.QuestionMapper;
 import io.micrometer.common.lang.Nullable;
+import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.stereotype.Service;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.StringReader;
@@ -462,6 +468,158 @@ public class QuestionService {
         return new Response<>(200, msg, parsedDtos);
     }
 
+    @Transactional
+    public Response<List<CSVQuestionDTO>> saveQuestionsFromPreview(ConfirmCsvRequest req) {
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            return new Response<>(401, "Please log in to continue", null);
+        }
+        String roleName = currentUser.getRole().name();
+        if (!"HR".equalsIgnoreCase(roleName) && !"ADMIN".equalsIgnoreCase(roleName)) {
+            return new Response<>(403, "Only HR or ADMIN users can save CSV questions", null);
+        }
+
+        if (req == null || req.getQuestions() == null || req.getQuestions().isEmpty()) {
+            return new Response<>(400, "Request must include non-empty questions list", null);
+        }
+
+        InterviewSession session = null;
+        if (req.getInterviewSessionId() != null) {
+            session = interviewSessionRepository.findById(req.getInterviewSessionId()).orElse(null);
+            if (session == null) {
+                return new Response<>(400, "Interview session not found: " + req.getInterviewSessionId(), null);
+            }
+            if (session.getQuestions() == null) session.setQuestions(new HashSet<>());
+        }
+
+        Company uploaderCompany = (currentUser.getRole() == User.Role.HR && currentUser.getHr() != null)
+                ? currentUser.getHr().getCompany() : null;
+
+        List<CSVQuestionDTO> savedDtos = new ArrayList<>();
+        List<String> rowErrors = new ArrayList<>();
+
+        int rowIndex = 0;
+        for (CSVQuestionDTO item : req.getQuestions()) {
+            rowIndex++;
+            try {
+                // validate tối thiểu
+                String title = n(item.getTitle());
+                String content = n(item.getContent());
+                String diffRaw = n(item.getDifficulty());
+                if (title.isBlank() || content.isBlank() || diffRaw.isBlank()) {
+                    throw new IllegalArgumentException("title/content/difficulty must not be blank");
+                }
+
+                Difficulty diffEnum = Difficulty.valueOf(normalizeDifficulty(diffRaw)); // EASY|MEDIUM|HARD
+
+                // resolve tagIds per question
+                Set<Tag> tags = resolveTags(item.getTagIds()); // cho phép null/empty
+
+
+                Question saved = saveSingleQuestionRequiresNew(
+                        title, content, item.getSuitableAnswer1(), item.getSuitableAnswer2(),
+                        diffEnum, currentUser, uploaderCompany, tags
+                );
+
+                if (session != null) {
+                    session.getQuestions().add(saved);
+                }
+
+                // build DTO trả về
+                CSVQuestionDTO dto = toCsvQuestionsDTO(saved, session, tags);
+                savedDtos.add(dto);
+
+            } catch (Exception ex) {
+                rowErrors.add("Row " + rowIndex + ": " + ex.getMessage());
+            }
+        }
+
+        if (session != null) {
+            Integer total = (session.getQuestions() == null) ? 0 : session.getQuestions().size();
+            session.setTotalQuestion(total);
+            interviewSessionRepository.save(session);
+
+            for (CSVQuestionDTO dto : savedDtos) {
+                if (dto.getInterviewSessionDTO() != null) {
+                    dto.getInterviewSessionDTO().setTotalQuestion(total);
+                }
+            }
+        }
+
+        String msg = rowErrors.isEmpty()
+                ? "CSV save successful"
+                : ("CSV save completed with " + rowErrors.size() + " row error(s). First error: " + rowErrors.get(0));
+
+        return new Response<>(200, msg, savedDtos);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    protected Question saveSingleQuestionRequiresNew(
+            String title,
+            String content,
+            String s1,
+            String s2,
+            Difficulty difficulty,
+            User creator,
+            Company company,
+            Set<Tag> tags
+    ) {
+        Question q = new Question();
+        q.setTitle(title);
+        q.setContent(content);
+        q.setSuitableAnswer1(s1);
+        q.setSuitableAnswer2(s2);
+        q.setDifficulty(difficulty);
+        q.setQuestionStatus(QuestionStatus.APPROVED);
+        q.setSource("CSV Upload");
+        q.setIs_deleted(Boolean.FALSE);
+
+        q.setCreatedBy(creator);
+        if (company != null) q.setCompany(company);
+
+        if (tags != null && !tags.isEmpty()) {
+            q.setTags(new HashSet<>(tags));
+        } else {
+            q.setTags(new HashSet<>());
+        }
+
+        return questionRepository.save(q);
+    }
+
+    private Set<Tag> resolveTags(Set<Long> tagIds) {
+        if (tagIds == null || tagIds.isEmpty()) return Collections.emptySet();
+        List<Tag> found = tagRepository.findAllById(tagIds);
+        Set<Long> foundIds = found.stream().map(Tag::getTagId).collect(Collectors.toSet());
+        Set<Long> missing = tagIds.stream().filter(id -> !foundIds.contains(id)).collect(Collectors.toSet());
+        if (!missing.isEmpty()) {
+            throw new IllegalArgumentException("Tag not found: " + missing);
+        }
+        return new HashSet<>(found);
+    }
+
+    private static String n(String s) { return s == null ? "" : s.trim(); }
+
+    private CSVQuestionDTO toCsvQuestionsDTO(Question q, InterviewSession session, Set<Tag> tagsForRow) {
+        InterviewSessionDTO sessionDTO = null;
+        if (session != null) {
+            sessionDTO = new InterviewSessionDTO();
+            sessionDTO.setInterviewSessionId(session.getInterviewSessionId());
+            sessionDTO.setTitle(session.getTitle());
+            sessionDTO.setTotalQuestion(session.getTotalQuestion());
+        }
+
+        return CSVQuestionDTO.builder()
+                .questionId(q.getQuestionId())
+                .title(q.getTitle())
+                .content(q.getContent())
+                .difficulty(q.getDifficulty().name())
+                .suitableAnswer1(q.getSuitableAnswer1())
+                .suitableAnswer2(q.getSuitableAnswer2())
+                .isDeleted(Boolean.TRUE.equals(q.getIs_deleted()))
+                .tags(tagsForRow != null && !tagsForRow.isEmpty() ? tagsForRow : q.getTags())
+                .interviewSessionDTO(sessionDTO)
+                .build();
+    }
 
 
     private CSVQuestionDTO toCsvQuestionDTO(Question saved, InterviewSession session, Tag tag) {
