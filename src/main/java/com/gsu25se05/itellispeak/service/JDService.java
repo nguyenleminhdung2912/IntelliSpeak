@@ -322,9 +322,8 @@ public class JDService {
         // Gate: chỉ cho phép IT
         boolean supported = root.path("supported").asBoolean(false);
         if (!supported) {
-            String detected = root.path("detectedDomain").asText("unknown");
             String msg = root.path("message").asText("This service only supports IT job descriptions.");
-            throw new IllegalArgumentException(msg + " Detected domain: " + detected + ".");
+            throw new IllegalArgumentException(msg);
         }
 
         // Từ đây chắc chắn là IT và có các field top-level

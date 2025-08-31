@@ -314,9 +314,8 @@ public class CVService {
         // 1) Bắt buộc có trường supported (theo prompt IT-only)
         boolean supported = root.path("supported").asBoolean(false);
         if (!supported) {
-            String detectedDomain = root.path("detectedDomain").asText("unknown");
             String msg = root.path("message").asText("This service only supports IT resumes.");
-            return new Response<>(422, String.format("%s Detected domain: %s.", msg, detectedDomain), null);
+            return new Response<>(422, String.format(msg), null);
         }
 
         JsonNode infoNode = root.path("extractedInfo");
