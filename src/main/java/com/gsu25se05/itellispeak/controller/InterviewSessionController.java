@@ -3,16 +3,14 @@ package com.gsu25se05.itellispeak.controller;
 
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.ai_evaluation.EvaluationBatchResponseDto;
-import com.gsu25se05.itellispeak.dto.interview_session.InterviewByTopicDTO;
-import com.gsu25se05.itellispeak.dto.interview_session.InterviewSessionDTO;
-import com.gsu25se05.itellispeak.dto.interview_session.QuestionSelectionRequestDTO;
-import com.gsu25se05.itellispeak.dto.interview_session.SessionWithQuestionsDTO;
+import com.gsu25se05.itellispeak.dto.interview_session.*;
 import com.gsu25se05.itellispeak.dto.topic.TopicWithTagsDTO;
 import com.gsu25se05.itellispeak.entity.InterviewSession;
 import com.gsu25se05.itellispeak.entity.Question;
 import com.gsu25se05.itellispeak.service.InterviewSessionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +34,25 @@ public class InterviewSessionController {
     public ResponseEntity<Response<InterviewSession>> create(@RequestBody InterviewSessionDTO interviewSessionDTO) {
         InterviewSession session = interviewSessionService.save(interviewSessionDTO);
         return ResponseEntity.ok(new Response<>(200, "Interview session created", session));
+    }
+
+    @DeleteMapping("/delete/{interview_session_id}")
+    @Operation(summary = "Xóa interview session")
+    public ResponseEntity<Response<String>> delete(@PathVariable Long interview_session_id) {
+        interviewSessionService.delete(interview_session_id);
+        return ResponseEntity.ok(new Response<>(200, "Interview session deleted", null));
+    }
+
+    @PutMapping("/update/{id}")
+    @Operation(summary = "Update interview session")
+    public ResponseEntity<Response<InterviewSession>> updateInterviewSession(@PathVariable("id") Long id, @RequestBody UpdateInterviewSessionRequestDTO request) {
+        try {
+            InterviewSession updated = interviewSessionService.updateInterviewSession(id, request);
+            Response<InterviewSession> response = new Response<>(200, "Interview session updated", updated);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new Response<>(200, "Interview session updated", null));
+        }
     }
 
     @PostMapping("/{sessionId}/questions/{questionId}")

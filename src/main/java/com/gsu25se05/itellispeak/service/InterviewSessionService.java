@@ -15,6 +15,9 @@ import com.gsu25se05.itellispeak.utils.AccountUtils;
 import com.gsu25se05.itellispeak.utils.TranslationUtil;
 import com.gsu25se05.itellispeak.utils.mapper.InterviewSessionMapper;
 import com.gsu25se05.itellispeak.utils.mapper.QuestionMapper;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -103,6 +106,68 @@ public class InterviewSessionService {
         return interviewSessionRepository.save(entity);
     }
 
+    @Transactional
+    public void delete(Long interviewSessionId) {
+        if (interviewSessionId == null) {
+            throw new IllegalArgumentException("Interview session ID must not be null");
+        }
+
+        InterviewSession session = interviewSessionRepository.findById(interviewSessionId)
+                .orElseThrow(() -> new AuthAppException(ErrorCode.INTERVIEW_SESSION_NOT_FOUND));
+
+        if (Boolean.TRUE.equals(session.getIsDeleted())) {
+            throw new IllegalStateException("Interview session with id " + interviewSessionId + " is already deleted");
+        }
+
+        session.setIsDeleted(true);
+        session.setUpdateAt(LocalDateTime.now());
+
+        interviewSessionRepository.save(session);
+    }
+
+    @Transactional
+    public InterviewSession updateInterviewSession(Long id, UpdateInterviewSessionRequestDTO request) {
+        InterviewSession session = interviewSessionRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Interview session not found"));
+
+        // update topic
+        if (request.getTopicId() != null) {
+            Topic topic = topicRepository.findById(request.getTopicId())
+                    .orElseThrow(() -> new EntityNotFoundException("Topic not found"));
+            session.setTopic(topic);
+        }
+
+        // update title
+        if (request.getTitle() != null) {
+            session.setTitle(request.getTitle());
+        }
+
+        // update description
+        if (request.getDescription() != null) {
+            session.setDescription(request.getDescription());
+        }
+
+        if (request.getDifficulty() != null) {
+            session.setDifficulty(request.getDifficulty());
+        }
+
+        // update tags (remove duplicates)
+        if (request.getTagIds() != null && !request.getTagIds().isEmpty()) {
+            // loại bỏ trùng bằng Set
+            Set<Long> uniqueTagIds = new HashSet<>(request.getTagIds());
+
+            List<Tag> tagsFromDb = tagRepository.findAllById(uniqueTagIds);
+
+            if (tagsFromDb.size() != uniqueTagIds.size()) {
+                throw new EntityNotFoundException("One or more tags not found");
+            }
+
+            session.setTags(new HashSet<>(tagsFromDb));
+        }
+
+        session.setUpdateAt(LocalDateTime.now());
+        return interviewSessionRepository.save(session);
+    }
 
     @Transactional
     public InterviewSession addQuestionToSession(Long sessionId, Long questionId) {
@@ -135,6 +200,7 @@ public class InterviewSessionService {
         return interviewSessionRepository.findVisibleById(id, "RANDOM")
                 .orElseThrow(() -> new NotFoundException("Interview session not found or unavailable"));
     }
+
     @Transactional
     public List<InterviewSession> getAllSessionsCreatedByHR() {
         User currentUser = accountUtils.getCurrentAccount();
@@ -186,8 +252,7 @@ public class InterviewSessionService {
             easyCount = 1;
             mediumCount = 2;
             hardCount = 0;
-        }
-        else if (total == 5) {
+        } else if (total == 5) {
             easyCount = 2;
             mediumCount = 2;
             hardCount = 1;
