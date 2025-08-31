@@ -713,6 +713,8 @@ public class CVService {
             HRViewSubmittedCvDTO dto = new HRViewSubmittedCvDTO();
             dto.setCvSubmissionId(sub.getId());
             dto.setUserId(sub.getMemberCV().getUser().getUserId());
+            dto.setFirstName(sub.getMemberCV().getUser().getFirstName());
+            dto.setLastName(sub.getMemberCV().getUser().getLastName());
             dto.setUserEmail(sub.getMemberCV().getUser().getEmail());
             dto.setUserPhone(sub.getMemberCV().getUser().getPhone());
             dto.setMemberCvTitle(sub.getMemberCV().getCvTitle());

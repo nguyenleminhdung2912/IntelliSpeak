@@ -77,7 +77,7 @@ public class PaymentService {
         PaymentData paymentData = PaymentData.builder()
                 .orderCode(orderCode)
                 .amount(amount.intValue())
-                .description("Purchase package: " + selectedPackage.getPackageName())
+                .description("Package: " + selectedPackage.getPackageName())
                 .returnUrl("https://bug-adapting-especially.ngrok-free.app/api/payment/success?orderCode=" + orderCode)
                 .cancelUrl("https://bug-adapting-especially.ngrok-free.app/api/payment/cancel?orderCode=" + orderCode)
 //                .returnUrl("http://localhost:8080/api/payment/success?orderCode=" + orderCode)

@@ -58,7 +58,8 @@ public enum ErrorCode {
     OUT_OF_INTERVIEW_COUNT(3001, "You have reached the limit for virtual interviews", HttpStatus.FORBIDDEN),
 
     // INTERVIEW SESSION | CODE: 4XXX
-    INTERVIEW_SESSION_WERE_DELETED(3001, "You have reached the limit for virtual interviews", HttpStatus.FORBIDDEN),
+    INTERVIEW_SESSION_WERE_DELETED(3001, "This interview session were deleted before.", HttpStatus.FORBIDDEN),
+    INTERVIEW_SESSION_NOT_FOUND(3002, "No such interview session found.", HttpStatus.NOT_FOUND),
 
     // CV & JD | CODE: 4XXX
     OUT_OF_CV_ANALYZE_COUNT(4001, "You have reached the limit for CV analysis", HttpStatus.FORBIDDEN),
