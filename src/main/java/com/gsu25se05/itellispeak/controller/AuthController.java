@@ -112,6 +112,11 @@ public class AuthController {
         return authService.resetPassword(resetPasswordRequest, token);
     }
 
+    @PostMapping("/change-password")
+    public ResponseEntity<ChangePasswordResponse> changePassword(@RequestBody ChangePasswordRequest request) {
+        return authService.changePassword(request);
+    }
+
 
 //    @GetMapping("/cookies")
 //    public ResponseEntity<Map<String, String>> getCookies(HttpServletRequest request) {

@@ -622,6 +622,52 @@ public class AuthService implements UserDetailsService {
         }
     }
 
+    public ResponseEntity<ChangePasswordResponse> changePassword(ChangePasswordRequest req) {
+        try {
+            User currentUser = accountUtils.getCurrentAccount();
+            if (currentUser == null) {
+                throw new AuthAppException(ErrorCode.NOT_LOGIN);
+            }
+            if (Boolean.TRUE.equals(currentUser.getIsDeleted())) {
+                throw new AuthAppException(ErrorCode.ACCOUNT_IS_DELETED);
+            }
+
+            if (req.getCurrentPassword() == null || req.getNewPassword() == null || req.getRepeatPassword() == null) {
+                throw new AuthAppException(ErrorCode.BAD_REQUEST);
+            }
+            if (!req.getNewPassword().equals(req.getRepeatPassword())) {
+                throw new AuthAppException(ErrorCode.PASSWORD_REPEAT_INCORRECT);
+            }
+            if (passwordEncoder.matches(req.getNewPassword(), currentUser.getPassword())) {
+                throw new AuthAppException(ErrorCode.PASSWORD_REPEAT_INCORRECT);
+            }
+
+            if (!passwordEncoder.matches(req.getCurrentPassword(), currentUser.getPassword())) {
+                throw new AuthAppException(ErrorCode.USERNAME_PASSWORD_NOT_CORRECT);
+            }
+
+            currentUser.setPassword(passwordEncoder.encode(req.getNewPassword()));
+            userRepository.save(currentUser);
+
+            ChangePasswordResponse resp = new ChangePasswordResponse(
+                    "Password changed successfully.", null, 200
+            );
+            return ResponseEntity.ok(resp);
+
+        } catch (AuthAppException e) {
+            ErrorCode ec = e.getErrorCode();
+            ChangePasswordResponse resp = new ChangePasswordResponse(
+                    "Change password failed", e.getMessage(), ec.getCode()
+            );
+            return new ResponseEntity<>(resp, ec.getHttpStatus());
+        } catch (Exception e) {
+            ChangePasswordResponse resp = new ChangePasswordResponse(
+                    "Change password failed", "Unexpected error", 400
+            );
+            return ResponseEntity.badRequest().body(resp);
+        }
+    }
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByEmail(username)
