@@ -100,6 +100,17 @@ public class JWTService {
         return refresh_token;
     }
 
+    public String generatePasswordResetToken(String email) {
+        // token cho reset password: purpose=password_reset, hết hạn 30 phút
+        return Jwts.builder()
+                .setSubject(email)
+                .claim("purpose", "password_reset")
+                .setIssuedAt(new Date())
+                .setExpiration(Date.from(Instant.now().plus(30, ChronoUnit.MINUTES)))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
     }
