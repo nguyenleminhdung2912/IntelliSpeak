@@ -16,6 +16,7 @@ import com.gsu25se05.itellispeak.utils.AccountUtils;
 import com.gsu25se05.itellispeak.utils.CloudinaryUtils;
 import com.gsu25se05.itellispeak.utils.FileUtils;
 import com.gsu25se05.itellispeak.utils.PdfToImageConverter;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -412,8 +413,14 @@ public class JDService {
     }
 
     public JD getJDById(Long id) {
-        return jdRepository.findById(id)
+        JD jd = jdRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("JD not found with ID: " + id));
+
+        if (Boolean.TRUE.equals(jd.isDeleted())) {
+            throw new NotFoundException("JD not found with ID: " + id);
+        }
+
+        return jd;
     }
 
     public Response<List<GetAllJdDTO>> getAllJDsByUser() {

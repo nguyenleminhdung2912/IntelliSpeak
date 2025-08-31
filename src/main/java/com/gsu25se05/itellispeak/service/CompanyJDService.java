@@ -13,6 +13,7 @@ import com.gsu25se05.itellispeak.utils.AccountUtils;
 import com.gsu25se05.itellispeak.utils.CloudinaryUtils;
 import com.gsu25se05.itellispeak.utils.FileUtils;
 import com.gsu25se05.itellispeak.utils.PdfToImageConverter;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,6 +23,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class CompanyJDService {
@@ -270,5 +272,44 @@ public class CompanyJDService {
 
         List<CompanyJD> jds = companyJDRepository.findByCompanyCompanyIdAndIsDeletedFalse(companyId);
         return jds;
+    }
+
+
+    @Transactional
+    public void deleteCompanyJD(Long companyJdId) {
+        User user = accountUtils.getCurrentAccount();
+        if (user == null) {
+            throw new NotLoginException("Please log in to continue");
+        }
+        CompanyJD companyJD = companyJDRepository.findById(companyJdId)
+                .orElseThrow(() -> new NotFoundException("Company JD not found with ID: " + companyJdId));
+
+        if (Boolean.TRUE.equals(companyJD.isDeleted())) {
+            throw new NotFoundException("Company JD not found with ID: " + companyJdId);
+        }
+
+        String role = user.getRole().name(); // USER | HR | ADMIN
+        boolean isAdmin = "ADMIN".equalsIgnoreCase(role);
+        boolean isHr = "HR".equalsIgnoreCase(role);
+
+        if (!isAdmin && !isHr) {
+            throw new AuthAppException(ErrorCode.ACCOUNT_NOT_HR);
+        }
+
+        if (isHr) {
+            HR hr = user.getHr();
+            if (hr == null || hr.getCompany() == null) {
+                throw new AuthAppException(ErrorCode.HR_NOT_FOUND);
+            }
+            Long myCompanyId = hr.getCompany().getCompanyId();
+            Long targetCompanyId = companyJD.getCompany().getCompanyId();
+            if (!Objects.equals(myCompanyId, targetCompanyId)) {
+                throw new IllegalArgumentException("You can delete only JDs of your company.");
+            }
+        }
+
+        companyJD.setDeleted(true);
+        companyJD.setUpdateAt(LocalDateTime.now());
+        companyJDRepository.save(companyJD);
     }
 }
