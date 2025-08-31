@@ -9,7 +9,7 @@ import com.gsu25se05.itellispeak.email.EmailService;
 import com.gsu25se05.itellispeak.entity.InterviewHistory;
 import com.gsu25se05.itellispeak.entity.InterviewHistoryDetail;
 import com.gsu25se05.itellispeak.entity.User;
-//import com.gsu25se05.itellispeak.entity.Wallet;
+import java.util.Objects;
 import com.gsu25se05.itellispeak.entity.UserUsage;
 import com.gsu25se05.itellispeak.exception.ErrorCode;
 import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
@@ -25,6 +25,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +53,9 @@ import java.util.stream.Collectors;
 public class AuthService implements UserDetailsService {
 
     private final static String defaultAvatar = "https://firebasestorage.googleapis.com/v0/b/mentor-booking-3d46a.appspot.com/o/76f15d2d-9f0b-4051-8177-812d5ee785a1.jpg?alt=media";
+
+    @Value("${BASE_FRONTEND_URL}")
+    private String frontendBaseUrl;
 
     @Autowired
     @Lazy
@@ -515,84 +519,146 @@ public class AuthService implements UserDetailsService {
 
     public ResponseEntity<ForgotPasswordResponse> forgotPassword(ForgotPasswordRequest forgotPasswordRequest) {
         try {
-            // CHECK VALID EMAIL
-            Optional<User> tempAccount = userRepository.findByEmail(forgotPasswordRequest.getEmail());
+            User account = userRepository.findByEmail(forgotPasswordRequest.getEmail())
+                    .orElseThrow(() -> new AuthAppException(ErrorCode.EMAIL_NOT_FOUND));
 
-            User checkAccount = tempAccount.orElseThrow(() -> new AuthAppException(ErrorCode.EMAIL_NOT_FOUND));
-
-            if (checkAccount.getEmail() == null || checkAccount.getEmail().isEmpty()) {
-                throw new AuthAppException(ErrorCode.EMAIL_NOT_FOUND);
+            if (Boolean.TRUE.equals(account.getIsDeleted())) {
+                throw new AuthAppException(ErrorCode.ACCOUNT_IS_DELETED);
             }
 
-            // GENERATE TOKEN FOR EMAIL FORGOT PASSWORD (ENSURE UNIQUE AND JUST ONLY EMAIL CAN USE)
-            String token = jwtService.generateToken(forgotPasswordRequest.getEmail());
-            User account = tempAccount.orElseThrow(() -> new AuthAppException(ErrorCode.USER_NOT_FOUND));
-            account.setTokens(token);
+            String token = jwtService.generatePasswordResetToken(account.getEmail());
 
-            //SEND MAIL
+            account.setTokens(token);
+            userRepository.save(account);
+
+            String resetLink = String.format("%s/reset-password?token=%s", frontendBaseUrl, token);
+
             EmailDetail emailDetail = EmailDetail.builder()
                     .recipient(account.getEmail())
-                    .msgBody("Hello " + account.getLastName() + ",\n\n" +
-                            "We have received a request to reset the password for your account. To complete the process, please click the link below:\n\n" +
-                            "<a href=\"https://circuit-project.vercel.app/forgotPassword?" + token + "\">Reset Password</a>\n\n" +
-                            "If you did not request a password reset, please ignore this email or contact our support team if you have any questions.\n\n" +
-                            "Best regards,\nSupport Team")
-                    .subject("Password Reset Request - Action Required")
-
-
-                    .name(account.getLastName())
+                    .name(account.getLastName() != null ? account.getLastName() : account.getUsername())
+                    .subject("Password Reset Request")
+                    .msgBody("We received a request to reset your password. Click the button to continue.")
+                    .attachment(resetLink)
                     .build();
+
             emailService.sendForgotPasswordEmail(emailDetail);
 
-            userRepository.save(account);
-            ForgotPasswordResponse forgotPasswordResponse = new ForgotPasswordResponse(
-                    "Password reset code created successfully. Please check your email.",
+            ForgotPasswordResponse resp = new ForgotPasswordResponse(
+                    "Password reset link has been sent. Please check your email.",
                     null,
                     200
             );
+            return new ResponseEntity<>(resp, HttpStatus.OK);
 
-            return new ResponseEntity<>(forgotPasswordResponse, HttpStatus.OK);
         } catch (AuthAppException e) {
             ErrorCode errorCode = e.getErrorCode();
-            ForgotPasswordResponse forgotPasswordResponse =
-                    new ForgotPasswordResponse("Password reset failed", e.getMessage(), errorCode.getCode());
-            return new ResponseEntity<>(forgotPasswordResponse, errorCode.getHttpStatus());
+            ForgotPasswordResponse resp = new ForgotPasswordResponse(
+                    "Password reset failed",
+                    e.getMessage(),
+                    errorCode.getCode()
+            );
+            return new ResponseEntity<>(resp, errorCode.getHttpStatus());
         }
     }
 
 
     public ResponseEntity<ResetPasswordResponse> resetPassword(ResetPasswordRequest resetPasswordRequest, String token) {
         try {
-            // AFTER USER CLICK LINK FORGOT PASSWORD IN EMAIL THEN REDIRECT TO API HERE (RESET PASSWORD)
-            // CHECK PASSWORD AND REPEAT PASSWORD
-            if (!resetPasswordRequest.getNew_password().equals(resetPasswordRequest.getRepeat_password())) {
+
+            if (token == null || token.isBlank()) {
+                throw new AuthAppException(ErrorCode.TOKEN_INVALID);
+            }
+            if (!Objects.equals(resetPasswordRequest.getNew_password(), resetPasswordRequest.getRepeat_password())) {
                 throw new AuthAppException(ErrorCode.PASSWORD_REPEAT_INCORRECT);
             }
-            // CALL FUNC
-            String email = jwtService.extractEmail(token);
 
-            // FIND EMAIL IN DATABASE AND UPDATE NEW PASSWORD
-            Optional<User> accountOptional = userRepository.findByEmail(email);
-            if (accountOptional.isPresent()) {
-                User account = accountOptional.get();
-                account.setPassword(passwordEncoder.encode(resetPasswordRequest.getNew_password()));
-                userRepository.save(account);
+            String purpose;
+            String email;
+            try {
+                purpose = jwtService.extractPurpose(token);
+                email = jwtService.extractEmail(token);
+            } catch (Exception ex) {
+                throw new AuthAppException(ErrorCode.TOKEN_INVALID);
+            }
+            if (!"password_reset".equals(purpose)) {
+                throw new AuthAppException(ErrorCode.TOKEN_INVALID);
             }
 
+            User account = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new AuthAppException(ErrorCode.EMAIL_NOT_FOUND));
+
+            if (Boolean.TRUE.equals(account.getIsDeleted())) {
+                throw new AuthAppException(ErrorCode.ACCOUNT_IS_DELETED);
+            }
+
+            account.setPassword(passwordEncoder.encode(resetPasswordRequest.getNew_password()));
+            account.setTokens(null);
+            userRepository.save(account);
+
             ResetPasswordResponse resetPasswordResponse = new ResetPasswordResponse(
-                    "Password reset successful.",
+                    "Password reset successfully.",
                     null,
                     200
             );
+            return new ResponseEntity<>(resetPasswordResponse, HttpStatus.OK);
 
-            return new ResponseEntity<>(resetPasswordResponse, HttpStatus.CREATED);
         } catch (AuthAppException e) {
             ErrorCode errorCode = e.getErrorCode();
             ResetPasswordResponse resetPasswordResponse =
                     new ResetPasswordResponse("Password reset failed", e.getMessage(), errorCode.getCode());
             return new ResponseEntity<>(resetPasswordResponse, errorCode.getHttpStatus());
-        }
+        } catch (Exception e) {
 
+            ResetPasswordResponse resetPasswordResponse =
+                    new ResetPasswordResponse("Password reset failed", "Unexpected error", 400);
+            return new ResponseEntity<>(resetPasswordResponse, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    public ResponseEntity<ChangePasswordResponse> changePassword(ChangePasswordRequest req) {
+        try {
+            User currentUser = accountUtils.getCurrentAccount();
+            if (currentUser == null) {
+                throw new AuthAppException(ErrorCode.NOT_LOGIN);
+            }
+            if (Boolean.TRUE.equals(currentUser.getIsDeleted())) {
+                throw new AuthAppException(ErrorCode.ACCOUNT_IS_DELETED);
+            }
+
+            if (req.getCurrentPassword() == null || req.getNewPassword() == null || req.getRepeatPassword() == null) {
+                throw new AuthAppException(ErrorCode.BAD_REQUEST);
+            }
+            if (!req.getNewPassword().equals(req.getRepeatPassword())) {
+                throw new AuthAppException(ErrorCode.PASSWORD_REPEAT_INCORRECT);
+            }
+            if (passwordEncoder.matches(req.getNewPassword(), currentUser.getPassword())) {
+                throw new AuthAppException(ErrorCode.PASSWORD_REPEAT_INCORRECT);
+            }
+
+            if (!passwordEncoder.matches(req.getCurrentPassword(), currentUser.getPassword())) {
+                throw new AuthAppException(ErrorCode.USERNAME_PASSWORD_NOT_CORRECT);
+            }
+
+            currentUser.setPassword(passwordEncoder.encode(req.getNewPassword()));
+            userRepository.save(currentUser);
+
+            ChangePasswordResponse resp = new ChangePasswordResponse(
+                    "Password changed successfully.", null, 200
+            );
+            return ResponseEntity.ok(resp);
+
+        } catch (AuthAppException e) {
+            ErrorCode ec = e.getErrorCode();
+            ChangePasswordResponse resp = new ChangePasswordResponse(
+                    "Change password failed", e.getMessage(), ec.getCode()
+            );
+            return new ResponseEntity<>(resp, ec.getHttpStatus());
+        } catch (Exception e) {
+            ChangePasswordResponse resp = new ChangePasswordResponse(
+                    "Change password failed", "Unexpected error", 400
+            );
+            return ResponseEntity.badRequest().body(resp);
+        }
     }
 
     @Override
