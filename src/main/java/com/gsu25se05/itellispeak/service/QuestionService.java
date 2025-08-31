@@ -11,6 +11,8 @@ import com.gsu25se05.itellispeak.repository.QuestionRepository;
 import com.gsu25se05.itellispeak.repository.TagRepository;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
 import com.gsu25se05.itellispeak.utils.mapper.QuestionMapper;
+import io.micrometer.common.lang.Nullable;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
 import org.apache.commons.csv.CSVFormat;
@@ -366,6 +368,101 @@ public class QuestionService {
             return new Response<>(400, "Invalid CSV format: " + e.getMessage(), null);
         }
     }
+
+    @Transactional(readOnly = true)
+    public Response<List<CSVQuestionDTO>> previewQuestionsFromCsv(MultipartFile file) {
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            return new Response<>(401, "Please log in to continue", null);
+        }
+        String roleName = currentUser.getRole().name();
+        if (!"HR".equalsIgnoreCase(roleName) && !"ADMIN".equalsIgnoreCase(roleName)) {
+            return new Response<>(403, "Only HR or ADMIN users can preview CSV", null);
+        }
+
+        final List<String> REQUIRED_HEADERS = List.of(
+                "title", "content", "difficulty", "suitableAnswer1", "suitableAnswer2"
+        );
+
+        List<CSVQuestionDTO> parsedDtos = new ArrayList<>();
+        List<String> rowErrors = new ArrayList<>();
+
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+
+            List<String> lines = reader.lines().collect(Collectors.toList());
+            if (lines.isEmpty()) {
+                return new Response<>(400, "CSV file is empty", null);
+            }
+
+            // remove UTF-8 BOM
+            lines.set(0, lines.get(0).replace("\uFEFF", ""));
+            String csvContent = String.join("\n", lines);
+
+            try (CSVParser csv = CSVFormat.DEFAULT
+                    .withFirstRecordAsHeader()
+                    .withIgnoreHeaderCase()
+                    .withTrim()
+                    .parse(new StringReader(csvContent))) {
+
+                Set<String> headersLc = csv.getHeaderNames().stream()
+                        .map(h -> h == null ? "" : h.trim().toLowerCase())
+                        .collect(Collectors.toSet());
+
+                for (String h : REQUIRED_HEADERS) {
+                    if (!headersLc.contains(h.toLowerCase())) {
+                        return new Response<>(400, "CSV file is missing required column: " + h, null);
+                    }
+                }
+
+                long rowIndex = 1; // header = row 1
+                for (CSVRecord r : csv) {
+                    rowIndex++;
+                    try {
+                        String title = safe(r, "title");
+                        String content = safe(r, "content");
+                        String difficultyRaw = safe(r, "difficulty");
+                        String s1 = safe(r, "suitableAnswer1");
+                        String s2 = safe(r, "suitableAnswer2");
+
+                        if (title.isBlank() || content.isBlank() || difficultyRaw.isBlank()) {
+                            throw new IllegalArgumentException("title/content/difficulty must not be blank");
+                        }
+
+                        String normalizedDiff = normalizeDifficulty(difficultyRaw); // EASY|MEDIUM|HARD
+
+                        CSVQuestionDTO dto = CSVQuestionDTO.builder()
+                                .title(title)
+                                .content(content)
+                                .difficulty(normalizedDiff)
+                                .suitableAnswer1(s1)
+                                .suitableAnswer2(s2)
+                                .isDeleted(false)
+                                .interviewSessionDTO(null) // không nhận session nữa
+                                .build();
+
+                        parsedDtos.add(dto);
+
+                    } catch (Exception rowEx) {
+                        rowErrors.add("Row " + rowIndex + ": " + rowEx.getMessage());
+                    }
+                }
+            }
+
+        } catch (IOException e) {
+            return new Response<>(500, "Unable to read CSV file: " + e.getMessage(), null);
+        } catch (IllegalArgumentException e) {
+            return new Response<>(400, "Invalid CSV format: " + e.getMessage(), null);
+        }
+
+        String msg = rowErrors.isEmpty()
+                ? ("CSV preview successful. Parsed: " + parsedDtos.size())
+                : ("CSV preview completed with " + rowErrors.size() + " row error(s). First error: " + rowErrors.get(0));
+
+        return new Response<>(200, msg, parsedDtos);
+    }
+
+
 
     private CSVQuestionDTO toCsvQuestionDTO(Question saved, InterviewSession session, Tag tag) {
 

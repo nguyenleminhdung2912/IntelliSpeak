@@ -82,4 +82,12 @@ public class QuestionController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/preview-csv")
+    @Operation(summary = "Preview questions from CSV")
+    public Response<List<CSVQuestionDTO>> previewQuestionsFromCsv(
+            @RequestParam("file") MultipartFile file
+    ) {
+        return questionService.previewQuestionsFromCsv(file);
+    }
+
 }
