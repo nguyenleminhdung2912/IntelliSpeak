@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 public class HRViewSubmittedCvDTO {
     private Long cvSubmissionId;
     private Long userId;
+    private String userName;
     private String userEmail;
     private String userPhone;
     private String memberCvTitle;

@@ -311,7 +311,7 @@ public class EvaluationService {
                 .append("         }\n")
                 .append("       }\n")
                 .append("     ],\n")
-                .append("     \"overallEvaluation\": \"<Concise overall evaluation in English, followed by 'Đã trả lời X/Y câu' in Vietnamese>\"\n")
+                .append("     \"overallEvaluation\": \"<Concise overall evaluation in English, followed by 'Answered X/Y questions'>\"\n")
                 .append("   }\n")
                 .append("6. Use a professional, concise HR-style tone.\n");
 
