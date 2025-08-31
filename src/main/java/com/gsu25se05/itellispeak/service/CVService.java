@@ -275,24 +275,24 @@ public class CVService {
             if (parts.length > 1) {
                 String lastName = parts[parts.length - 1];
                 String firstName = String.join(" ", Arrays.copyOf(parts, parts.length - 1));
-                if (isBlank(user.getFirstName())) user.setFirstName(firstName);
-                if (isBlank(user.getLastName())) user.setLastName(lastName);
+
+                user.setLastName(lastName);
+
+                if (isBlank(user.getFirstName())) {
+                    user.setFirstName(firstName);
+                }
             } else {
-                if (isBlank(user.getLastName())) user.setLastName(parts[0]);
+                user.setLastName(parts[0]);
             }
         }
 
-        // Phone
         if (isNotBlank(extracted.getPhone()) && isBlank(user.getPhone())) {
             user.setPhone(extracted.getPhone());
         }
 
-        // Website, LinkedIn, GitHub
         if (isNotBlank(extracted.getUniversity()) && isBlank(user.getBio())) {
             user.setBio("Studied at " + extracted.getUniversity());
-        }
-
-        if (isNotBlank(extracted.getCareerGoals()) && isBlank(user.getBio())) {
+        } else if (isNotBlank(extracted.getCareerGoals()) && isBlank(user.getBio())) {
             user.setBio(extracted.getCareerGoals());
         }
     }

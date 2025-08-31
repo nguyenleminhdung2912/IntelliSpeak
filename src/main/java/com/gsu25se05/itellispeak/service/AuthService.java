@@ -519,7 +519,6 @@ public class AuthService implements UserDetailsService {
 
     public ResponseEntity<ForgotPasswordResponse> forgotPassword(ForgotPasswordRequest forgotPasswordRequest) {
         try {
-            // 1) Check email hợp lệ
             User account = userRepository.findByEmail(forgotPasswordRequest.getEmail())
                     .orElseThrow(() -> new AuthAppException(ErrorCode.EMAIL_NOT_FOUND));
 
@@ -527,18 +526,13 @@ public class AuthService implements UserDetailsService {
                 throw new AuthAppException(ErrorCode.ACCOUNT_IS_DELETED);
             }
 
-            // 2) Generate token reset password (purpose=password_reset, expiry ngắn)
             String token = jwtService.generatePasswordResetToken(account.getEmail());
 
-            // (Tuỳ chọn) Lưu token để one-time (nếu chưa muốn chỉnh entity, giữ nguyên string).
-            // Tốt nhất: lưu HASH + expiredAt.
             account.setTokens(token);
             userRepository.save(account);
 
-            // 3) Build reset link (FE sẽ đọc token từ query)
             String resetLink = String.format("%s/reset-password?token=%s", frontendBaseUrl, token);
 
-            // 4) Gửi email - TRUYỀN resetLink VÀO EmailService (EmailService KHÔNG tạo token nữa)
             EmailDetail emailDetail = EmailDetail.builder()
                     .recipient(account.getEmail())
                     .name(account.getLastName() != null ? account.getLastName() : account.getUsername())
@@ -549,7 +543,6 @@ public class AuthService implements UserDetailsService {
 
             emailService.sendForgotPasswordEmail(emailDetail);
 
-            // 5) Response
             ForgotPasswordResponse resp = new ForgotPasswordResponse(
                     "Password reset link has been sent. Please check your email.",
                     null,
