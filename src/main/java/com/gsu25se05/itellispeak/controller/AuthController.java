@@ -107,9 +107,14 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<ResetPasswordResponse> resetPassword(
             @RequestBody ResetPasswordRequest resetPasswordRequest,
-            @CookieValue(name = "resetToken", required = false) String token
+            @RequestParam("token") String token
     ) {
         return authService.resetPassword(resetPasswordRequest, token);
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<ChangePasswordResponse> changePassword(@RequestBody ChangePasswordRequest request) {
+        return authService.changePassword(request);
     }
 
 

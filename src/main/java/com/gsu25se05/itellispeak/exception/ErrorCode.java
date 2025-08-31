@@ -36,7 +36,7 @@ public enum ErrorCode {
     EMAIL_WAIT_VERIFY(1501, "Email is registered; please verify and log in", HttpStatus.BAD_REQUEST),
     EMAIL_EXISTED(1502, "This email has been registered; please log in", HttpStatus.BAD_REQUEST),
     ACCOUNT_ACCESS_FORBIDDEN(1503, "Access to this account is forbidden", HttpStatus.FORBIDDEN),
-
+    BAD_REQUEST(400, "Bad request", HttpStatus.BAD_REQUEST),
     // ACCOUNTS | HR | CODE: 16XX
     HR_ALREADY_APPLIED(1600, "You have already submitted a request to become HR", HttpStatus.CONFLICT),
     HR_NOT_FOUND(1601, "You have not submitted a request to become HR", HttpStatus.NOT_FOUND),

@@ -27,6 +27,9 @@ public class EmailService {
     @Value("${BASE_BACKEND_URL}")
     private String backendBaseUrl;
 
+    @Value("${BASE_FRONTEND_URL}")
+    private String frontendBaseUrl;
+
     private String url;
 
     @Async
@@ -48,24 +51,14 @@ public class EmailService {
     }
 
 
+    @Async
     public void sendForgotPasswordEmail(EmailDetail emailDetail) {
         try {
             Context context = new Context();
             context.setVariable("name", emailDetail.getName());
-
-            // Tạo token để người dùng có thể reset mật khẩu
-            String token = jwtService.generateToken(emailDetail.getRecipient());
-            String resetLink = "http://localhost:8080/swagger-ui/index.html#/auth-controller/forgotPassword?" + token;
-
-            context.setVariable("link", resetLink);
+            context.setVariable("link", emailDetail.getAttachment());
             context.setVariable("button", "Reset Password");
 
-            emailDetail.setSubject("Yêu cầu đặt lại mật khẩu");
-            emailDetail.setMsgBody("Xin chào " + emailDetail.getName() + ",\n\n" +
-                    "Chúng tôi đã nhận được yêu cầu đặt lại mật khẩu từ bạn. Vui lòng nhấn vào nút bên dưới để thực hiện:\n\n" +
-                    "<a href=\"" + resetLink + "\">Đặt lại mật khẩu</a>\n\n" +
-                    "Nếu bạn không yêu cầu điều này, vui lòng bỏ qua email này hoặc liên hệ với bộ phận hỗ trợ.\n\n" +
-                    "Trân trọng,\nĐội ngũ hỗ trợ ItelliSpeak");
             proceedToSendMail(emailDetail, context, "forgot-password");
         } catch (MessagingException e) {
             e.printStackTrace();
