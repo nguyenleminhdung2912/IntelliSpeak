@@ -140,7 +140,7 @@ public class JDService {
     You are an experienced IT recruiter. Compare the following CV against the JD and return a single valid JSON object only.
 
     Scoring rubric:
-    - Overall score 0..100.
+    - Overall score 0..100. This overall score should also be considered by levelFit and domainFit. For example if level FIT is 1, domain FIT is 1, and the user have every must have skill and nice to have skill, then the score must around 90 or upper.
     - Consider: coverage of must-have skills (highest weight), nice-to-have skills, level fit (years vs. suitable level), and domain/job-title alignment.
     - Be strict on must-have: missing must-haves should lower the score significantly.
 
