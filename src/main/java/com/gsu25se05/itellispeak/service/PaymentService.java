@@ -111,16 +111,12 @@ public class PaymentService {
                 tx.setTransactionStatus(TransactionStatus.PAID);
                 transactionRepository.save(tx);
 
-                Package purchasedPackage = tx.getAPackage();
-                user.setAPackage(purchasedPackage);
+                Package oldPkg = user.getAPackage();
+                Package newPkg = tx.getAPackage();
+                user.setAPackage(newPkg);
 
                 UserUsage usage = user.getUserUsage();
-                if (usage != null) {
-                    usage.setCvAnalyzeUsed(0);
-                    usage.setJdAnalyzeUsed(0);
-                    usage.setInterviewUsed(0);
-                    usage.setUpdateAt(LocalDateTime.now());
-                } else {
+                if (usage == null) {
                     usage = UserUsage.builder()
                             .user(user)
                             .cvAnalyzeUsed(0)
@@ -128,11 +124,29 @@ public class PaymentService {
                             .interviewUsed(0)
                             .updateAt(LocalDateTime.now())
                             .build();
+                } else {
+                    int oldCvLimit  = (oldPkg != null && oldPkg.getCvAnalyzeCount() != null) ? oldPkg.getCvAnalyzeCount() : 0;
+                    int oldJdLimit  = (oldPkg != null && oldPkg.getJdAnalyzeCount() != null) ? oldPkg.getJdAnalyzeCount() : 0;
+                    int oldItvLimit = (oldPkg != null && oldPkg.getInterviewCount() != null) ? oldPkg.getInterviewCount() : 0;
+
+                    int cvUsed  = usage.getCvAnalyzeUsed();
+                    int jdUsed  = usage.getJdAnalyzeUsed();
+                    int itvUsed = usage.getInterviewUsed();
+
+                    int cvUsedNew  = cvUsed  - oldCvLimit;
+                    int jdUsedNew  = jdUsed  - oldJdLimit;
+                    int itvUsedNew = itvUsed - oldItvLimit;
+
+                    usage.setCvAnalyzeUsed(cvUsedNew);
+                    usage.setJdAnalyzeUsed(jdUsedNew);
+                    usage.setInterviewUsed(itvUsedNew);
+                    usage.setUpdateAt(LocalDateTime.now());
                 }
+
                 user.setUserUsage(usage);
                 userRepository.save(user);
 
-                return new Response<>(200, "Payment successful, package activated", "PAID");
+                return new Response<>(200, "Payment successful, package activated with rollover", "PAID");
             }
 
             return new Response<>(202, "Transaction not paid yet", tx.getTransactionStatus().toString());

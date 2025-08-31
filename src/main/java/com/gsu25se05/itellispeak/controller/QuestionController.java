@@ -1,6 +1,7 @@
 package com.gsu25se05.itellispeak.controller;
 
 import com.gsu25se05.itellispeak.dto.Response;
+import com.gsu25se05.itellispeak.dto.interview_session.ConfirmCsvRequest;
 import com.gsu25se05.itellispeak.dto.question.CSVQuestionDTO;
 import com.gsu25se05.itellispeak.dto.question.QuestionDTO;
 import com.gsu25se05.itellispeak.dto.question.UpdateQuestionDTO;
@@ -8,6 +9,7 @@ import com.gsu25se05.itellispeak.entity.Question;
 import com.gsu25se05.itellispeak.service.QuestionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -80,6 +82,26 @@ public class QuestionController {
         QuestionDTO questionDTO = questionService.updateQuestion(id, dto);
         Response<QuestionDTO> response = new Response<>(200, "Question updated successfully", questionDTO);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/preview-csv")
+    @Operation(summary = "preview câu hỏi từ trong file csv")
+    public Response<List<CSVQuestionDTO>> previewQuestionsFromCsv(
+            @RequestParam("file") MultipartFile file
+    ) {
+        return questionService.previewQuestionsFromCsv(file);
+    }
+
+    @PostMapping(
+            value = "/confirm-csv",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @Operation(summary = "Confirm file csv và lưu câu hỏi vào trong Interview Template")
+    public Response<List<CSVQuestionDTO>> confirmCsvQuestions(
+            @RequestBody ConfirmCsvRequest req
+    ) {
+        return questionService.saveQuestionsFromPreview(req);
     }
 
 }
