@@ -36,6 +36,9 @@ public class ForumPost {
     @Column(name = "title")
     private String title;
 
+    @Column(name = "thumbnail", columnDefinition = "TEXT", nullable = true)
+    private String thumbnail;
+
     @Column(name = "content", columnDefinition = "TEXT")
     private String content;
 

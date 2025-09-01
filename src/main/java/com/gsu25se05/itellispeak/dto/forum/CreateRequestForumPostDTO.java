@@ -16,6 +16,9 @@ public class CreateRequestForumPostDTO {
     @NotBlank(message = "Content cannot be empty")
     private String content;
 
+    @JsonProperty("thumbnail")
+    private String thumbnail;
+
     @JsonProperty("images")
     private List<String> images;
 

@@ -20,6 +20,8 @@ public class CreateResponseForumDTO {
 
     private String content;
 
+    private String thumbnail;
+
     private List<String> image;
 
     private String userName;

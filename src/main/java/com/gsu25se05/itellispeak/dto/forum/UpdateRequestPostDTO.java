@@ -19,6 +19,8 @@ public class UpdateRequestPostDTO {
     @NotBlank(message = "Content cannot be empty")
     private String content;
 
+    private String thumbnail;
+
     private List<UpdateImageDTO> images;
 
     private Long forumTopicTypeId;

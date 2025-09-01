@@ -54,27 +54,30 @@ public class ForumPostController {
     }
 
     @GetMapping("/by-topic/{topicId}")
-    public Response<List<CreateResponseForumDTO>> getByTopic(@PathVariable Long topicId) {
-        return forumPostService.getPostsByTopic(topicId);
+    public ResponseEntity<Response<List<CreateResponseForumDTO>>> getByTopic(@PathVariable Long topicId) {
+        Response<List<CreateResponseForumDTO>> resp = forumPostService.getPostsByTopic(topicId);
+        return ResponseEntity.status(resp.getCode()).body(resp);
     }
 
     @PostMapping
-    public Response<CreateResponseForumDTO> createForumPost(@Valid @RequestBody CreateRequestForumPostDTO forumPostDTO) {
-        return forumPostService.createForumPost(forumPostDTO);
+    public ResponseEntity<Response<CreateResponseForumDTO>> createForumPost(@Valid @RequestBody CreateRequestForumPostDTO forumPostDTO) {
+        Response<CreateResponseForumDTO> resp = forumPostService.createForumPost(forumPostDTO);
+        return ResponseEntity.status(resp.getCode()).body(resp);
     }
 
     @PutMapping("/{id}")
-    public Response<UpdateResponsePostDTO> updatePost(@PathVariable Long id, @RequestBody UpdateRequestPostDTO post) {
-        return forumPostService.updateForumPost(id, post);
+    public ResponseEntity<Response<UpdateResponsePostDTO>> updatePost(@PathVariable Long id, @RequestBody UpdateRequestPostDTO post) {
+        Response<UpdateResponsePostDTO> resp = forumPostService.updateForumPost(id, post);
+        return ResponseEntity.status(resp.getCode()).body(resp);
     }
 
     @DeleteMapping("/{id}")
-    public Response<String> deletePost(@PathVariable Long id) {
-        return forumPostService.deletePost(id);
+    public ResponseEntity<Response<String>> deletePost(@PathVariable Long id) {
+        Response<String> resp = forumPostService.deletePost(id);
+        return ResponseEntity.status(resp.getCode()).body(resp);
     }
 
     @DeleteMapping("/posts/{postId}/images/{imageId}")
-    @SecurityRequirement(name = "api")
     public ResponseEntity<Response<String>> deleteImageFromPost(
             @PathVariable Long postId,
             @PathVariable Long imageId
@@ -83,39 +86,21 @@ public class ForumPostController {
         return ResponseEntity.status(response.getCode()).body(response);
     }
 
-//    @Operation(summary = "Sort posts by the highest number of comments")
-//    @GetMapping("/top-replied")
-//    public ResponseEntity<Response<List<ForumPost>>> getTopRepliedPosts(
-//            @RequestParam(defaultValue = "5") int limit) {
-//        Response<List<ForumPost>> response = forumPostService.getTopPostsByReplies(limit);
-//        return ResponseEntity.status(response.getCode()).body(response);
-//    }
+    @Operation(summary = "Sort posts by the highest number of comments")
+    @GetMapping("/top-replied")
+    public ResponseEntity<Response<List<CreateResponseForumDTO>>> getTopRepliedPosts(
+            @RequestParam(defaultValue = "5") int limit) {
+        Response<List<CreateResponseForumDTO>> response = forumPostService.getTopPostsByReplies(limit);
+        return ResponseEntity.status(response.getCode()).body(response);
+    }
 
     @PostMapping("/{postId}/like")
     public ResponseEntity<Response<String>> likeOrUnlikePost(
             @PathVariable Long postId,
             @RequestParam boolean liked
     ) {
-        User user = accountUtils.getCurrentAccount();
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new Response<>(401, "Please login to continue", null));
-        }
-
-        ForumPost post = forumPostRepository.findById(postId)
-                .orElseThrow(() -> new NotFoundException("No post found"));
-
-        if (post.getLikeCount() == null) post.setLikeCount(0);
-
-        if (liked) {
-            post.setLikeCount(post.getLikeCount() + 1);
-        } else {
-            post.setLikeCount(Math.max(0, post.getLikeCount() - 1));
-        }
-
-        forumPostRepository.save(post);
-
-        return ResponseEntity.ok(new Response<>(200, "Like updated successfully", "Total likes: " + post.getLikeCount()));
+        Response<String> response = forumPostService.likeOrUnlikePost(postId, liked);
+        return ResponseEntity.status(response.getCode()).body(response);
     }
 
     @GetMapping("/{postId}/replies")
@@ -123,5 +108,4 @@ public class ForumPostController {
         List<ForumPostReplyWithUserDTO> replies = forumPostService.getRepliesWithUserByPostId(postId);
         return ResponseEntity.ok(new Response<>(200, "Success", replies));
     }
-
 }
