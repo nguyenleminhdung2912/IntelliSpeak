@@ -4,10 +4,12 @@ import com.gsu25se05.itellispeak.dto.ai_evaluation.InterviewSessionDto;
 import com.gsu25se05.itellispeak.dto.company.CreateCompanyRequestDTO;
 import com.gsu25se05.itellispeak.dto.company.GetCompanyDetailResponseDTO;
 import com.gsu25se05.itellispeak.dto.company.InterviewSessionUserDto;
+import com.gsu25se05.itellispeak.dto.company.UpdateCompanyRequest;
 import com.gsu25se05.itellispeak.dto.hr.HRResponseDTO;
 import com.gsu25se05.itellispeak.entity.Company;
 import com.gsu25se05.itellispeak.repository.CompanyRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,7 +26,7 @@ public class CompanyService {
 
     public List<GetCompanyDetailResponseDTO> getAllCompanyDetailsWhichHaveInterviewSession() {
         return companyRepository.findAll().stream()
-                .filter(company -> company.getInterviewSessions() != null && !company.getInterviewSessions().isEmpty())
+                .filter(company -> company.getIsDeleted() == null || !company.getIsDeleted() && company.getInterviewSessions() != null && !company.getInterviewSessions().isEmpty())
                 .map(company -> {
                     GetCompanyDetailResponseDTO dto = new GetCompanyDetailResponseDTO();
                     dto.setCompanyId(company.getCompanyId());
@@ -42,7 +44,9 @@ public class CompanyService {
     }
 
     public List<GetCompanyDetailResponseDTO> getAllCompanyDetails() {
-        return companyRepository.findAll().stream().map(company -> {
+        return companyRepository.findAll().stream()
+                .filter(c -> c != null && (c.getIsDeleted() == null || !c.getIsDeleted()))
+                .map(company -> {
             GetCompanyDetailResponseDTO dto = new GetCompanyDetailResponseDTO();
             dto.setCompanyId(company.getCompanyId());
             dto.setName(company.getName());
@@ -61,6 +65,7 @@ public class CompanyService {
     public GetCompanyDetailResponseDTO getCompanyDetailById(Long companyId) {
         Company company = companyRepository.findById(companyId).orElse(null);
         if (company == null) return null;
+        if (Boolean.TRUE.equals(company.getIsDeleted())) return null;
 
         GetCompanyDetailResponseDTO dto = new GetCompanyDetailResponseDTO();
         dto.setCompanyId(company.getCompanyId());
@@ -78,7 +83,7 @@ public class CompanyService {
             HRResponseDTO hrDto = new HRResponseDTO();
             hrDto.setHrId(hr.getHrId());
             String firstName = hr.getUser().getFirstName();
-            String lastName  = hr.getUser().getLastName();
+            String lastName = hr.getUser().getLastName();
 
             String fullName = (firstName == null || firstName.isBlank())
                     ? lastName
@@ -148,5 +153,40 @@ public class CompanyService {
 
     public void deleteCompany(Long id) {
         companyRepository.deleteById(id);
+    }
+
+    public Company updateCompanyy(Long id, UpdateCompanyRequest dto) {
+        return companyRepository.findById(id)
+                .map(company -> {
+                    if (dto.getName() != null && !dto.getName().isBlank()) {
+                        company.setName(dto.getName().trim());
+                    }
+                    if (dto.getShortName() != null && !dto.getShortName().isBlank()) {
+                        company.setShortName(dto.getShortName().trim());
+                    }
+                    if (dto.getDescription() != null) {
+                        company.setDescription(dto.getDescription().trim());
+                    }
+                    if (dto.getLogoUrl() != null) {
+                        company.setLogoUrl(dto.getLogoUrl().trim());
+                    }
+                    if (dto.getWebsite() != null) {
+                        company.setWebsite(dto.getWebsite().trim());
+                    }
+
+                    company.setUpdateAt(LocalDateTime.now());
+                    return companyRepository.save(company);
+                })
+                .orElseThrow(() -> new EntityNotFoundException("Company not found with id: " + id));
+    }
+
+    public void deleteCompanyy(Long id) {
+        Company company = companyRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Company not found with id: " + id));
+
+        company.setIsDeleted(true);
+        company.setUpdateAt(LocalDateTime.now());
+        companyRepository.save(company);
+
     }
 }
