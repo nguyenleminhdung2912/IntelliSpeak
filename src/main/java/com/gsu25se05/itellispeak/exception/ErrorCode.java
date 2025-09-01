@@ -71,6 +71,7 @@ public enum ErrorCode {
     CV_NOT_FOUND(4007, "CV not found", HttpStatus.NOT_FOUND),
     JD_NOT_FOUND(4008, "Job Description not found", HttpStatus.NOT_FOUND),
     JD_NOT_FROM_COMPANY(4009, "Job Description does not belong to this company", HttpStatus.BAD_REQUEST),
+    QUESTION_NOT_FOUND(4010, "Question not found", HttpStatus.NOT_FOUND),
 
     // PACKAGE | CODE: 6XXX
     PACKAGE_NOT_FOUND(6001, "Package not found", HttpStatus.NOT_FOUND),

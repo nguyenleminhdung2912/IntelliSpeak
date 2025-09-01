@@ -64,8 +64,8 @@ public class InterviewSessionController {
 
     @PostMapping("/{sessionId}/questions")
     @Operation(summary = "Thêm nhiều câu hỏi cho interview session (dành cho các câu hỏi đã có sẵn trong database chứ không phải thêm mới)")
-    public ResponseEntity<Response<InterviewSession>> addQuestions(@PathVariable Long sessionId, @RequestBody Set<Question> questions) {
-        InterviewSession session = interviewSessionService.addQuestionsToSession(sessionId, questions);
+    public ResponseEntity<Response<InterviewSession>> addQuestions(@PathVariable Long sessionId, @RequestBody AddQuestionsRequestDTO request) {
+        InterviewSession session = interviewSessionService.addQuestionsToSession(sessionId, request);
         return ResponseEntity.ok(new Response<>(200, "Questions added to session", session));
     }
 
@@ -151,7 +151,7 @@ public class InterviewSessionController {
 
     @PutMapping("/thumbnail/{id}")
     @Operation(summary = "Đổi thumbnail nè")
-    public ResponseEntity<String> updateInterviewSessionThumbnail(@PathVariable Long id, @RequestBody String thumbnailURL) {
+    public ResponseEntity<String> updateInterviewSessionThumbnail(@PathVariable Long id, @RequestBody ThumbnailRequestDTO thumbnailURL) {
         String result = interviewSessionService.updateInterviewSessionThumbnail(id, thumbnailURL);
         return ResponseEntity.ok(result);
     }
