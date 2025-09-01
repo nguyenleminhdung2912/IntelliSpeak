@@ -43,8 +43,8 @@ public class Question {
     @Column(nullable = false)
     private QuestionStatus questionStatus;
 
-    @Column
-    private Boolean is_deleted;
+    @Column(name = "is_deleted")
+    private Boolean isDeleted;
 
     @Column(nullable = false)
     private String source; //Where is this question from: "geeksforgeeks", "leetcode"

@@ -62,9 +62,7 @@ public class QuestionController {
 
     @PostMapping("/{sessionId}/questions/{questionId}/remove")
     @Operation(summary = "Remove a question from an interview session")
-    public ResponseEntity<Response<Void>> removeQuestion(
-            @PathVariable Long sessionId,
-            @PathVariable Long questionId) {
+    public ResponseEntity<Response<Void>> removeQuestion(@PathVariable Long sessionId, @PathVariable Long questionId) {
         questionService.removeQuestionFromSession(sessionId, questionId);
         return ResponseEntity.ok(new Response<>(200, "Question removed from session", null));
     }
@@ -86,9 +84,7 @@ public class QuestionController {
 
     @PostMapping("/preview-csv")
     @Operation(summary = "preview câu hỏi từ trong file csv")
-    public Response<List<CSVQuestionDTO>> previewQuestionsFromCsv(
-            @RequestParam("file") MultipartFile file
-    ) {
+    public Response<List<CSVQuestionDTO>> previewQuestionsFromCsv(@RequestParam("file") MultipartFile file) {
         return questionService.previewQuestionsFromCsv(file);
     }
 
@@ -102,6 +98,13 @@ public class QuestionController {
             @RequestBody ConfirmCsvRequest req
     ) {
         return questionService.saveQuestionsFromPreview(req);
+    }
+
+    @GetMapping("/company/available-for-session/{sessionId}")
+    @Operation(summary = "HR lấy danh sách câu hỏi của công ty chưa có trong một interview session cụ thể")
+    public ResponseEntity<Response<List<QuestionDTO>>> getAvailableQuestionsForSession(@PathVariable Long sessionId) {
+        Response<List<QuestionDTO>> response = questionService.getCompanyQuestionsNotInSession(sessionId);
+        return ResponseEntity.ok(response);
     }
 
 }

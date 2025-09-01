@@ -1,5 +1,6 @@
 package com.gsu25se05.itellispeak.repository;
 
+import com.gsu25se05.itellispeak.entity.Company;
 import com.gsu25se05.itellispeak.entity.Difficulty;
 import com.gsu25se05.itellispeak.entity.Question;
 import com.gsu25se05.itellispeak.entity.User;
@@ -17,13 +18,17 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
 
     @Query("SELECT DISTINCT q FROM Question q JOIN q.tags t " +
             "WHERE (:tagIds IS NULL OR t.tagId IN :tagIds) " +
-            "AND q.difficulty = :difficulty AND q.is_deleted = false")
+            "AND q.difficulty = :difficulty AND q.isDeleted = false")
     List<Question> findByTagsAndDifficultyAndIsDeletedFalse(
             @Param("tagIds") Set<Long> tagIds,
             @Param("difficulty") Difficulty difficulty
     );
 
     List<Question> findByCreatedByOrderByQuestionIdDesc(User createdBy);
+
+    List<Question> findByCompanyAndIsDeletedFalseAndQuestionIdNotInOrderByQuestionIdDesc(Company company, Set<Long> questionIds);
+
+    List<Question> findByCompanyAndIsDeletedFalseOrderByQuestionIdDesc(Company company);
 
 
 }
