@@ -1,6 +1,7 @@
 package com.gsu25se05.itellispeak.dto.ai_evaluation;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.gsu25se05.itellispeak.dto.topic.TagSimpleDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,7 +23,9 @@ public class EvaluationBatchResponseDto {
     private Integer totalQuestion;
     private Double averageScore;
     private String aiOverallEvaluate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
     private LocalDateTime startedAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy")
     private LocalDateTime endedAt;
     private List<TagSimpleDTO> tags;
     private List<EvaluationResponseDto> results;
