@@ -33,7 +33,7 @@ public class InterviewSession {
     @Column
     private String description;
 
-    @Column(name = "interview_session_thumbnail")
+    @Column(name = "interview_session_thumbnail", columnDefinition = "TEXT")
     private String interviewSessionThumbnail;
 
     @Column(nullable = false)

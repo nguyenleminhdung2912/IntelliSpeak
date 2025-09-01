@@ -174,6 +174,7 @@ public class InterviewSessionService {
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question not found"));
         session.getQuestions().add(question);
+        session.setTotalQuestion(session.getTotalQuestion() + 1);
         return interviewSessionRepository.save(session);
     }
 
@@ -185,6 +186,7 @@ public class InterviewSessionService {
         Set<Question> existingQuestions = session.getQuestions();
         questions.removeAll(existingQuestions);
         session.getQuestions().addAll(questions);
+        session.setTotalQuestion(session.getTotalQuestion() + questions.size());
         return interviewSessionRepository.save(session);
     }
 
@@ -388,10 +390,10 @@ public class InterviewSessionService {
     }
 
     @Transactional
-    public String updateInterviewSessionThumbnail(Long id, String thumbnailURL) {
+    public String updateInterviewSessionThumbnail(Long id, ThumbnailRequestDTO thumbnailURL) {
         InterviewSession existingInterviewSession = interviewSessionRepository.findById(id).orElse(null);
         if (existingInterviewSession != null) {
-            existingInterviewSession.setInterviewSessionThumbnail(thumbnailURL);
+            existingInterviewSession.setInterviewSessionThumbnail(thumbnailURL.getThumbnailURL());
             existingInterviewSession.setUpdateAt(LocalDateTime.now());
             try {
                 interviewSessionRepository.save(existingInterviewSession);

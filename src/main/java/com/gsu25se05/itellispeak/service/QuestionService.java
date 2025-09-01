@@ -681,8 +681,14 @@ public class QuestionService {
                 .orElseThrow(() -> new IllegalArgumentException("Session not found"));
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new IllegalArgumentException("Question not found"));
-        session.getQuestions().remove(question);
-        interviewSessionRepository.save(session);
+
+        boolean removed = session.getQuestions().remove(question);
+
+        // Chỉ cập nhật lại khi việc xóa thực sự diễn ra
+        if (removed) {
+            session.setTotalQuestion(session.getQuestions().size());
+            interviewSessionRepository.save(session);
+        }
     }
 
     public Response<List<QuestionDTO>> getCompanyQuestionsNotInSession(Long sessionId) {

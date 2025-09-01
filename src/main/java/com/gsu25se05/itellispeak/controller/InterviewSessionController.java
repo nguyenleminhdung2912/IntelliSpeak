@@ -151,7 +151,7 @@ public class InterviewSessionController {
 
     @PutMapping("/thumbnail/{id}")
     @Operation(summary = "Đổi thumbnail nè")
-    public ResponseEntity<String> updateInterviewSessionThumbnail(@PathVariable Long id, @RequestBody String thumbnailURL) {
+    public ResponseEntity<String> updateInterviewSessionThumbnail(@PathVariable Long id, @RequestBody ThumbnailRequestDTO thumbnailURL) {
         String result = interviewSessionService.updateInterviewSessionThumbnail(id, thumbnailURL);
         return ResponseEntity.ok(result);
     }
