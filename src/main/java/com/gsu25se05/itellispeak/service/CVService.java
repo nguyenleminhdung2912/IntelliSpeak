@@ -176,6 +176,9 @@ public class CVService {
             List<Predicate> ands = new ArrayList<>();
             ands.add(cb.isFalse(root.get("isDeleted")));
 
+            // Chỉ lấy session không gắn với company
+            ands.add(cb.isNull(root.get("company")));
+
             // join topic luôn dùng
             Join<?, ?> tp = root.join("topic", JoinType.LEFT);
 
