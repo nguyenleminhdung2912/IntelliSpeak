@@ -13,6 +13,7 @@ import com.gsu25se05.itellispeak.utils.mapper.QuestionMapper;
 import com.gsu25se05.itellispeak.utils.mapper.TagMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
 
 import java.util.List;
 import java.util.Optional;
@@ -46,27 +47,36 @@ public class TagService {
     }
 
     public List<TagDTO> findAll() {
-        return tagRepository.findAll().stream()
+        return tagRepository.findByIsDeletedFalse().stream()
                 .map(tagMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public Optional<TagDTO> update(Long id, TagDTO dto) {
-        return tagRepository.findById(id).map(existing -> {
+        return tagRepository.findById(id).flatMap(existing -> {
+            if (Boolean.TRUE.equals(existing.getIsDeleted())) {
+                return Optional.empty(); // Không thể cập nhật tag đã bị xóa
+            }
             existing.setTitle(dto.getTitle());
             existing.setDescription(dto.getDescription());
-            existing.setUpdateAt(dto.getUpdateAt());
-            existing.setIsDeleted(dto.getIsDeleted());
-            return tagMapper.toDTO(tagRepository.save(existing));
+            existing.setUpdateAt(LocalDateTime.now());
+            return Optional.of(tagMapper.toDTO(tagRepository.save(existing)));
         });
     }
 
+    @Transactional
     public boolean delete(Long id) {
-        if (tagRepository.existsById(id)) {
-            tagRepository.deleteById(id);
+        // Soft delete
+        return tagRepository.findById(id).map(tag -> {
+            if (Boolean.TRUE.equals(tag.getIsDeleted())) {
+                return false; // Đã được xóa trước đó
+            }
+            tag.setIsDeleted(true);
+            tag.setUpdateAt(LocalDateTime.now());
+            tagRepository.save(tag);
             return true;
-        }
-        return false;
+        }).orElse(false);
     }
 
     @Transactional
@@ -147,5 +157,15 @@ public class TagService {
         Tag tag = tagRepository.findById(tagId)
                 .orElseThrow(() -> new RuntimeException("Tag not found"));
         return tag.getTopics();
+    }
+
+    @Transactional
+    public Optional<TagDTO> restore(Long id) {
+        return tagRepository.findById(id).map(tag -> {
+            tag.setIsDeleted(false);
+            tag.setUpdateAt(LocalDateTime.now());
+            Tag restoredTag = tagRepository.save(tag);
+            return tagMapper.toDTO(restoredTag);
+        });
     }
 }

@@ -708,20 +708,26 @@ public class QuestionService {
             throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
         }
 
-        // 3. Get IDs of questions already in the session
+        // 3. Get tags from the session. If none, no questions can be suggested.
+        Set<Tag> sessionTags = session.getTags();
+        if (sessionTags == null || sessionTags.isEmpty()) {
+            return new Response<>(200, "Interview session has no tags, no relevant questions to suggest.", Collections.emptyList());
+        }
+
+        // 4. Get IDs of questions already in the session
         Set<Long> existingQuestionIds = session.getQuestions().stream()
                 .map(Question::getQuestionId)
                 .collect(Collectors.toSet());
 
-        // 4. Fetch questions from repository
+        // 5. Fetch questions from repository that match session tags
         List<Question> availableQuestions;
         if (existingQuestionIds.isEmpty()) {
-            availableQuestions = questionRepository.findByCompanyAndIsDeletedFalseOrderByQuestionIdDesc(hrCompany);
+            availableQuestions = questionRepository.findDistinctByCompanyAndIsDeletedFalseAndTagsInOrderByQuestionIdDesc(hrCompany, sessionTags);
         } else {
-            availableQuestions = questionRepository.findByCompanyAndIsDeletedFalseAndQuestionIdNotInOrderByQuestionIdDesc(hrCompany, existingQuestionIds);
+            availableQuestions = questionRepository.findDistinctByCompanyAndIsDeletedFalseAndTagsInAndQuestionIdNotInOrderByQuestionIdDesc(hrCompany, sessionTags, existingQuestionIds);
         }
 
-        // 5. Map to DTOs and return
+        // 6. Map to DTOs and return
         List<QuestionDTO> dtos = availableQuestions.stream()
                 .map(questionMapper::toDTO)
                 .collect(Collectors.toList());

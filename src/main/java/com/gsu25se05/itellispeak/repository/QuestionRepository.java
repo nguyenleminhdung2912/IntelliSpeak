@@ -1,9 +1,6 @@
 package com.gsu25se05.itellispeak.repository;
 
-import com.gsu25se05.itellispeak.entity.Company;
-import com.gsu25se05.itellispeak.entity.Difficulty;
-import com.gsu25se05.itellispeak.entity.Question;
-import com.gsu25se05.itellispeak.entity.User;
+import com.gsu25se05.itellispeak.entity.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -26,9 +23,7 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
 
     List<Question> findByCreatedByOrderByQuestionIdDesc(User createdBy);
 
-    List<Question> findByCompanyAndIsDeletedFalseAndQuestionIdNotInOrderByQuestionIdDesc(Company company, Set<Long> questionIds);
+    List<Question> findDistinctByCompanyAndIsDeletedFalseAndTagsInOrderByQuestionIdDesc(Company company, Set<Tag> tags);
 
-    List<Question> findByCompanyAndIsDeletedFalseOrderByQuestionIdDesc(Company company);
-
-
+    List<Question> findDistinctByCompanyAndIsDeletedFalseAndTagsInAndQuestionIdNotInOrderByQuestionIdDesc(Company company, Set<Tag> tags, Set<Long> questionIds);
 }

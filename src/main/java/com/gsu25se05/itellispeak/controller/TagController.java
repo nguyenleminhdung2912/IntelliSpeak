@@ -68,6 +68,15 @@ public class TagController {
         }
     }
 
+    @PutMapping("/{id}/restore")
+    @Operation(summary = "Khôi phục Tag đã bị xóa mềm theo ID")
+    public ResponseEntity<Response<TagDTO>> restore(@PathVariable Long id) {
+        return tagService.restore(id)
+                .map(restoredTag -> ResponseEntity.ok(new Response<>(200, "Tag restored successfully", restoredTag)))
+                .orElse(ResponseEntity.status(404).body(new Response<>(404, "Tag not found", null)));
+    }
+
+
     @PutMapping("/{questionId}/tags/{tagId}")
     @Operation(summary = "Thêm Tag vào Question theo ID (Nhập question id và tag id là để thêm Tag có TagID đó vào Question có QuestionID đó)")
     public ResponseEntity<Response<QuestionDTO>> addTagToQuestion(
