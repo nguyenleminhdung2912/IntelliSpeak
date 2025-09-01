@@ -250,100 +250,105 @@ public class JDService {
 
     public JD analyzeAndSaveJD(MultipartFile file) throws Exception {
         User user = accountUtils.getCurrentAccount();
-        if (user == null) {
-            throw new NotLoginException("Please log in to continue");
-        }
+        if (user == null) throw new NotLoginException("Please log in to continue");
 
         if (user.getUserUsage().getJdAnalyzeUsed() >= user.getAPackage().getJdAnalyzeCount()) {
             throw new AuthAppException(ErrorCode.OUT_OF_JD_ANALYZE_COUNT);
         }
 
         String text = FileUtils.extractTextFromCV(file);
-
-        if (text == null || text.isEmpty()) {
-            throw new IllegalArgumentException("A JD link or JD content is required");
+        if (text == null || text.isBlank()) {
+            throw new IllegalArgumentException("A JD file with readable text is required");
         }
 
-        // IT-only prompt: yêu cầu phân loại trước, chỉ phân tích nếu là IT
+        //chặn CV trước khi gọi AI
+        if (looksLikeCV(text) && !looksLikeJD(text)) {
+            throw new IllegalArgumentException("The uploaded file looks like a CV/resume, not a Job Description.");
+        }
+
+        // (2) Prompt buộc AI phân loại tài liệu
         String prompt = String.format("""
-            You are an expert in analyzing Job Descriptions (JDs) for the **IT/technology domain only**.
+        You are an expert in analyzing **Job Descriptions** (JDs) for the **IT/technology domain only**.
 
-            Your tasks:
-            1) Detect whether the JD belongs to IT (e.g., Software Engineer, Backend/Frontend/Full-stack, Mobile, DevOps/SRE, Cloud, Data/ML/AI, QA/Automation, Security, System/Network, Product/BA/PO in tech, Tech Lead/Architect, etc.).
-            2) If and only if the JD is IT-related, analyze it and return fields as specified below.
+        First, strictly classify the input document by type:
+        - "JD": recruitment/job description posting (contains role title, responsibilities, requirements, benefits, company info, etc.)
+        - "CV": resume/curriculum vitae (candidate profile, education, projects, skills, experience)
+        - "Other": anything else.
 
-            Output rules:
-            - Return **one valid JSON object only** (no Markdown, no explanations).
-            - If NON-IT, return:
-              {
-                "supported": false,
-                "detectedDomain": "<short domain>",
-                "message": "This service only supports IT job descriptions."
-              }
-            - If IT, return the fields at TOP LEVEL (plus supported/detectedDomain):
-              {
-                "supported": true,
-                "detectedDomain": "IT",
-                "jobTitle": "",
-                "summary": "",
-                "mustHaveSkills": "",
-                "niceToHaveSkills": "",
-                "suitableLevel": "",
-                "recommendedLearning": "",
-                "questions": [
-                  {
-                    "question": "",
-                    "suitableAnswer1": "",
-                    "suitableAnswer2": "",
-                    "skillNeeded": "",
-                    "difficultyLevel": "",   // easy / hard / very hard
-                    "questionType": ""       // technical / behavioral / logic / other
-                  }
-                ]
-              }
+        Output JSON ONLY (no markdown). If documentType != "JD", return:
+        {
+          "documentType": "<JD|CV|Other>",
+          "supported": false,
+          "message": "This endpoint only accepts Job Descriptions."
+        }
 
-            JD content:
-            %s
-            """, text);
+        If documentType == "JD", continue and check IT-only. If NON-IT JD, return:
+        {
+          "documentType": "JD",
+          "supported": false,
+          "message": "This service only supports IT job descriptions."
+        }
+
+        If IT JD, return exactly:
+        {
+          "documentType": "JD",
+          "supported": true,
+          "detectedDomain": "<short IT domain>",
+          "jobTitle": "",
+          "summary": "",
+          "mustHaveSkills": "",
+          "niceToHaveSkills": "",
+          "suitableLevel": "",
+          "recommendedLearning": "",
+          "questions": [
+            {
+              "question": "",
+              "suitableAnswer1": "",
+              "suitableAnswer2": "",
+              "skillNeeded": "",
+              "difficultyLevel": "",
+              "questionType": ""
+            }
+          ]
+        }
+
+        Document content:
+        %s
+        """, text);
 
         String responseText = callGemini(prompt);
 
         // Parse AI JSON safely
         JsonNode root;
         try {
-            String cleanedJson = responseText
-                    .replaceAll("(?i)```json", "")
+            String cleaned = responseText.replaceAll("(?i)```json", "")
                     .replaceAll("(?i)```", "")
                     .trim();
-            root = objectMapper.readTree(cleanedJson);
+            root = objectMapper.readTree(cleaned);
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException("AI returned an invalid JSON response:\n" + responseText);
         }
 
-        // Gate: chỉ cho phép IT
+        String docType = root.path("documentType").asText("");
         boolean supported = root.path("supported").asBoolean(false);
-        if (!supported) {
-            String msg = root.path("message").asText("This service only supports IT job descriptions.");
+        if (!"JD".equalsIgnoreCase(docType) || !supported) {
+            String msg = root.path("message").asText("This endpoint only accepts Job Descriptions.");
             throw new IllegalArgumentException(msg);
         }
 
-        // Từ đây chắc chắn là IT và có các field top-level
-        JD jd = new JD();
-
-        // Save images to Cloudinary
         String baseName = file.getOriginalFilename()
                 .replaceAll(".pdf", "")
                 .replaceAll("\\s+", "_");
 
-        List<MultipartFile> imageFiles = PdfToImageConverter.convertPdfToMultipartImages(file.getInputStream(), baseName);
-
+        List<MultipartFile> images = PdfToImageConverter.convertPdfToMultipartImages(file.getInputStream(), baseName);
         StringBuilder imageUrls = new StringBuilder();
-        for (MultipartFile img : imageFiles) {
+        for (MultipartFile img : images) {
             String url = cloudinaryUtils.uploadImage(img);
             if (!imageUrls.isEmpty()) imageUrls.append(";");
             imageUrls.append(url);
         }
 
+        JD jd = new JD();
         jd.setUser(user);
         jd.setLinkToJd(imageUrls.toString());
         jd.setJobTitle(getJsonText(root, "jobTitle"));
@@ -358,32 +363,61 @@ public class JDService {
 
         JD savedJD = jdRepository.save(jd);
 
-        // Questions (nếu có)
+        // Questions
         JsonNode qs = root.path("questions");
         if (qs.isArray()) {
             for (JsonNode q : qs) {
-                JDEvaluate evaluate = new JDEvaluate();
-                evaluate.setJd(savedJD);
-                evaluate.setQuestion(getJsonText(q, "question"));
-                evaluate.setSuitableAnswer1(getJsonText(q, "suitableAnswer1"));
-                evaluate.setSuitableAnswer2(getJsonText(q, "suitableAnswer2"));
-                evaluate.setSkillNeeded(getJsonText(q, "skillNeeded"));
-                evaluate.setDifficultyLevel(getJsonText(q, "difficultyLevel"));
-                evaluate.setQuestionType(getJsonText(q, "questionType"));
-                evaluate.setCreateAt(LocalDateTime.now());
-                evaluate.setUpdateAt(LocalDateTime.now());
-
-                jdEvaluateRepository.save(evaluate);
+                JDEvaluate e = new JDEvaluate();
+                e.setJd(savedJD);
+                e.setQuestion(getJsonText(q, "question"));
+                e.setSuitableAnswer1(getJsonText(q, "suitableAnswer1"));
+                e.setSuitableAnswer2(getJsonText(q, "suitableAnswer2"));
+                e.setSkillNeeded(getJsonText(q, "skillNeeded"));
+                e.setDifficultyLevel(getJsonText(q, "difficultyLevel"));
+                e.setQuestionType(getJsonText(q, "questionType"));
+                e.setCreateAt(LocalDateTime.now());
+                e.setUpdateAt(LocalDateTime.now());
+                jdEvaluateRepository.save(e);
             }
         }
 
-        // Chỉ trừ lượt khi thực sự phân tích IT & lưu thành công
         user.getUserUsage().setJdAnalyzeUsed(user.getUserUsage().getJdAnalyzeUsed() + 1);
         userRepository.save(user);
         userUsageRepository.save(user.getUserUsage());
 
         return savedJD;
     }
+
+    /** Heuristic: nhận diện nhanh CV/JD trước khi gọi AI */
+    private boolean looksLikeCV(String text) {
+        String s = text.toLowerCase();
+        int hits =
+                (s.contains("curriculum vitae") ? 1 : 0) +
+                        (s.contains("resume") ? 1 : 0) +
+                        (s.contains("education") ? 1 : 0) +
+                        (s.contains("experience") ? 1 : 0) +
+                        (s.contains("projects") ? 1 : 0) +
+                        (s.contains("skills") ? 1 : 0) +
+                        (s.contains("certificate") || s.contains("certifications") ? 1 : 0) +
+                        (s.contains("summary") ? 1 : 0) +
+                        (s.matches("(?s).*\\b(github|linkedin)\\.com/.*") ? 1 : 0);
+        return hits >= 3; // ngưỡng mềm, bạn có thể điều chỉnh
+    }
+
+    private boolean looksLikeJD(String text) {
+        String s = text.toLowerCase();
+        int hits =
+                (s.contains("we are hiring") || s.contains("we're hiring") ? 1 : 0) +
+                        (s.contains("job description") ? 1 : 0) +
+                        (s.contains("responsibilities") || s.contains("responsibility") ? 1 : 0) +
+                        (s.contains("requirements") || s.contains("requirement") ? 1 : 0) +
+                        (s.contains("benefits") ? 1 : 0) +
+                        (s.contains("qualifications") ? 1 : 0) +
+                        (s.contains("salary") || s.contains("compensation") ? 1 : 0) +
+                        (s.contains("apply now") || s.contains("how to apply") ? 1 : 0);
+        return hits >= 2;
+    }
+
 
     private String getJsonText(JsonNode node, String field) {
         return node.has(field) ? node.get(field).asText() : "";

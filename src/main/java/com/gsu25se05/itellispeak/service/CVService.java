@@ -273,7 +273,7 @@ public class CVService {
     private void updateProfileFromExtracted(User user, CVExtractedInfo extracted) {
         if (extracted == null) return;
 
-        if (isNotBlank(extracted.getFullName())) {
+        if (isNotBlank(extracted.getFullName()) && isBlank(user.getLastName())) {
             String[] parts = extracted.getFullName().trim().split("\\s+");
             if (parts.length > 1) {
                 String lastName = parts[parts.length - 1];
