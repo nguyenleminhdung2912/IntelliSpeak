@@ -169,24 +169,86 @@ public class InterviewSessionService {
 
     @Transactional
     public InterviewSession addQuestionToSession(Long sessionId, Long questionId) {
+        // 1. Get current user for authorization
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            throw new AuthAppException(ErrorCode.NOT_LOGIN);
+        }
+
+        // 2. Find entities
         InterviewSession session = interviewSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new RuntimeException("Session not found"));
+                .orElseThrow(() -> new AuthAppException(ErrorCode.INTERVIEW_SESSION_NOT_FOUND));
         Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new RuntimeException("Question not found"));
-        session.getQuestions().add(question);
-        session.setTotalQuestion(session.getTotalQuestion() + 1);
-        return interviewSessionRepository.save(session);
+                .orElseThrow(() -> new AuthAppException(ErrorCode.QUESTION_NOT_FOUND));
+
+        // 3. Authorization Check: Only owner or ADMIN can modify
+        boolean isOwner = session.getCreatedBy() != null && session.getCreatedBy().getUserId().equals(currentUser.getUserId());
+        boolean isAdmin = currentUser.getRole() == User.Role.ADMIN;
+        if (!isOwner && !isAdmin) {
+            throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
+        }
+
+        // 4. Business Rule: If session is for a company, question must be public or from the same company
+        Company sessionCompany = session.getCompany();
+        if (sessionCompany != null && question.getCompany() != null && !question.getCompany().getCompanyId().equals(sessionCompany.getCompanyId())) {
+            throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
+        }
+
+        // 5. Add question and update total only if it's a new addition
+        boolean isAdded = session.getQuestions().add(question);
+        if (isAdded) {
+            session.setTotalQuestion(session.getQuestions().size());
+            return interviewSessionRepository.save(session);
+        }
+
+        return session; // Return session without saving if the question was already present
     }
 
     @Transactional
-    public InterviewSession addQuestionsToSession(Long sessionId, Set<Question> questions) {
-        InterviewSession session = interviewSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new RuntimeException("Interview Session with ID " + sessionId + " not found"));
+    public InterviewSession addQuestionsToSession(Long sessionId, AddQuestionsRequestDTO request) {
+        // 1. Get current user for authorization
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            throw new AuthAppException(ErrorCode.NOT_LOGIN);
+        }
 
-        Set<Question> existingQuestions = session.getQuestions();
-        questions.removeAll(existingQuestions);
-        session.getQuestions().addAll(questions);
-        session.setTotalQuestion(session.getTotalQuestion() + questions.size());
+        // 2. Find session and perform authorization check
+        InterviewSession session = interviewSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new AuthAppException(ErrorCode.INTERVIEW_SESSION_NOT_FOUND));
+
+        boolean isOwner = session.getCreatedBy() != null && session.getCreatedBy().getUserId().equals(currentUser.getUserId());
+        boolean isAdmin = currentUser.getRole() == User.Role.ADMIN;
+        if (!isOwner && !isAdmin) {
+            throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
+        }
+
+        // 3. Handle empty request
+        if (request.getQuestionIds() == null || request.getQuestionIds().isEmpty()) {
+            // Nothing to add, just return the session
+            return session;
+        }
+
+        // 4. Find questions and validate their existence
+        List<Question> questionsToAdd = questionRepository.findAllById(request.getQuestionIds());
+        if (questionsToAdd.size() != request.getQuestionIds().size()) {
+            throw new AuthAppException(ErrorCode.INVALID_INPUT);
+        }
+
+        // 5. Business Rule: Check if questions can be added to the session's company
+        Company sessionCompany = session.getCompany();
+        if (sessionCompany != null) {
+            for (Question q : questionsToAdd) {
+                if (q.getCompany() != null && !q.getCompany().getCompanyId().equals(sessionCompany.getCompanyId())) {
+                    throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
+                }
+            }
+        }
+
+        // 6. Add questions (Set handles duplicates) and update total
+        session.getQuestions().addAll(questionsToAdd);
+        session.setTotalQuestion(session.getQuestions().size());
+
+        // 7. Save and return
         return interviewSessionRepository.save(session);
     }
 
