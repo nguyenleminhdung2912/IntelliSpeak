@@ -8,6 +8,7 @@ import com.gsu25se05.itellispeak.email.EmailDetail;
 import com.gsu25se05.itellispeak.email.EmailService;
 import com.gsu25se05.itellispeak.entity.InterviewHistory;
 import com.gsu25se05.itellispeak.entity.InterviewHistoryDetail;
+import com.gsu25se05.itellispeak.entity.Package;
 import com.gsu25se05.itellispeak.entity.User;
 import java.util.Objects;
 import com.gsu25se05.itellispeak.entity.UserUsage;
@@ -254,10 +255,11 @@ public class AuthService implements UserDetailsService {
         if (usage == null) {
             usage = userUsageRepository.findByUser(user).orElse(null);
         }
-        if (usage != null) {
-            cvUsed = user.getAPackage().getCvAnalyzeCount() - usage.getCvAnalyzeUsed();
-            jdUsed = user.getAPackage().getJdAnalyzeCount() - usage.getJdAnalyzeUsed();
-            interviewUsed = user.getAPackage().getInterviewCount() - usage.getInterviewUsed();
+        if (usage != null && user.getAPackage() != null) {
+            Package currentPackage = user.getAPackage();
+            cvUsed = (currentPackage.getCvAnalyzeCount() != null ? currentPackage.getCvAnalyzeCount() : 0) - usage.getCvAnalyzeUsed();
+            jdUsed = (currentPackage.getJdAnalyzeCount() != null ? currentPackage.getJdAnalyzeCount() : 0) - usage.getJdAnalyzeUsed();
+            interviewUsed = (currentPackage.getInterviewCount() != null ? currentPackage.getInterviewCount() : 0) - usage.getInterviewUsed();
         }
 
         UserProfileDTO profile = UserProfileDTO.builder()

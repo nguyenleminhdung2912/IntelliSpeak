@@ -55,15 +55,15 @@ public enum ErrorCode {
     FILE_MAX_SIZE(2009, "Maximum file size exceeded", HttpStatus.PAYLOAD_TOO_LARGE),
 
     // INTERVIEW | CODE: 3XXX
-    OUT_OF_INTERVIEW_COUNT(3001, "You have reached the limit for virtual interviews", HttpStatus.FORBIDDEN),
+    OUT_OF_INTERVIEW_COUNT(3001, "You have run out of interview credits. Please purchase a new package.", HttpStatus.FORBIDDEN),
 
     // INTERVIEW SESSION | CODE: 4XXX
     INTERVIEW_SESSION_WERE_DELETED(3001, "This interview session were deleted before.", HttpStatus.FORBIDDEN),
     INTERVIEW_SESSION_NOT_FOUND(3002, "No such interview session found.", HttpStatus.NOT_FOUND),
 
     // CV & JD | CODE: 4XXX
-    OUT_OF_CV_ANALYZE_COUNT(4001, "You have reached the limit for CV analysis", HttpStatus.FORBIDDEN),
-    OUT_OF_JD_ANALYZE_COUNT(4002, "You have reached the limit for JD analysis", HttpStatus.FORBIDDEN),
+    OUT_OF_CV_ANALYZE_COUNT(4001, "You have run out of CV analysis credits. Please purchase a new package.", HttpStatus.FORBIDDEN),
+    OUT_OF_JD_ANALYZE_COUNT(4002, "You have run out of JD analysis credits. Please purchase a new package.", HttpStatus.FORBIDDEN),
     NO_CV_UPLOADED(4003, "You have not uploaded any CV yet", HttpStatus.BAD_REQUEST),
     CV_IS_PENDING(4004, "CV is pending review and cannot be resubmitted", HttpStatus.BAD_REQUEST),
     CV_IS_ALREADY_ACCEPTED(4005, "CV is pending review and cannot be resubmitted", HttpStatus.BAD_REQUEST),

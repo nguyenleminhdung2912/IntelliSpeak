@@ -16,8 +16,6 @@ import com.gsu25se05.itellispeak.utils.TranslationUtil;
 import com.gsu25se05.itellispeak.utils.mapper.InterviewSessionMapper;
 import com.gsu25se05.itellispeak.utils.mapper.QuestionMapper;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -478,7 +476,7 @@ public class InterviewSessionService {
     public List<QuestionInfoDTO> randomQuestionsBySession(InterviewSession session, Difficulty difficulty, int count) {
         if (count <= 0) return Collections.emptyList();
         List<Question> questions = session.getQuestions().stream()
-                .filter(q -> q.getDifficulty() == difficulty && !q.getIs_deleted())
+                .filter(q -> q.getDifficulty() == difficulty && !q.getIsDeleted())
                 .collect(Collectors.toList());
         Collections.shuffle(questions);
         return questions.stream()

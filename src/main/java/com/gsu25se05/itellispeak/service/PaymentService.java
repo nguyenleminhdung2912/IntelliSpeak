@@ -9,10 +9,12 @@ import com.gsu25se05.itellispeak.repository.PackageRepository;
 import com.gsu25se05.itellispeak.repository.TransactionRepository;
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.repository.UserRepository;
+import com.gsu25se05.itellispeak.repository.UserUsageRepository;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import vn.payos.PayOS;
 import vn.payos.type.CheckoutResponseData;
@@ -30,6 +32,7 @@ public class PaymentService {
     private final AccountUtils accountUtils;
     private final UserRepository userRepository;
     private final PackageRepository packageRepository;
+    private final UserUsageRepository userUsageRepository;
 
     @Value("${PAYOS_CLIENT_ID}")
     private String clientId;
@@ -108,44 +111,8 @@ public class PaymentService {
             String status = paymentLinkData.getStatus();
 
             if ("PAID".equalsIgnoreCase(status)) {
-                tx.setTransactionStatus(TransactionStatus.PAID);
-                transactionRepository.save(tx);
-
-                Package oldPkg = user.getAPackage();
-                Package newPkg = tx.getAPackage();
-                user.setAPackage(newPkg);
-
-                UserUsage usage = user.getUserUsage();
-                if (usage == null) {
-                    usage = UserUsage.builder()
-                            .user(user)
-                            .cvAnalyzeUsed(0)
-                            .jdAnalyzeUsed(0)
-                            .interviewUsed(0)
-                            .updateAt(LocalDateTime.now())
-                            .build();
-                } else {
-                    int oldCvLimit  = (oldPkg != null && oldPkg.getCvAnalyzeCount() != null) ? oldPkg.getCvAnalyzeCount() : 0;
-                    int oldJdLimit  = (oldPkg != null && oldPkg.getJdAnalyzeCount() != null) ? oldPkg.getJdAnalyzeCount() : 0;
-                    int oldItvLimit = (oldPkg != null && oldPkg.getInterviewCount() != null) ? oldPkg.getInterviewCount() : 0;
-
-                    int cvUsed  = usage.getCvAnalyzeUsed();
-                    int jdUsed  = usage.getJdAnalyzeUsed();
-                    int itvUsed = usage.getInterviewUsed();
-
-                    int cvUsedNew  = cvUsed  - oldCvLimit;
-                    int jdUsedNew  = jdUsed  - oldJdLimit;
-                    int itvUsedNew = itvUsed - oldItvLimit;
-
-                    usage.setCvAnalyzeUsed(cvUsedNew);
-                    usage.setJdAnalyzeUsed(jdUsedNew);
-                    usage.setInterviewUsed(itvUsedNew);
-                    usage.setUpdateAt(LocalDateTime.now());
-                }
-
-                user.setUserUsage(usage);
-                userRepository.save(user);
-
+                // Centralized logic for activating package and rolling over credits
+                activatePackageForUser(tx);
                 return new Response<>(200, "Payment successful, package activated with rollover", "PAID");
             }
 
@@ -154,7 +121,6 @@ public class PaymentService {
             return new Response<>(500, "Error while checking transaction status: " + e.getMessage(), null);
         }
     }
-
     public Response<String> cancelPayment(Long orderCode) {
         Transaction tx = transactionRepository.findByOrderCode(orderCode)
                 .orElseThrow(() -> new NotFoundException("Transaction not found"));
@@ -189,31 +155,8 @@ public class PaymentService {
             String status = paymentLinkData.getStatus();
 
             if ("PAID".equalsIgnoreCase(status)) {
-                if (tx.getTransactionStatus() != TransactionStatus.PAID) {
-                    tx.setTransactionStatus(TransactionStatus.PAID);
-                    transactionRepository.save(tx);
-
-                    Package purchasedPackage = tx.getAPackage();
-                    user.setAPackage(purchasedPackage);
-
-                    UserUsage usage = user.getUserUsage();
-                    if (usage != null) {
-                        usage.setCvAnalyzeUsed(0);
-                        usage.setJdAnalyzeUsed(0);
-                        usage.setInterviewUsed(0);
-                        usage.setUpdateAt(LocalDateTime.now());
-                    } else {
-                        usage = UserUsage.builder()
-                                .user(user)
-                                .cvAnalyzeUsed(0)
-                                .jdAnalyzeUsed(0)
-                                .interviewUsed(0)
-                                .updateAt(LocalDateTime.now())
-                                .build();
-                    }
-                    user.setUserUsage(usage);
-                    userRepository.save(user);
-                }
+                // Centralized logic for activating package and rolling over credits
+                activatePackageForUser(tx);
                 return new Response<>(200, "Payment successful, package activated", "PAID");
             } else if ("CANCELLED".equalsIgnoreCase(status) || "EXPIRED".equalsIgnoreCase(status)) {
                 tx.setTransactionStatus(TransactionStatus.FAILED);
@@ -227,5 +170,66 @@ public class PaymentService {
         } catch (Exception e) {
             return new Response<>(500, "Error while processing payment: " + e.getMessage(), null);
         }
+    }
+
+    /**
+     * Handles the logic of activating a package for a user after a successful payment.
+     * This method is transactional to ensure all database operations succeed or fail together.
+     * It implements a "rollover" feature by calculating remaining credits and adjusting the "used" counters.
+     *
+     * @param tx The successful transaction.
+     */
+    private void activatePackageForUser(Transaction tx) {
+        // 1. Check if already processed to prevent duplicate execution
+        if (tx.getTransactionStatus() == TransactionStatus.PAID) {
+            return;
+        }
+
+        // 2. Get required entities
+        User user = tx.getUser();
+        Package purchasedPackage = tx.getAPackage();
+        UserUsage usage = user.getUserUsage();
+        Package currentPackage = user.getAPackage(); // The package user had before this purchase
+
+        // 3. Mark transaction as PAID
+        tx.setTransactionStatus(TransactionStatus.PAID);
+        tx.setCreateAt(LocalDateTime.now());
+
+        // 4. Ensure a UserUsage object exists for the user
+        if (usage == null) {
+            usage = UserUsage.builder()
+                    .user(user)
+                    .cvAnalyzeUsed(0)
+                    .jdAnalyzeUsed(0)
+                    .interviewUsed(0)
+                    .build();
+            user.setUserUsage(usage);
+        }
+
+        // 5. Calculate remaining credits from the current package (if any)
+        int remainingCv = 0;
+        int remainingJd = 0;
+        int remainingItv = 0;
+
+        if (currentPackage != null) {
+            remainingCv = (currentPackage.getCvAnalyzeCount() != null ? currentPackage.getCvAnalyzeCount() : 0) - usage.getCvAnalyzeUsed();
+            remainingJd = (currentPackage.getJdAnalyzeCount() != null ? currentPackage.getJdAnalyzeCount() : 0) - usage.getJdAnalyzeUsed();
+            remainingItv = (currentPackage.getInterviewCount() != null ? currentPackage.getInterviewCount() : 0) - usage.getInterviewUsed();
+        }
+
+        // 6. Update user's package to the newly purchased one
+        user.setAPackage(purchasedPackage);
+
+        // 7. Apply rollover by setting "used" counters to the negative of remaining credits.
+        // This allows the user to use the new package's credits PLUS the remaining ones.
+        usage.setCvAnalyzeUsed(0 - (remainingCv > 0 ? remainingCv : 0));
+        usage.setJdAnalyzeUsed(0 - (remainingJd > 0 ? remainingJd : 0));
+        usage.setInterviewUsed(0 - (remainingItv > 0 ? remainingItv : 0));
+        usage.setUpdateAt(LocalDateTime.now());
+
+        // 8. Save all changes
+        transactionRepository.save(tx);
+        userUsageRepository.save(usage);
+        userRepository.save(user);
     }
 }

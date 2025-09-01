@@ -7,14 +7,13 @@ import com.gsu25se05.itellispeak.dto.question.CSVQuestionDTO;
 import com.gsu25se05.itellispeak.dto.question.QuestionDTO;
 import com.gsu25se05.itellispeak.dto.question.UpdateQuestionDTO;
 import com.gsu25se05.itellispeak.entity.*;
+import com.gsu25se05.itellispeak.exception.ErrorCode;
+import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
 import com.gsu25se05.itellispeak.repository.InterviewSessionRepository;
 import com.gsu25se05.itellispeak.repository.QuestionRepository;
 import com.gsu25se05.itellispeak.repository.TagRepository;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
 import com.gsu25se05.itellispeak.utils.mapper.QuestionMapper;
-import io.micrometer.common.lang.Nullable;
-import io.swagger.v3.oas.annotations.Operation;
-import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.stereotype.Service;
@@ -22,8 +21,6 @@ import org.springframework.stereotype.Service;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.StringReader;
@@ -78,7 +75,7 @@ public class QuestionService {
     public void deleteQuestion(Long questionId) {
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new IllegalArgumentException("Question not found"));
-        question.setIs_deleted(true);
+        question.setIsDeleted(true);
         questionRepository.save(question);
     }
 
@@ -102,7 +99,7 @@ public class QuestionService {
 
     public List<QuestionDTO> findAll() {
         return questionRepository.findAll().stream()
-                .filter(question -> question.getIs_deleted() == false)
+                .filter(question -> question.getIsDeleted() == false)
                 .map(questionMapper::toDTO)
                 .collect(Collectors.toList());
     }
@@ -119,7 +116,7 @@ public class QuestionService {
         }
 
         List<QuestionDTO> questions = questionRepository.findByCreatedByOrderByQuestionIdDesc(currentUser).stream()
-                .filter(question -> question.getIs_deleted() == false)
+                .filter(question -> question.getIsDeleted() == false)
                 .map(questionMapper::toDTO)
                 .collect(Collectors.toList());
 
@@ -325,7 +322,7 @@ public class QuestionService {
                         q.setDifficulty(diffEnum);
                         q.setQuestionStatus(QuestionStatus.APPROVED);
                         q.setSource("GeeksForGeeks");
-                        q.setIs_deleted(Boolean.FALSE);
+                        q.setIsDeleted(Boolean.FALSE);
 
                         q.setCreatedBy(currentUser);
                         if (uploaderCompany != null) {
@@ -572,7 +569,7 @@ public class QuestionService {
         q.setDifficulty(difficulty);
         q.setQuestionStatus(QuestionStatus.APPROVED);
         q.setSource("CSV Upload");
-        q.setIs_deleted(Boolean.FALSE);
+        q.setIsDeleted(Boolean.FALSE);
 
         q.setCreatedBy(creator);
         if (company != null) q.setCompany(company);
@@ -615,7 +612,7 @@ public class QuestionService {
                 .difficulty(q.getDifficulty().name())
                 .suitableAnswer1(q.getSuitableAnswer1())
                 .suitableAnswer2(q.getSuitableAnswer2())
-                .isDeleted(Boolean.TRUE.equals(q.getIs_deleted()))
+                .isDeleted(Boolean.TRUE.equals(q.getIsDeleted()))
                 .tags(tagsForRow != null && !tagsForRow.isEmpty() ? tagsForRow : q.getTags())
                 .interviewSessionDTO(sessionDTO)
                 .build();
@@ -636,7 +633,7 @@ public class QuestionService {
                 .difficulty(saved.getDifficulty() != null ? saved.getDifficulty().name() : null)
                 .suitableAnswer1(saved.getSuitableAnswer1())
                 .suitableAnswer2(saved.getSuitableAnswer2())
-                .isDeleted(Boolean.TRUE.equals(saved.getIs_deleted()))
+                .isDeleted(Boolean.TRUE.equals(saved.getIsDeleted()))
                 .tagIds(Set.of(tag.getTagId()))
                 .tags(Set.of(tag))
                 .interviewSessionDTO(isDto)
@@ -686,5 +683,49 @@ public class QuestionService {
                 .orElseThrow(() -> new IllegalArgumentException("Question not found"));
         session.getQuestions().remove(question);
         interviewSessionRepository.save(session);
+    }
+
+    public Response<List<QuestionDTO>> getCompanyQuestionsNotInSession(Long sessionId) {
+        // 1. Security: Get current user, check role, and get company
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            throw new AuthAppException(ErrorCode.NOT_LOGIN);
+        }
+        if (currentUser.getRole() != User.Role.HR) {
+            throw new AuthAppException(ErrorCode.ACCOUNT_NOT_HR);
+        }
+        Company hrCompany = (currentUser.getHr() != null) ? currentUser.getHr().getCompany() : null;
+        if (hrCompany == null) {
+            throw new AuthAppException(ErrorCode.HR_NOT_FOUND);
+        }
+
+        // 2. Find session and verify ownership
+        InterviewSession session = interviewSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new AuthAppException(ErrorCode.INTERVIEW_SESSION_NOT_FOUND));
+
+        // An HR can only add questions to their own company's sessions
+        if (session.getCompany() == null || !session.getCompany().getCompanyId().equals(hrCompany.getCompanyId())) {
+            throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
+        }
+
+        // 3. Get IDs of questions already in the session
+        Set<Long> existingQuestionIds = session.getQuestions().stream()
+                .map(Question::getQuestionId)
+                .collect(Collectors.toSet());
+
+        // 4. Fetch questions from repository
+        List<Question> availableQuestions;
+        if (existingQuestionIds.isEmpty()) {
+            availableQuestions = questionRepository.findByCompanyAndIsDeletedFalseOrderByQuestionIdDesc(hrCompany);
+        } else {
+            availableQuestions = questionRepository.findByCompanyAndIsDeletedFalseAndQuestionIdNotInOrderByQuestionIdDesc(hrCompany, existingQuestionIds);
+        }
+
+        // 5. Map to DTOs and return
+        List<QuestionDTO> dtos = availableQuestions.stream()
+                .map(questionMapper::toDTO)
+                .collect(Collectors.toList());
+
+        return new Response<>(200, "Successfully retrieved available questions for the session.", dtos);
     }
 }
