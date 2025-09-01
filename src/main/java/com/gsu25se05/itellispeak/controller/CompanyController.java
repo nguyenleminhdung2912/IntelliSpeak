@@ -3,8 +3,10 @@ package com.gsu25se05.itellispeak.controller;
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.company.CreateCompanyRequestDTO;
 import com.gsu25se05.itellispeak.dto.company.GetCompanyDetailResponseDTO;
+import com.gsu25se05.itellispeak.dto.company.UpdateCompanyRequest;
 import com.gsu25se05.itellispeak.entity.Company;
 import com.gsu25se05.itellispeak.service.CompanyService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -48,6 +50,23 @@ public class CompanyController {
     public ResponseEntity<Response<Company>> createCompanies(@RequestBody CreateCompanyRequestDTO createCompanyRequestDTO) {
         Company companies = companyService.createCompany(createCompanyRequestDTO);
         return ResponseEntity.ok(new Response<>(200, "Get all companies successfully", companies));
+    }
+
+    @Operation(summary = "Update company")
+    @PatchMapping("/{id}")
+    public ResponseEntity<Response<Company>> updateCompany(
+            @PathVariable Long id,
+            @RequestBody UpdateCompanyRequest payload
+    ) {
+        Company updated = companyService.updateCompanyy(id, payload);
+        return ResponseEntity.ok(new Response<>(200, "Company updated", updated));
+    }
+
+    @Operation(summary = "Delete company")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Response<Void>> deleteCompany(@PathVariable Long id) {
+        companyService.deleteCompanyy(id);
+        return ResponseEntity.ok(new Response<>(200, "Company deleted", null));
     }
 
 }
