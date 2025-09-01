@@ -3,6 +3,7 @@ package com.gsu25se05.itellispeak.controller;
 import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.interview_session.ConfirmCsvRequest;
 import com.gsu25se05.itellispeak.dto.question.CSVQuestionDTO;
+import com.gsu25se05.itellispeak.dto.question.CompanyQuestionDTO;
 import com.gsu25se05.itellispeak.dto.question.QuestionDTO;
 import com.gsu25se05.itellispeak.dto.question.UpdateQuestionDTO;
 import com.gsu25se05.itellispeak.entity.Question;
@@ -105,6 +106,12 @@ public class QuestionController {
     public ResponseEntity<Response<List<QuestionDTO>>> getAvailableQuestionsForSession(@PathVariable Long sessionId) {
         Response<List<QuestionDTO>> response = questionService.getCompanyQuestionsNotInSession(sessionId);
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Get my company's questions")
+    @GetMapping("/company")
+    public Response<List<CompanyQuestionDTO>> getMyCompanyQuestions() {
+        return questionService.getMyCompanyQuestions();
     }
 
 }
