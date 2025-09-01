@@ -26,4 +26,6 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     List<Question> findDistinctByCompanyAndIsDeletedFalseAndTagsInOrderByQuestionIdDesc(Company company, Set<Tag> tags);
 
     List<Question> findDistinctByCompanyAndIsDeletedFalseAndTagsInAndQuestionIdNotInOrderByQuestionIdDesc(Company company, Set<Tag> tags, Set<Long> questionIds);
+
+    List<Question> findByCompanyAndIsDeletedFalseOrderByQuestionIdDesc(Company company);
 }

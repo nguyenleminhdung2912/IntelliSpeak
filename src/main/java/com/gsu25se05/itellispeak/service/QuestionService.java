@@ -4,11 +4,13 @@ import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.interview_session.ConfirmCsvRequest;
 import com.gsu25se05.itellispeak.dto.interview_session.InterviewSessionDTO;
 import com.gsu25se05.itellispeak.dto.question.CSVQuestionDTO;
+import com.gsu25se05.itellispeak.dto.question.CompanyQuestionDTO;
 import com.gsu25se05.itellispeak.dto.question.QuestionDTO;
 import com.gsu25se05.itellispeak.dto.question.UpdateQuestionDTO;
 import com.gsu25se05.itellispeak.entity.*;
 import com.gsu25se05.itellispeak.exception.ErrorCode;
 import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
+import com.gsu25se05.itellispeak.repository.CompanyRepository;
 import com.gsu25se05.itellispeak.repository.InterviewSessionRepository;
 import com.gsu25se05.itellispeak.repository.QuestionRepository;
 import com.gsu25se05.itellispeak.repository.TagRepository;
@@ -39,13 +41,15 @@ public class QuestionService {
     private final TagRepository tagRepository;
     private final AccountUtils accountUtils;
     private final InterviewSessionRepository interviewSessionRepository;
+    private final CompanyRepository companyRepository;
 
-    public QuestionService(QuestionRepository questionRepository, QuestionMapper questionMapper, TagRepository tagRepository, AccountUtils accountUtils, InterviewSessionRepository interviewSessionRepository) {
+    public QuestionService(QuestionRepository questionRepository, QuestionMapper questionMapper, TagRepository tagRepository, AccountUtils accountUtils, InterviewSessionRepository interviewSessionRepository, CompanyRepository companyRepository) {
         this.questionRepository = questionRepository;
         this.questionMapper = questionMapper;
         this.tagRepository = tagRepository;
         this.accountUtils = accountUtils;
         this.interviewSessionRepository = interviewSessionRepository;
+        this.companyRepository = companyRepository;
     }
 
     public QuestionDTO save(QuestionDTO dto) {
@@ -121,6 +125,85 @@ public class QuestionService {
                 .collect(Collectors.toList());
 
         return new Response<>(200, "Successfully retrieved question list", questions);
+    }
+
+    private CompanyQuestionDTO toCompanyQuestionDTO(Question q) {
+        return CompanyQuestionDTO.builder()
+                .questionId(q.getQuestionId())
+                .title(q.getTitle())
+                .content(q.getContent())
+                .difficulty(q.getDifficulty() != null ? q.getDifficulty().name() : null)
+                .suitableAnswer1(q.getSuitableAnswer1())
+                .suitableAnswer2(q.getSuitableAnswer2())
+                .isDeleted(Boolean.TRUE.equals(q.getIsDeleted()))
+                .tagIds(q.getTags() != null
+                        ? q.getTags().stream().map(Tag::getTagId).collect(java.util.stream.Collectors.toSet())
+                        : java.util.Collections.emptySet())
+                .tags(q.getTags())
+                .interviewSessionId(null)
+                .interviewSessionName(null)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public Response<List<CompanyQuestionDTO>> getMyCompanyQuestions() {
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) return new Response<>(401, "Please log in to continue", null);
+        if (currentUser.getRole() != User.Role.HR) return new Response<>(403, "Only HR can view their company questions", null);
+        if (currentUser.getHr() == null || currentUser.getHr().getCompany() == null)
+            return new Response<>(403, "HR is not linked to any company", null);
+
+        final Company company = currentUser.getHr().getCompany();
+
+        //Lấy tất cả câu hỏi của công ty
+        final List<Question> questions =
+                questionRepository.findByCompanyAndIsDeletedFalseOrderByQuestionIdDesc(company);
+
+        if (questions.isEmpty()) {
+            return new Response<>(200, "Successfully retrieved company questions", Collections.emptyList());
+        }
+
+        //Lấy tất cả session có chứa các câu hỏi này
+        final List<InterviewSession> sessions =
+                interviewSessionRepository.findAllByCompanyAndQuestionsIn(company, questions);
+
+        //Chọn session cho mỗi question
+        final Map<Long, InterviewSession> latestSessionByQid = new HashMap<>();
+        for (InterviewSession s : sessions) {
+            if (s.getQuestions() == null) continue;
+            for (Question q : s.getQuestions()) {
+                final Long qid = q.getQuestionId();
+                if (qid == null) continue;
+                final InterviewSession cur = latestSessionByQid.get(qid);
+                if (cur == null || s.getInterviewSessionId() > cur.getInterviewSessionId()) {
+                    latestSessionByQid.put(qid, s);
+                }
+            }
+        }
+
+        //Map sang CompanyQuestionDTO và gắn interviewSessionId và Name
+        final List<CompanyQuestionDTO> dtos = questions.stream()
+                .map(q -> {
+                    final InterviewSession ls = latestSessionByQid.get(q.getQuestionId());
+                    return CompanyQuestionDTO.builder()
+                            .questionId(q.getQuestionId())
+                            .title(q.getTitle())
+                            .content(q.getContent())
+                            .difficulty(q.getDifficulty() != null ? q.getDifficulty().name() : null)
+                            .suitableAnswer1(q.getSuitableAnswer1())
+                            .suitableAnswer2(q.getSuitableAnswer2())
+                            .isDeleted(Boolean.TRUE.equals(q.getIsDeleted()))
+                            .tagIds(q.getTags() != null
+                                    ? q.getTags().stream().map(Tag::getTagId).collect(Collectors.toSet())
+                                    : Collections.emptySet())
+                            .tags(q.getTags())
+                            .interviewSessionId(ls != null ? ls.getInterviewSessionId() : null)
+                            .interviewSessionName(ls != null ? ls.getTitle() : null)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        return new Response<>(200, "Successfully retrieved company questions", dtos);
     }
 
     public Response<List<QuestionDTO>> importFromCsv(MultipartFile file, Long tagId) {
