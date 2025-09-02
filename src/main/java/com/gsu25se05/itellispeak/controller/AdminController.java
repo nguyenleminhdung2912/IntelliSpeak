@@ -15,7 +15,6 @@ import com.gsu25se05.itellispeak.service.InterviewSessionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -195,5 +194,19 @@ public class AdminController {
     public ResponseEntity<Response<Void>> unbanUser(@PathVariable Long userId) {
         adminService.unbanUser(userId);
         return ResponseEntity.ok(new Response<>(200, "User unbanned successfully", null));
+    }
+
+    @Operation(summary = "Get all interview của admin kể cả đã delete")
+    @GetMapping("/all-interviews")
+    public ResponseEntity<Response<List<InterviewSession>>> getAdminInterviews() {
+        List<InterviewSession> interviews = adminService.getAdminInterviews();
+        return ResponseEntity.ok(new Response<>(200, "Success", interviews));
+    }
+
+    @Operation(summary = "Get all interview của admin nhưng lọc deleted")
+    @GetMapping("/interviews")
+    public ResponseEntity<Response<List<InterviewSession>>> getAdminInterviewsIsDeleted() {
+        List<InterviewSession> interviews = adminService.getAdminInterviewsIsDeleted();
+        return ResponseEntity.ok(new Response<>(200, "Success", interviews));
     }
 }

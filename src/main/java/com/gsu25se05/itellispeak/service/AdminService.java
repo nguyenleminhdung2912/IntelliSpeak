@@ -33,9 +33,10 @@ public class AdminService {
     private final EmailService emailService;
     private final AccountUtils accountUtils;
     private final CompanyRepository companyRepository;
+    private final InterviewSessionRepository interviewSessionRepository;
 
 
-    public AdminService(TransactionRepository transactionRepository, UserRepository userRepository, HRRepository hrRepository, PackageRepository packageRepository, UserUsageRepository userUsageRepository, PasswordEncoder passwordEncoder, EmailService emailService, AccountUtils accountUtils, CompanyRepository companyRepository) {
+    public AdminService(TransactionRepository transactionRepository, UserRepository userRepository, HRRepository hrRepository, PackageRepository packageRepository, UserUsageRepository userUsageRepository, PasswordEncoder passwordEncoder, EmailService emailService, AccountUtils accountUtils, CompanyRepository companyRepository, InterviewSessionRepository interviewSessionRepository) {
         this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
         this.hrRepository = hrRepository;
@@ -45,6 +46,7 @@ public class AdminService {
         this.emailService = emailService;
         this.accountUtils = accountUtils;
         this.companyRepository = companyRepository;
+        this.interviewSessionRepository = interviewSessionRepository;
     }
 
     public Double getMonthlyRevenue(int year, int month) {
@@ -84,6 +86,17 @@ public class AdminService {
         return result;
     }
 
+    public List<InterviewSession> getAdminInterviews() {
+        return interviewSessionRepository
+                .findByCompanyIsNullAndSourceNotOrderByCreateAtDesc("RANDOM");
+    }
+
+    public List<InterviewSession> getAdminInterviewsIsDeleted() {
+        return interviewSessionRepository
+                .findByCompanyIsNullAndIsDeletedFalseAndSourceNotOrderByCreateAtDesc("RANDOM");
+    }
+
+
     public List<HRAdminResponseDTO> getAllHRApplications() {
         return hrRepository.findAll(Sort.by(Sort.Direction.DESC, "submittedAt"))
                 .stream()
@@ -117,6 +130,7 @@ public class AdminService {
             );
         }).toList();
     }
+
 
     @Transactional
     public void approveHR(Long hrId) {
@@ -398,7 +412,7 @@ public class AdminService {
     }
 
     public List<UserDTO> getAllUsers() {
-        return userRepository.findAll().stream().map(user -> {
+        return userRepository.findAll(Sort.by(Sort.Direction.DESC, "createAt")).stream().map(user -> {
             String email = user.getEmail();
             String userName = email != null && email.contains("@") ? email.split("@")[0] : "";
             return UserDTO.builder()

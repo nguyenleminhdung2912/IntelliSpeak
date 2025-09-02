@@ -57,4 +57,7 @@ public interface InterviewSessionRepository extends JpaRepository<InterviewSessi
 
     List<InterviewSession> findByCompanyIsNotNullAndIsDeletedFalse();
 
+    List<InterviewSession> findByCompanyIsNullAndSourceNotOrderByCreateAtDesc(String excludedSource);
+
+    List<InterviewSession> findByCompanyIsNullAndIsDeletedFalseAndSourceNotOrderByCreateAtDesc(String excludedSource);
 }

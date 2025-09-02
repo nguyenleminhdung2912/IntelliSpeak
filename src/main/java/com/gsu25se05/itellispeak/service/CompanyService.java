@@ -9,7 +9,6 @@ import com.gsu25se05.itellispeak.dto.hr.HRResponseDTO;
 import com.gsu25se05.itellispeak.entity.Company;
 import com.gsu25se05.itellispeak.repository.CompanyRepository;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -183,6 +182,10 @@ public class CompanyService {
     public void deleteCompanyy(Long id) {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Company not found with id: " + id));
+
+        if (company.getInterviewSessions() != null && !company.getInterviewSessions().isEmpty()) {
+            throw new IllegalStateException("Cannot delete company because it still has interview sessions");
+        }
 
         company.setIsDeleted(true);
         company.setUpdateAt(LocalDateTime.now());

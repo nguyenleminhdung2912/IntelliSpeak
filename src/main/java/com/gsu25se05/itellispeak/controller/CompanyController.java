@@ -8,6 +8,7 @@ import com.gsu25se05.itellispeak.entity.Company;
 import com.gsu25se05.itellispeak.service.CompanyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -65,8 +66,18 @@ public class CompanyController {
     @Operation(summary = "Delete company")
     @DeleteMapping("/{id}")
     public ResponseEntity<Response<Void>> deleteCompany(@PathVariable Long id) {
-        companyService.deleteCompanyy(id);
-        return ResponseEntity.ok(new Response<>(200, "Company deleted", null));
+        try {
+            companyService.deleteCompanyy(id);
+            return ResponseEntity.ok(new Response<>(200, "Company deleted", null));
+        } catch (IllegalStateException e) {
+            return ResponseEntity
+                    .status(400)
+                    .body(new Response<>(400, e.getMessage(), null));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity
+                    .status(404)
+                    .body(new Response<>(404, e.getMessage(), null));
+        }
     }
 
 }
