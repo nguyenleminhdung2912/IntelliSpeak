@@ -38,6 +38,9 @@ public class HRService {
 
         Company company;
         if (request.getCompanyId() == null) {
+            if (request.getCompanyNameIfNotExist() == null || request.getCompanyNameIfNotExist().isBlank()) {
+                throw new AuthAppException(ErrorCode.INVALID_INPUT);
+            }
             company = new Company();
             company.setName(request.getCompanyNameIfNotExist());
             company.setDescription("");
@@ -48,10 +51,8 @@ public class HRService {
             company.setIsDeleted(false);
             company = companyRepository.save(company);
         } else {
-            company = companyRepository.findById(request.getCompanyId()).orElse(null);
-            if (company == null) {
-                return new Response<>(500, "The company with this ID does not exist, please check again!", null);
-            }
+            company = companyRepository.findById(request.getCompanyId())
+                    .orElseThrow(() -> new AuthAppException(ErrorCode.COMPANY_NOT_FOUND));
         }
 
         HR saved;

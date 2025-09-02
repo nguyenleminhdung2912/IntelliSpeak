@@ -1,6 +1,5 @@
 package com.gsu25se05.itellispeak.service;
 
-import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.admin.CreateUserDTO;
 import com.gsu25se05.itellispeak.dto.admin.UserWithPackageDTO;
 import com.gsu25se05.itellispeak.dto.auth.reponse.UserDTO;
@@ -12,6 +11,7 @@ import com.gsu25se05.itellispeak.exception.ErrorCode;
 import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
 import com.gsu25se05.itellispeak.repository.*;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -84,9 +84,10 @@ public class AdminService {
         return result;
     }
 
-
     public List<HRAdminResponseDTO> getAllHRApplications() {
-        return hrRepository.findAll().stream().map(hr -> {
+        return hrRepository.findAll(Sort.by(Sort.Direction.DESC, "submittedAt"))
+                .stream()
+                .map(hr -> {
             String firstName = hr.getUser().getFirstName();
             String lastName = hr.getUser().getLastName();
             String email = hr.getUser().getEmail();
@@ -116,7 +117,6 @@ public class AdminService {
             );
         }).toList();
     }
-
 
     @Transactional
     public void approveHR(Long hrId) {
@@ -379,9 +379,6 @@ public class AdminService {
                 .isDeleted(user.getIsDeleted())
                 .build();
     }
-
-
-
 
     public List<UserWithPackageDTO> getAllUsersWithPackage() {
         return userRepository.findAll().stream().map(user -> {

@@ -1,6 +1,7 @@
 package com.gsu25se05.itellispeak.dto.hr;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,6 +20,7 @@ public class HRRequestDTO {
     )
     private String phone;
     private String country;
+    @Min(value = 0, message = "Experience years must be a non-negative number.")
     private Integer experienceYears;
     private String linkedinUrl;
     private String cvUrl;
