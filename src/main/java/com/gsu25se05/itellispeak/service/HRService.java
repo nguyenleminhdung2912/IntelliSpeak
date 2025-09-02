@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class HRService {
@@ -33,12 +34,9 @@ public class HRService {
             return new Response<>(401, "Please log in to continue.", null);
         }
 
-        // Kiểm tra nếu user đã gửi yêu cầu HR
-        if (hrRepository.findByUser(user).isPresent()) {
-            throw new AuthAppException(ErrorCode.HR_ALREADY_APPLIED);
-        }
+        Optional<HR> existingOpt = hrRepository.findByUser(user);
 
-        Company company = new Company();
+        Company company;
         if (request.getCompanyId() == null) {
             company = new Company();
             company.setName(request.getCompanyNameIfNotExist());
@@ -56,23 +54,50 @@ public class HRService {
             }
         }
 
+        HR saved;
 
-        HR hrRequest = new HR();
-        hrRequest.setUser(user);
-        hrRequest.setCompany(company);
-        hrRequest.setPhone(request.getPhone());
-        hrRequest.setCountry(request.getCountry());
-        hrRequest.setExperienceYears(request.getExperienceYears());
-        hrRequest.setLinkedinUrl(request.getLinkedinUrl());
-        hrRequest.setCvUrl(request.getCvUrl());
-        hrRequest.setStatus(HRStatus.PENDING);
-        hrRequest.setSubmittedAt(LocalDateTime.now());
+        if (existingOpt.isPresent()) {
+            HR existing = existingOpt.get();
+            HRStatus status = existing.getStatus();
 
-        HR saved = hrRepository.save(hrRequest);
+            if (status == HRStatus.PENDING) {
+                // Đang chờ duyệt -> không cho nộp lại
+                throw new AuthAppException(ErrorCode.HR_ALREADY_APPLIED);
+            } else if (status == HRStatus.APPROVED) {
+                // Đã được duyệt -> không cần nộp
+                return new Response<>(400, "Your HR application has already been approved.", null);
+            } else if (status == HRStatus.REJECTED) {
+                // Bị từ chối -> cho phép nộp lại bằng cách cập nhật hồ sơ cũ
+                existing.setCompany(company);
+                existing.setPhone(request.getPhone());
+                existing.setCountry(request.getCountry());
+                existing.setExperienceYears(request.getExperienceYears());
+                existing.setLinkedinUrl(request.getLinkedinUrl());
+                existing.setCvUrl(request.getCvUrl());
+                existing.setStatus(HRStatus.PENDING);
+                existing.setSubmittedAt(LocalDateTime.now());
+                saved = hrRepository.save(existing);
+            } else {
+                return new Response<>(400, "Invalid HR application status.", null);
+            }
+        } else {
+            // Chưa từng nộp -> tạo mới
+            HR hrRequest = new HR();
+            hrRequest.setUser(user);
+            hrRequest.setCompany(company);
+            hrRequest.setPhone(request.getPhone());
+            hrRequest.setCountry(request.getCountry());
+            hrRequest.setExperienceYears(request.getExperienceYears());
+            hrRequest.setLinkedinUrl(request.getLinkedinUrl());
+            hrRequest.setCvUrl(request.getCvUrl());
+            hrRequest.setStatus(HRStatus.PENDING);
+            hrRequest.setSubmittedAt(LocalDateTime.now());
+
+            saved = hrRepository.save(hrRequest);
+        }
 
         String firstName = saved.getUser().getFirstName();
         String lastName  = saved.getUser().getLastName();
-
         String fullName = (firstName == null || firstName.isBlank())
                 ? lastName
                 : firstName + " " + lastName;
@@ -89,7 +114,11 @@ public class HRService {
                 saved.getSubmittedAt(),
                 saved.getStatus().name()
         );
-        return new Response<>(200, "HR application submitted successfully", responseDTO);
+        String message = (existingOpt.isPresent() && existingOpt.get().getStatus() == HRStatus.REJECTED)
+                ? "Resubmitted HR application successfully"
+                : "HR application submitted successfully";
+
+        return new Response<>(200, message, responseDTO);
     }
 
     public Response<HRResponseDTO> checkHRApplicationStatus() {
