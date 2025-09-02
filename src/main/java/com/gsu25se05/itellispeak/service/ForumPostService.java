@@ -63,11 +63,19 @@ public class ForumPostService {
                         .map(ForumPostPicture::getUrl)
                         .collect(Collectors.toList());
 
-        // Get author's username
-        String authorEmail = (post.getUser() != null) ? post.getUser().getEmail() : null;
-        String authorUsername = (authorEmail != null && authorEmail.contains("@"))
-                ? authorEmail.substring(0, authorEmail.indexOf('@'))
-                : "unknown";
+        // Get author's info
+        User author = post.getUser();
+        String authorUsername = "unknown";
+        Long authorId = null;
+        String authorAvatar = null;
+
+        if (author != null) {
+            authorId = author.getUserId();
+            authorAvatar = author.getAvatar();
+            if (author.getEmail() != null && author.getEmail().contains("@")) {
+                authorUsername = author.getEmail().substring(0, author.getEmail().indexOf('@'));
+            }
+        }
 
         boolean isSaved = savedPostIds.contains(post.getId());
 
@@ -80,11 +88,14 @@ public class ForumPostService {
                 post.getThumbnail(),
                 activeImages,
                 authorUsername,
+                authorId,
+                authorAvatar,
                 post.getForumTopicType(),
                 isSaved,
                 post.getCreateAt(),
                 post.getLikeCount(),
-                readTime
+                readTime,
+                post.getRepliedCount()
         );
     }
 
@@ -403,24 +414,33 @@ public class ForumPostService {
     }
 
     public List<ForumPostReplyWithUserDTO> getRepliesWithUserByPostId(Long postId) {
+        // Get current user. Can be null if not logged in.
+        User currentUser = accountUtils.getCurrentAccount();
+        Long currentUserId = (currentUser != null) ? currentUser.getUserId() : null;
+
         ForumPost post = forumPostRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("Post not found"));
         List<ForumPostReply> replies = forumPostReplyRepository.findByForumPostAndIsDeletedFalse(post);
         return replies.stream().map(reply -> {
             User user = reply.getUser();
             ForumPostReplyWithUserDTO.UserInfo userInfo = new ForumPostReplyWithUserDTO.UserInfo(
-                user.getFirstName(),
-                user.getLastName(),
-                user.getAvatar()
+                    user.getFirstName(),
+                    user.getLastName(),
+                    user.getAvatar()
             );
+
+            // Check if the reply belongs to the current user
+            boolean isYours = currentUserId != null && user.getUserId().equals(currentUserId);
+
             return new ForumPostReplyWithUserDTO(
-                reply.getId(),
-                reply.getContent(),
-                reply.getStatus(),
-                reply.getCreateAt(),
-                reply.getUpdateAt(),
-                reply.getIsDeleted(),
-                userInfo
+                    reply.getId(),
+                    reply.getContent(),
+                    reply.getStatus(),
+                    reply.getCreateAt(),
+                    reply.getUpdateAt(),
+                    reply.getIsDeleted(),
+                    userInfo,
+                    isYours
             );
         }).collect(Collectors.toList());
     }

@@ -26,6 +26,10 @@ public class CreateResponseForumDTO {
 
     private String userName;
 
+    private Long userId;
+
+    private String avatar;
+
     private ForumTopicType forumTopicType;
 
     private Boolean isSaved;
@@ -34,4 +38,6 @@ public class CreateResponseForumDTO {
 
     private Integer reactionCount;
     private Integer readTimeEstimate;
+
+    private Integer repliedCount;
 }

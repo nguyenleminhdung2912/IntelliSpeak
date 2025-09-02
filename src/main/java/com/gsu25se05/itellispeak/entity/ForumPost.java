@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Formula;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +48,9 @@ public class ForumPost {
 
     @Column(name = "like_count")
     private Integer likeCount;
+
+    @Formula("(SELECT COUNT(*) FROM forum_post_reply fpr WHERE fpr.forum_post_id = id AND (fpr.is_deleted IS NULL OR fpr.is_deleted = false))")
+    private Integer repliedCount;
 
     @Column(name = "create_at")
     private LocalDateTime createAt;

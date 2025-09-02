@@ -168,4 +168,10 @@ public class TagService {
             return tagMapper.toDTO(restoredTag);
         });
     }
+
+    public List<TagDTO> findAllEvenDeleted() {
+        return tagRepository.findAll().stream()
+                .map(tagMapper::toDTO)
+                .collect(Collectors.toList());
+    }
 }
