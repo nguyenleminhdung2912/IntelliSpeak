@@ -8,6 +8,7 @@ import com.gsu25se05.itellispeak.dto.apackage.UpgradePackageRequest;
 import com.gsu25se05.itellispeak.dto.auth.reponse.UserDTO;
 import com.gsu25se05.itellispeak.dto.hr.HRAdminResponseDTO;
 import com.gsu25se05.itellispeak.dto.hr.UpdateRoleHRRequest;
+import com.gsu25se05.itellispeak.entity.InterviewSession;
 import com.gsu25se05.itellispeak.entity.Transaction;
 import com.gsu25se05.itellispeak.service.AdminService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -183,5 +184,19 @@ public class AdminController {
     public ResponseEntity<Response<Void>> unbanUser(@PathVariable Long userId) {
         adminService.unbanUser(userId);
         return ResponseEntity.ok(new Response<>(200, "User unbanned successfully", null));
+    }
+
+    @Operation(summary = "Get all interview của admin kể cả đã delete")
+    @GetMapping("/all-interviews")
+    public ResponseEntity<Response<List<InterviewSession>>> getAdminInterviews() {
+        List<InterviewSession> interviews = adminService.getAdminInterviews();
+        return ResponseEntity.ok(new Response<>(200, "Success", interviews));
+    }
+
+    @Operation(summary = "Get all interview của admin nhưng lọc deleted")
+    @GetMapping("/interviews")
+    public ResponseEntity<Response<List<InterviewSession>>> getAdminInterviewsIsDeleted() {
+        List<InterviewSession> interviews = adminService.getAdminInterviewsIsDeleted();
+        return ResponseEntity.ok(new Response<>(200, "Success", interviews));
     }
 }
