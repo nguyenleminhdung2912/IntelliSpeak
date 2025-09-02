@@ -7,7 +7,8 @@ import com.gsu25se05.itellispeak.entity.*;
 import com.gsu25se05.itellispeak.exception.auth.NotFoundException;
 import com.gsu25se05.itellispeak.repository.*;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
-import jakarta.transaction.Transactional;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.transaction.annotation.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 
@@ -56,14 +57,15 @@ public class ForumPostService {
     }
 
     private CreateResponseForumDTO mapPostToDto(ForumPost post, java.util.Set<Long> savedPostIds) {
-        // Get active images
-        List<String> activeImages = (post.getPictures() == null) ? Collections.emptyList() :
-                post.getPictures().stream()
+        // Active images
+        List<String> activeImages =
+                (post.getPictures() == null) ? java.util.Collections.emptyList()
+                        : post.getPictures().stream()
                         .filter(p -> !Boolean.TRUE.equals(p.isDeleted()))
                         .map(ForumPostPicture::getUrl)
-                        .collect(Collectors.toList());
+                        .collect(java.util.stream.Collectors.toList());
 
-        // Get author's info
+        // Author info
         User author = post.getUser();
         String authorUsername = "unknown";
         Long authorId = null;
@@ -72,14 +74,28 @@ public class ForumPostService {
         if (author != null) {
             authorId = author.getUserId();
             authorAvatar = author.getAvatar();
-            if (author.getEmail() != null && author.getEmail().contains("@")) {
-                authorUsername = author.getEmail().substring(0, author.getEmail().indexOf('@'));
+            String email = author.getEmail();
+            if (email != null && email.contains("@")) {
+                authorUsername = email.substring(0, email.indexOf('@'));
             }
         }
 
         boolean isSaved = savedPostIds.contains(post.getId());
 
         int readTime = estimateReadTime(post.getContent());
+
+        Long repliedCountLong = post.getRepliedCount();
+        Integer repliedCountInt;
+        if (repliedCountLong == null) {
+            repliedCountInt = 0;
+        } else if (repliedCountLong > Integer.MAX_VALUE) {
+            repliedCountInt = Integer.MAX_VALUE;
+        } else {
+            repliedCountInt = repliedCountLong.intValue();
+        }
+
+
+        Integer likeCount = (post.getLikeCount() == null) ? 0 : post.getLikeCount();
 
         return new CreateResponseForumDTO(
                 post.getId(),
@@ -93,11 +109,12 @@ public class ForumPostService {
                 post.getForumTopicType(),
                 isSaved,
                 post.getCreateAt(),
-                post.getLikeCount(),
+                likeCount,
                 readTime,
-                post.getRepliedCount()
+                repliedCountInt
         );
     }
+
 
     public Response<CreateResponseForumDTO> getPostById(Long postId) {
         User current = accountUtils.getCurrentAccount();
@@ -394,18 +411,24 @@ public class ForumPostService {
                 new ToggleSaveDTO(postId, false));
     }
 
+    @Transactional(readOnly = true)
     public Response<List<CreateResponseForumDTO>> getTopPostsByReplies(int limit) {
+        final int size = Math.max(1, Math.min(limit, 50));
+
         User current = accountUtils.getCurrentAccount();
-        List<ForumPost> topPosts = forumPostRepository.findTopPostsByReplyCount(limit);
+
+        List<ForumPost> topPosts = forumPostRepository.findTopPostsByReplyCount(PageRequest.of(0, size));
 
         final java.util.Set<Long> savedIds = (current == null)
                 ? java.util.Collections.emptySet()
                 : new java.util.HashSet<>(savedPostRepository.findActiveSavedPostIdsByUser(current));
 
-        List<CreateResponseForumDTO> dtos = topPosts.stream().map(post -> mapPostToDto(post, savedIds)).collect(Collectors.toList());
+        List<CreateResponseForumDTO> dtos = topPosts.stream()
+                .map(post -> mapPostToDto(post, savedIds))
+                .toList();
+
         return new Response<>(200, "Successfully retrieved top replied posts", dtos);
     }
-
 
     public List<ForumPostReply> getRepliesByPostId(Long postId) {
         ForumPost post = forumPostRepository.findById(postId)
