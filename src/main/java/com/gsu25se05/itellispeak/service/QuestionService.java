@@ -937,4 +937,49 @@ public class QuestionService {
 
         return new Response<>(200, "Successfully retrieved available questions for the session.", dtos);
     }
+
+    public Response<List<QuestionDTO>> getPublicQuestionsNotInSession(Long sessionId) {
+        // 1. Security: Get current user, check role
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            throw new AuthAppException(ErrorCode.NOT_LOGIN);
+        }
+        if (currentUser.getRole() != User.Role.ADMIN) {
+            throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
+        }
+
+        // 2. Find session and verify it's a public session
+        InterviewSession session = interviewSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new AuthAppException(ErrorCode.INTERVIEW_SESSION_NOT_FOUND));
+
+        if (session.getCompany() != null) {
+            throw new AuthAppException(ErrorCode.INVALID_INPUT);
+        }
+
+        // 3. Get tags from the session. If none, no questions can be suggested.
+        Set<Tag> sessionTags = session.getTags();
+        if (sessionTags == null || sessionTags.isEmpty()) {
+            return new Response<>(200, "Interview session has no tags, no relevant questions to suggest.", Collections.emptyList());
+        }
+
+        // 4. Get IDs of questions already in the session
+        Set<Long> existingQuestionIds = session.getQuestions().stream()
+                .map(Question::getQuestionId)
+                .collect(Collectors.toSet());
+
+        // 5. Fetch public questions from repository that match session tags
+        List<Question> availableQuestions;
+        if (existingQuestionIds.isEmpty()) {
+            availableQuestions = questionRepository.findDistinctByCompanyIsNullAndIsDeletedFalseAndTagsInOrderByQuestionIdDesc(sessionTags);
+        } else {
+            availableQuestions = questionRepository.findDistinctByCompanyIsNullAndIsDeletedFalseAndTagsInAndQuestionIdNotInOrderByQuestionIdDesc(sessionTags, existingQuestionIds);
+        }
+
+        // 6. Map to DTOs and return
+        List<QuestionDTO> dtos = availableQuestions.stream()
+                .map(questionMapper::toDTO)
+                .collect(Collectors.toList());
+
+        return new Response<>(200, "Successfully retrieved available public questions for the session.", dtos);
+    }
 }

@@ -8,13 +8,16 @@ import com.gsu25se05.itellispeak.dto.apackage.UpgradePackageRequest;
 import com.gsu25se05.itellispeak.dto.auth.reponse.UserDTO;
 import com.gsu25se05.itellispeak.dto.hr.HRAdminResponseDTO;
 import com.gsu25se05.itellispeak.dto.hr.UpdateRoleHRRequest;
+import com.gsu25se05.itellispeak.dto.question.QuestionDTO;
 import com.gsu25se05.itellispeak.entity.InterviewSession;
 import com.gsu25se05.itellispeak.entity.Transaction;
 import com.gsu25se05.itellispeak.service.AdminService;
 import com.gsu25se05.itellispeak.service.InterviewSessionService;
+import com.gsu25se05.itellispeak.service.QuestionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -31,10 +34,12 @@ import java.util.stream.Collectors;
 public class AdminController {
     private final AdminService adminService;
     private final InterviewSessionService interviewSessionService;
+    private final QuestionService questionService;
 
-    public AdminController(AdminService adminService, InterviewSessionService interviewSessionService) {
+    public AdminController(AdminService adminService, InterviewSessionService interviewSessionService, QuestionService questionService) {
         this.adminService = adminService;
         this.interviewSessionService = interviewSessionService;
+        this.questionService = questionService;
     }
 
     @GetMapping("/monthly-revenue")
@@ -208,5 +213,12 @@ public class AdminController {
     public ResponseEntity<Response<List<InterviewSession>>> getAdminInterviewsIsDeleted() {
         List<InterviewSession> interviews = adminService.getAdminInterviewsIsDeleted();
         return ResponseEntity.ok(new Response<>(200, "Success", interviews));
+    }
+
+    @GetMapping("/questions/available-for-session/{sessionId}")
+    @Operation(summary = "ADMIN: Lấy danh sách câu hỏi public (không thuộc công ty nào) chưa có trong một interview session public cụ thể")
+    public ResponseEntity<Response<List<QuestionDTO>>> getAvailablePublicQuestionsForSession(@PathVariable Long sessionId) {
+        Response<List<QuestionDTO>> response = questionService.getPublicQuestionsNotInSession(sessionId);
+        return ResponseEntity.ok(response);
     }
 }

@@ -497,9 +497,12 @@ public class InterviewSessionService {
             throw new AuthAppException(ErrorCode.INTERVIEW_SESSION_WERE_DELETED);
         }
         int total = session.getTotalQuestion();
-        int easyCount = Math.round(total * 5f / 10f);
-        int mediumCount = Math.round(total * 3f / 10f);
-        int hardCount = total - easyCount - mediumCount;
+//        int easyCount = Math.round(total * 5f / 10f);
+//        int mediumCount = Math.round(total * 3f / 10f);
+//        int hardCount = total - easyCount - mediumCount;
+        int easyCount = 1;
+        int mediumCount = 1;
+        int hardCount = 1;
 
         List<QuestionInfoDTO> result = new ArrayList<>();
 
