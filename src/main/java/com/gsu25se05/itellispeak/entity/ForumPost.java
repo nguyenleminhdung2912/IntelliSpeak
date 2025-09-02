@@ -49,8 +49,13 @@ public class ForumPost {
     @Column(name = "like_count")
     private Integer likeCount;
 
-    @Formula("(SELECT COUNT(*) FROM forum_post_reply fpr WHERE fpr.forum_post_id = id AND (fpr.is_deleted IS NULL OR fpr.is_deleted = false))")
-    private Integer repliedCount;
+    @Formula("""
+        (SELECT COALESCE(COUNT(*), 0)
+           FROM forum_post_reply fpr
+          WHERE fpr.forum_post_id = id
+            AND (fpr.is_deleted IS NULL OR fpr.is_deleted = false))
+        """)
+    private Long repliedCount;
 
     @Column(name = "create_at")
     private LocalDateTime createAt;
