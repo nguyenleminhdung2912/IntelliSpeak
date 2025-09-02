@@ -8,6 +8,7 @@ import com.gsu25se05.itellispeak.utils.AccountUtils;
 import com.gsu25se05.itellispeak.utils.mapper.InterviewHistoryMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,6 +37,7 @@ public class InterviewHistoryService {
         List<InterviewHistory> histories = interviewHistoryRepository.findByUser(currentUser);
         return histories.stream()
                 .map(interviewHistoryMapper::toEvaluationBatchResponseForGetAllDto)
+                .sorted(Comparator.comparing(EvaluationBatchResponseDto::getStartedAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .collect(Collectors.toList());
     }
 

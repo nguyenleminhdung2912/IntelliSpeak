@@ -20,6 +20,8 @@ public class UpdateResponsePostDTO {
 
     private String content;
 
+    private String thumbnail;
+
     private List<String> image;
 
     private ForumTopicType forumTopicType;

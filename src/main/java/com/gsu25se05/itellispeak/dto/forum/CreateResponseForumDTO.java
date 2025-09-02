@@ -20,9 +20,15 @@ public class CreateResponseForumDTO {
 
     private String content;
 
+    private String thumbnail;
+
     private List<String> image;
 
     private String userName;
+
+    private Long userId;
+
+    private String avatar;
 
     private ForumTopicType forumTopicType;
 
@@ -32,4 +38,6 @@ public class CreateResponseForumDTO {
 
     private Integer reactionCount;
     private Integer readTimeEstimate;
+
+    private Integer repliedCount;
 }

@@ -50,6 +50,12 @@ public class TagController {
         return ResponseEntity.ok(new Response<>(200, "Tags fetched successfully", tags));
     }
 
+    @GetMapping("/get-all")
+    public ResponseEntity<Response<List<TagDTO>>> getAllEvenDeleted() {
+        List<TagDTO> tags = tagService.findAllEvenDeleted();
+        return ResponseEntity.ok(new Response<>(200, "Tags fetched successfully", tags));
+    }
+
     @PutMapping("/{id}")
     @Operation(summary = "Cập nhật thông tin Tag theo ID (Tức là nhập ID lên Uri á Lĩu")
     public ResponseEntity<Response<TagDTO>> update(@PathVariable Long id, @RequestBody TagDTO dto) {
