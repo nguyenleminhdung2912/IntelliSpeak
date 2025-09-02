@@ -12,6 +12,7 @@ import com.gsu25se05.itellispeak.repository.TransactionRepository;
 import com.gsu25se05.itellispeak.repository.UserUsageRepository;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,7 +30,8 @@ public class TransactionService {
 
 
     public List<TransactionDTO> getAllTransactionDetails() {
-        return transactionRepository.findAll().stream()
+        return transactionRepository.findAll(Sort.by(Sort.Direction.DESC, "createAt"))
+                .stream()
                 .map(this::mapToDetailDTO)
                 .toList();
     }
