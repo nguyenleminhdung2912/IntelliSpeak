@@ -9,7 +9,6 @@ import com.gsu25se05.itellispeak.dto.hr.HRResponseDTO;
 import com.gsu25se05.itellispeak.entity.Company;
 import com.gsu25se05.itellispeak.repository.CompanyRepository;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

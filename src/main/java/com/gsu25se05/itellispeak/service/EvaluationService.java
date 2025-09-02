@@ -63,6 +63,7 @@ public class EvaluationService {
         try {
             // Lấy thông tin buổi phỏng vấn
             InterviewSessionDto session = request.getInterviewSession();
+            int totalQuestions = session.getTotalQuestion();
 
             // Tạo prompt với chatHistory
             String prompt = buildPrompt(session, request.getChatHistory());
@@ -115,7 +116,7 @@ public class EvaluationService {
             // Tạo và lưu InterviewHistory trước
             InterviewHistory interviewHistory = new InterviewHistory();
             interviewHistory.setInterviewSession(interviewSessionEntity);
-            interviewHistory.setTotalQuestion(session.getTotalQuestion());
+            interviewHistory.setTotalQuestion(totalQuestions);
             interviewHistory.setStartedAt(LocalDateTime.now());
             interviewHistory.setUser(currentUser);
             interviewHistory = interviewHistoryRepository.save(interviewHistory); // Lưu trước để có ID
@@ -129,6 +130,7 @@ public class EvaluationService {
             if (resultsJson.isArray()) {
                 for (JsonNode jsonObj : resultsJson) {
                     String userAnswer = jsonObj.get("userAnswer").asText();
+                    Double score = jsonObj.get("score").asDouble();
                     // Bỏ qua nếu userAnswer là "No answer"
                     if ("No answer".equalsIgnoreCase(userAnswer)) {
                         continue;
@@ -139,7 +141,6 @@ public class EvaluationService {
                     dto.setQuestionId(questionId);
                     dto.setQuestion(jsonObj.get("question").asText());
                     dto.setUserAnswer(userAnswer);
-                    Double score = jsonObj.get("score").asDouble();
                     dto.setLevel(score.toString()); // Lưu score dưới dạng chuỗi cho DTO
 
                     // Parse feedback
@@ -203,7 +204,8 @@ public class EvaluationService {
 
                 // Cập nhật InterviewHistory với details và averageScore
                 interviewHistory.setDetails(details);
-                interviewHistory.setAverageScore(evaluatedQuestions > 0 ? totalScore / evaluatedQuestions : 0.0);
+                // Tính averageScore dựa trên tổng số câu hỏi, bao gồm cả câu không trả lời (score = 0)
+                interviewHistory.setAverageScore(totalQuestions > 0 ? totalScore / totalQuestions : 0.0);
                 interviewHistory.setEndedAt(LocalDateTime.now());
                 interviewHistory.setAiOverallEvaluate(overallEvaluation);
 

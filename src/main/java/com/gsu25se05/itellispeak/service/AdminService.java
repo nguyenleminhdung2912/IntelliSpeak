@@ -1,6 +1,5 @@
 package com.gsu25se05.itellispeak.service;
 
-import com.gsu25se05.itellispeak.dto.Response;
 import com.gsu25se05.itellispeak.dto.admin.CreateUserDTO;
 import com.gsu25se05.itellispeak.dto.admin.UserWithPackageDTO;
 import com.gsu25se05.itellispeak.dto.auth.reponse.UserDTO;
@@ -12,6 +11,7 @@ import com.gsu25se05.itellispeak.exception.ErrorCode;
 import com.gsu25se05.itellispeak.exception.auth.AuthAppException;
 import com.gsu25se05.itellispeak.repository.*;
 import com.gsu25se05.itellispeak.utils.AccountUtils;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,8 +57,6 @@ public class AdminService {
         return revenue != null ? revenue : 0.0;
     }
 
-
-
     public Map<String, Long> getPlanCounts() {
         Map<String, Long> result = new HashMap<>();
         var packages = packageRepository.findByIsDeletedFalse();
@@ -100,7 +98,9 @@ public class AdminService {
 
 
     public List<HRAdminResponseDTO> getAllHRApplications() {
-        return hrRepository.findAll().stream().map(hr -> {
+        return hrRepository.findAll(Sort.by(Sort.Direction.DESC, "submittedAt"))
+                .stream()
+                .map(hr -> {
             String firstName = hr.getUser().getFirstName();
             String lastName = hr.getUser().getLastName();
             String email = hr.getUser().getEmail();
@@ -394,9 +394,6 @@ public class AdminService {
                 .build();
     }
 
-
-
-
     public List<UserWithPackageDTO> getAllUsersWithPackage() {
         return userRepository.findAll().stream().map(user -> {
             UserWithPackageDTO dto = new UserWithPackageDTO();
@@ -415,7 +412,7 @@ public class AdminService {
     }
 
     public List<UserDTO> getAllUsers() {
-        return userRepository.findAll().stream().map(user -> {
+        return userRepository.findAll(Sort.by(Sort.Direction.DESC, "createAt")).stream().map(user -> {
             String email = user.getEmail();
             String userName = email != null && email.contains("@") ? email.split("@")[0] : "";
             return UserDTO.builder()

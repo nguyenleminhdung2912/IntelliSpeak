@@ -27,7 +27,6 @@ public interface InterviewSessionRepository extends JpaRepository<InterviewSessi
         SELECT i
         FROM InterviewSession i
         WHERE (i.source IS NULL OR i.source <> :excluded)
-          AND i.isDeleted = false
         ORDER BY i.createAt DESC
     """)
     List<InterviewSession> findAllVisibleFetchAll(@Param("excluded") String excluded);
@@ -55,6 +54,8 @@ public interface InterviewSessionRepository extends JpaRepository<InterviewSessi
             @Param("company") Company company,
             @Param("questions") Collection<Question> questions
     );
+
+    List<InterviewSession> findByCompanyIsNotNullAndIsDeletedFalse();
 
     List<InterviewSession> findByCompanyIsNullAndSourceNotOrderByCreateAtDesc(String excludedSource);
 

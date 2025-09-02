@@ -52,28 +52,70 @@ public class QuestionService {
         this.companyRepository = companyRepository;
     }
 
+    @Transactional
     public QuestionDTO save(QuestionDTO dto) {
+        // 1. Get current user and check permissions
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            throw new AuthAppException(ErrorCode.NOT_LOGIN);
+        }
+
+        // 2. Determine source and company based on user role
+        String source;
+        Company company = null;
+
+        if (currentUser.getRole() == User.Role.ADMIN) {
+            List<String> sources = List.of("GeeksForGeeks", "LeetCode", "HackerRank", "TopCoder");
+            source = sources.get(new Random().nextInt(sources.size()));
+            // Admin-created questions are public, so company is null.
+        } else if (currentUser.getRole() == User.Role.HR) {
+            if (currentUser.getHr() == null || currentUser.getHr().getCompany() == null || currentUser.getHr().getStatus() != HRStatus.APPROVED) {
+                throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
+            }
+            company = currentUser.getHr().getCompany();
+            source = company.getName();
+        } else {
+            throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
+        }
+
+        // 3. Map DTO to entity and set properties
         Question entity = questionMapper.toEntity(dto);
         entity.setQuestionStatus(QuestionStatus.APPROVED);
-        entity.setSource("GeeksForGeeks");
-
-        User currentUser = accountUtils.getCurrentAccount();
-        if (currentUser != null) {
-            entity.setCreatedBy(currentUser);
+        entity.setSource(source);
+        entity.setCreatedBy(currentUser);
+        if (company != null) {
+            entity.setCompany(company);
         }
 
-        if (currentUser.getHr().getStatus() == HRStatus.APPROVED)
-            entity.setCompany(currentUser.getHr().getCompany());
-
-        if (currentUser.getRole() == User.Role.HR && currentUser.getHr().getCompany() != null) {
-            entity.setCompany(currentUser.getHr().getCompany());
-        }
-
-        if (dto.getTagIds() != null) {
+        if (dto.getTagIds() != null && !dto.getTagIds().isEmpty()) {
             Set<Tag> tags = new HashSet<>(tagRepository.findAllById(dto.getTagIds()));
             entity.setTags(tags);
         }
-        return questionMapper.toDTO(questionRepository.save(entity));
+
+        // 4. Save the new question
+        Question savedQuestion = questionRepository.save(entity);
+
+        // 5. If interviewSessionId is provided, add the question to the session
+        if (dto.getInterviewSessionId() != null) {
+            InterviewSession session = interviewSessionRepository.findById(dto.getInterviewSessionId())
+                    .orElseThrow(() -> new AuthAppException(ErrorCode.INTERVIEW_SESSION_NOT_FOUND));
+
+            // Authorization check for session
+            boolean isOwner = session.getCreatedBy() != null && session.getCreatedBy().getUserId().equals(currentUser.getUserId());
+            boolean isAdmin = currentUser.getRole() == User.Role.ADMIN;
+            boolean isHrOfCompanySession = (currentUser.getRole() == User.Role.HR && session.getCompany() != null && currentUser.getHr() != null && session.getCompany().getCompanyId().equals(currentUser.getHr().getCompany().getCompanyId()));
+            if (!isOwner && !isAdmin && !isHrOfCompanySession) {
+                throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
+            }
+
+            if (session.getQuestions().add(savedQuestion)) {
+                session.setTotalQuestion(session.getQuestions().size());
+                interviewSessionRepository.save(session);
+            }
+        }
+
+        // 6. Return the DTO of the created question
+        return questionMapper.toDTO(savedQuestion);
     }
 
     public void deleteQuestion(Long questionId) {
@@ -894,5 +936,50 @@ public class QuestionService {
                 .collect(Collectors.toList());
 
         return new Response<>(200, "Successfully retrieved available questions for the session.", dtos);
+    }
+
+    public Response<List<QuestionDTO>> getPublicQuestionsNotInSession(Long sessionId) {
+        // 1. Security: Get current user, check role
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            throw new AuthAppException(ErrorCode.NOT_LOGIN);
+        }
+        if (currentUser.getRole() != User.Role.ADMIN) {
+            throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
+        }
+
+        // 2. Find session and verify it's a public session
+        InterviewSession session = interviewSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new AuthAppException(ErrorCode.INTERVIEW_SESSION_NOT_FOUND));
+
+        if (session.getCompany() != null) {
+            throw new AuthAppException(ErrorCode.INVALID_INPUT);
+        }
+
+        // 3. Get tags from the session. If none, no questions can be suggested.
+        Set<Tag> sessionTags = session.getTags();
+        if (sessionTags == null || sessionTags.isEmpty()) {
+            return new Response<>(200, "Interview session has no tags, no relevant questions to suggest.", Collections.emptyList());
+        }
+
+        // 4. Get IDs of questions already in the session
+        Set<Long> existingQuestionIds = session.getQuestions().stream()
+                .map(Question::getQuestionId)
+                .collect(Collectors.toSet());
+
+        // 5. Fetch public questions from repository that match session tags
+        List<Question> availableQuestions;
+        if (existingQuestionIds.isEmpty()) {
+            availableQuestions = questionRepository.findDistinctByCompanyIsNullAndIsDeletedFalseAndTagsInOrderByQuestionIdDesc(sessionTags);
+        } else {
+            availableQuestions = questionRepository.findDistinctByCompanyIsNullAndIsDeletedFalseAndTagsInAndQuestionIdNotInOrderByQuestionIdDesc(sessionTags, existingQuestionIds);
+        }
+
+        // 6. Map to DTOs and return
+        List<QuestionDTO> dtos = availableQuestions.stream()
+                .map(questionMapper::toDTO)
+                .collect(Collectors.toList());
+
+        return new Response<>(200, "Successfully retrieved available public questions for the session.", dtos);
     }
 }

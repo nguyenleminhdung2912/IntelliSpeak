@@ -22,4 +22,5 @@ public class QuestionDTO {
     private boolean isDeleted;
     private Set<Long> tagIds; // for input
     private Set<Tag> tags; // for output
+    private Long interviewSessionId; // Optional: for input when creating a question
 }

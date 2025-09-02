@@ -43,6 +43,13 @@ public class InterviewSessionController {
         return ResponseEntity.ok(new Response<>(200, "Interview session deleted", null));
     }
 
+    @PutMapping("/restore/{interview_session_id}")
+    @Operation(summary = "Khôi phục interview session")
+    public ResponseEntity<Response<String>> restore(@PathVariable Long interview_session_id) {
+        interviewSessionService.restore(interview_session_id);
+        return ResponseEntity.ok(new Response<>(200, "Interview session restored successfully", null));
+    }
+
     @PutMapping("/update/{id}")
     @Operation(summary = "Update interview session")
     public ResponseEntity<Response<InterviewSession>> updateInterviewSession(@PathVariable("id") Long id, @RequestBody UpdateInterviewSessionRequestDTO request) {
