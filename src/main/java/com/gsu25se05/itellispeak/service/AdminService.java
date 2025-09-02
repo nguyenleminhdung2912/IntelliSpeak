@@ -33,9 +33,10 @@ public class AdminService {
     private final EmailService emailService;
     private final AccountUtils accountUtils;
     private final CompanyRepository companyRepository;
+    private final InterviewSessionRepository interviewSessionRepository;
 
 
-    public AdminService(TransactionRepository transactionRepository, UserRepository userRepository, HRRepository hrRepository, PackageRepository packageRepository, UserUsageRepository userUsageRepository, PasswordEncoder passwordEncoder, EmailService emailService, AccountUtils accountUtils, CompanyRepository companyRepository) {
+    public AdminService(TransactionRepository transactionRepository, UserRepository userRepository, HRRepository hrRepository, PackageRepository packageRepository, UserUsageRepository userUsageRepository, PasswordEncoder passwordEncoder, EmailService emailService, AccountUtils accountUtils, CompanyRepository companyRepository, InterviewSessionRepository interviewSessionRepository) {
         this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
         this.hrRepository = hrRepository;
@@ -45,6 +46,7 @@ public class AdminService {
         this.emailService = emailService;
         this.accountUtils = accountUtils;
         this.companyRepository = companyRepository;
+        this.interviewSessionRepository = interviewSessionRepository;
     }
 
     public Double getMonthlyRevenue(int year, int month) {
@@ -54,6 +56,8 @@ public class AdminService {
         Double revenue = transactionRepository.sumAmountByCreateAtBetween(start, end);
         return revenue != null ? revenue : 0.0;
     }
+
+
 
     public Map<String, Long> getPlanCounts() {
         Map<String, Long> result = new HashMap<>();
@@ -82,6 +86,16 @@ public class AdminService {
             result.add(entry);
         }
         return result;
+    }
+
+    public List<InterviewSession> getAdminInterviews() {
+        return interviewSessionRepository
+                .findByCompanyIsNullAndSourceNotOrderByCreateAtDesc("RANDOM");
+    }
+
+    public List<InterviewSession> getAdminInterviewsIsDeleted() {
+        return interviewSessionRepository
+                .findByCompanyIsNullAndIsDeletedFalseAndSourceNotOrderByCreateAtDesc("RANDOM");
     }
 
 
