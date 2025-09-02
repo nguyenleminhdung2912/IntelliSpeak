@@ -220,10 +220,29 @@ public class QuestionService {
             return new Response<>(400, "Missing required parameter: tagId", null);
         }
 
-        // Đảm bảo tag tồn tại
         Tag tag = tagRepository.findById(tagId).orElse(null);
         if (tag == null) {
             return new Response<>(400, "Tag not found: " + tagId, null);
+        }
+
+        // Xác định source
+        Company uploaderCompany = null;
+        String sourceForQuestion;
+        if ("HR".equalsIgnoreCase(roleName)) {
+            uploaderCompany = (currentUser.getHr() != null) ? currentUser.getHr().getCompany() : null;
+            if (uploaderCompany == null) {
+                return new Response<>(400, "HR user is not linked to any company", null);
+            }
+            String companyName = uploaderCompany.getName();
+            if (companyName == null || companyName.isBlank()) {
+                companyName = uploaderCompany.getShortName();
+            }
+            if (companyName == null || companyName.isBlank()) {
+                companyName = "UnknownCompany";
+            }
+            sourceForQuestion = companyName;
+        } else {
+            sourceForQuestion = "GeeksForGeeks";
         }
 
         final List<String> REQUIRED_HEADERS = List.of(
@@ -241,7 +260,6 @@ public class QuestionService {
                 return new Response<>(400, "CSV file is empty", null);
             }
 
-            // remove UTF-8 BOM
             lines.set(0, lines.get(0).replace("\uFEFF", ""));
             String csvContent = String.join("\n", lines);
 
@@ -251,7 +269,6 @@ public class QuestionService {
                     .withTrim()
                     .parse(new StringReader(csvContent))) {
 
-                // Kiểm tra header bắt buộc (case-insensitive)
                 Set<String> headersLc = csv.getHeaderNames().stream()
                         .map(h -> h == null ? "" : h.trim().toLowerCase())
                         .collect(Collectors.toSet());
@@ -262,7 +279,6 @@ public class QuestionService {
                     }
                 }
 
-                // Bỏ qua hoàn toàn cột tagIds nếu file có (để đảm bảo dùng duy nhất 1 tag từ request)
                 long rowIndex = 1;
                 for (CSVRecord r : csv) {
                     rowIndex++;
@@ -285,10 +301,10 @@ public class QuestionService {
                         dto.setDifficulty(difficulty);
                         dto.setSuitableAnswer1(s1);
                         dto.setSuitableAnswer2(s2);
-
                         dto.setTagIds(Set.of(tagId));
 
-                        imported.add(save(dto));
+                        // ⬇️ Truyền source vào tầng save
+                        imported.add(saveWithSource(dto, sourceForQuestion, currentUser, uploaderCompany));
                     } catch (Exception rowEx) {
                         rowErrors.add("Row " + rowIndex + ": " + rowEx.getMessage());
                     }
@@ -307,6 +323,30 @@ public class QuestionService {
         }
         return new Response<>(200, "CSV import successful", imported);
     }
+
+    private QuestionDTO saveWithSource(QuestionDTO dto, String source, User creator, Company company) {
+        Question q = new Question();
+        q.setTitle(dto.getTitle());
+        q.setContent(dto.getContent());
+        q.setDifficulty(Difficulty.valueOf(dto.getDifficulty()));
+        q.setSuitableAnswer1(dto.getSuitableAnswer1());
+        q.setSuitableAnswer2(dto.getSuitableAnswer2());
+        q.setIsDeleted(false);
+        q.setQuestionStatus(QuestionStatus.APPROVED);
+        q.setCreatedBy(creator);
+        q.setSource(source);
+        if (company != null) {
+            q.setCompany(company);
+        }
+
+        Set<Tag> tags = tagRepository.findAllById(dto.getTagIds())
+                .stream().collect(Collectors.toSet());
+        q.setTags(tags);
+
+        Question saved = questionRepository.save(q);
+        return questionMapper.toDTO(saved);
+    }
+
 
     public Response<List<CSVQuestionDTO>> importQuestionsToInterviewSession(
             MultipartFile file,
@@ -377,6 +417,26 @@ public class QuestionService {
                         ? (currentUser.getHr() != null ? currentUser.getHr().getCompany() : null)
                         : null;
 
+                // Xác định source theo role
+                String sourceForQuestion;
+                if ("HR".equalsIgnoreCase(roleName)) {
+                    if (uploaderCompany == null) {
+                        return new Response<>(400, "HR user is not linked to any company", null);
+                    }
+                    // Ưu tiên name, nếu trống thì dùng shortName
+                    String companyName = uploaderCompany.getName();
+                    if (companyName == null || companyName.isBlank()) {
+                        companyName = uploaderCompany.getShortName();
+                    }
+                    if (companyName == null || companyName.isBlank()) {
+                        companyName = "UnknownCompany";
+                    }
+                    sourceForQuestion = companyName;
+                } else {
+                    // ADMIN
+                    sourceForQuestion = "GeeksForGeeks";
+                }
+
                 if (session.getQuestions() == null) {
                     session.setQuestions(new HashSet<>());
                 }
@@ -404,7 +464,7 @@ public class QuestionService {
                         q.setSuitableAnswer2(s2);
                         q.setDifficulty(diffEnum);
                         q.setQuestionStatus(QuestionStatus.APPROVED);
-                        q.setSource("GeeksForGeeks");
+                        q.setSource(sourceForQuestion);
                         q.setIsDeleted(Boolean.FALSE);
 
                         q.setCreatedBy(currentUser);
@@ -425,7 +485,6 @@ public class QuestionService {
                         rowErrors.add("Row " + rowIndex + ": " + rowEx.getMessage());
                     }
                 }
-
 
                 Integer total = (session.getQuestions() == null) ? 0 : session.getQuestions().size();
                 session.setTotalQuestion(total);
@@ -454,6 +513,7 @@ public class QuestionService {
             return new Response<>(400, "Invalid CSV format: " + e.getMessage(), null);
         }
     }
+
 
     @Transactional(readOnly = true)
     public Response<List<CSVQuestionDTO>> previewQuestionsFromCsv(MultipartFile file) {
