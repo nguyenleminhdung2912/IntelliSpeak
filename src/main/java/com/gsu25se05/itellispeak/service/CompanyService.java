@@ -184,6 +184,10 @@ public class CompanyService {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Company not found with id: " + id));
 
+        if (company.getInterviewSessions() != null && !company.getInterviewSessions().isEmpty()) {
+            throw new IllegalStateException("Cannot delete company because it still has interview sessions");
+        }
+
         company.setIsDeleted(true);
         company.setUpdateAt(LocalDateTime.now());
         companyRepository.save(company);
