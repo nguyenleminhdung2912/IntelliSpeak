@@ -8,11 +8,14 @@ import com.gsu25se05.itellispeak.dto.apackage.UpgradePackageRequest;
 import com.gsu25se05.itellispeak.dto.auth.reponse.UserDTO;
 import com.gsu25se05.itellispeak.dto.hr.HRAdminResponseDTO;
 import com.gsu25se05.itellispeak.dto.hr.UpdateRoleHRRequest;
+import com.gsu25se05.itellispeak.entity.InterviewSession;
 import com.gsu25se05.itellispeak.entity.Transaction;
 import com.gsu25se05.itellispeak.service.AdminService;
+import com.gsu25se05.itellispeak.service.InterviewSessionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -28,9 +31,11 @@ import java.util.stream.Collectors;
 @SecurityRequirement(name = "api")
 public class AdminController {
     private final AdminService adminService;
+    private final InterviewSessionService interviewSessionService;
 
-    public AdminController(AdminService adminService) {
+    public AdminController(AdminService adminService, InterviewSessionService interviewSessionService) {
         this.adminService = adminService;
+        this.interviewSessionService = interviewSessionService;
     }
 
     @GetMapping("/monthly-revenue")
@@ -94,6 +99,13 @@ public class AdminController {
     public Response<List<HRAdminResponseDTO>> getHRApplications() {
         List<HRAdminResponseDTO> data = adminService.getAllHRApplications();
         return new Response<>(200, "Fetched HR applications successfully", data);
+    }
+
+    @GetMapping("/interview-sessions/company")
+    @Operation(summary = "ADMIN: Lấy danh sách tất cả các interview session có liên kết với công ty")
+    public ResponseEntity<Response<List<InterviewSession>>> getCompanyInterviewSessions() {
+        List<InterviewSession> sessions = interviewSessionService.getAllCompanySessions();
+        return ResponseEntity.ok(new Response<>(200, "Successfully fetched all company interview sessions.", sessions));
     }
 
     @Operation(summary = "Admin duyệt HR")

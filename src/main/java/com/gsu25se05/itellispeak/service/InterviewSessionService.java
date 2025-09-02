@@ -258,6 +258,18 @@ public class InterviewSessionService {
     }
 
     @Transactional(readOnly = true)
+    public List<InterviewSession> getAllCompanySessions() {
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            throw new NotLoginException("Please log in to continue");
+        }
+        if (currentUser.getRole() != User.Role.ADMIN) {
+            throw new SecurityException("Only ADMIN are allowed to view the interview sessions they created");
+        }
+        return interviewSessionRepository.findByCompanyIsNotNullAndIsDeletedFalse();
+    }
+
+    @Transactional(readOnly = true)
     public InterviewSession getInterviewSessionById(Long id) {
         return interviewSessionRepository.findVisibleById(id, "RANDOM")
                 .orElseThrow(() -> new NotFoundException("Interview session not found or unavailable"));
@@ -706,5 +718,24 @@ public class InterviewSessionService {
         userUsageRepository.save(currentUser.getUserUsage());
 
         return dto;
+    }
+
+    @Transactional
+    public void restore(Long interviewSessionId) {
+        if (interviewSessionId == null) {
+            throw new IllegalArgumentException("Interview session ID must not be null");
+        }
+
+        InterviewSession session = interviewSessionRepository.findById(interviewSessionId)
+                .orElseThrow(() -> new AuthAppException(ErrorCode.INTERVIEW_SESSION_NOT_FOUND));
+
+        if (Boolean.FALSE.equals(session.getIsDeleted())) {
+            throw new IllegalStateException("Interview session with id " + interviewSessionId + " is still on working");
+        }
+
+        session.setIsDeleted(false);
+        session.setUpdateAt(LocalDateTime.now());
+
+        interviewSessionRepository.save(session);
     }
 }

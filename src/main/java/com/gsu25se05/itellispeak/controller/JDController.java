@@ -40,10 +40,10 @@ public class JDController {
             JD jd = jdService.analyzeAndSaveJD(file);
             return ResponseEntity.ok(jd);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "System error: " + e.getMessage()));
+                    .body(Map.of("message", "System error: " + e.getMessage()));
         }
     }
 
