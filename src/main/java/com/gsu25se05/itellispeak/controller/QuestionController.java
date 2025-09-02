@@ -56,9 +56,14 @@ public class QuestionController {
         return questionService.importFromCsv(file, tagId);
     }
 
-    @PostMapping("/import-csv/{tagId}/{interviewSessionId}")
-    public Response<List<CSVQuestionDTO>> importQuestionsToInterviewSession(@RequestParam("file") MultipartFile file, @PathVariable Long tagId, @PathVariable Long interviewSessionId) {
-        return questionService.importQuestionsToInterviewSession(file, tagId, interviewSessionId);
+    @PostMapping(value = "/import-csv/{interviewSessionId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Import questions from CSV into interview session with multiple tags")
+    public Response<List<CSVQuestionDTO>> importQuestionsToInterviewSession(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("tagIds") List<Long> tagIds,    // ví dụ: tagIds=1&tagIds=2&tagIds=3
+            @PathVariable Long interviewSessionId
+    ) {
+        return questionService.importQuestionsToInterviewSession(file, tagIds, interviewSessionId);
     }
 
     @PostMapping("/{sessionId}/questions/{questionId}/remove")
