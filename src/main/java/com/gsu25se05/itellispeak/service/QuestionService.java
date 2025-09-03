@@ -209,43 +209,57 @@ public class QuestionService {
     @Transactional(readOnly = true)
     public Response<List<CompanyQuestionDTO>> getMyCompanyQuestions() {
         User currentUser = accountUtils.getCurrentAccount();
-        if (currentUser == null) return new Response<>(401, "Please log in to continue", null);
-        if (currentUser.getRole() != User.Role.HR) return new Response<>(403, "Only HR can view their company questions", null);
-        if (currentUser.getHr() == null || currentUser.getHr().getCompany() == null)
-            return new Response<>(403, "HR is not linked to any company", null);
+        if (currentUser == null) {
+            return new Response<>(401, "Please log in to continue", null);
+        }
 
-        final Company company = currentUser.getHr().getCompany();
+        final List<Question> questions;
+        final Company company;
 
-        //Lấy tất cả câu hỏi của công ty
-        final List<Question> questions =
-                questionRepository.findByCompanyAndIsDeletedFalseOrderByQuestionIdDesc(company);
+        if (currentUser.getRole() == User.Role.HR) {
+            if (currentUser.getHr() == null || currentUser.getHr().getCompany() == null) {
+                return new Response<>(403, "HR is not linked to any company", null);
+            }
+            company = currentUser.getHr().getCompany();
+            // HR: chỉ lấy câu hỏi của công ty
+            questions = questionRepository.findByCompanyAndIsDeletedFalseOrderByQuestionIdDesc(company);
+
+        } else if (currentUser.getRole() == User.Role.ADMIN) {
+            company = null;
+            // ADMIN: chỉ lấy global
+            questions = questionRepository.findGlobalQuestions();
+
+        } else {
+            return new Response<>(403, "Only HR or ADMIN can view questions", null);
+        }
 
         if (questions.isEmpty()) {
             return new Response<>(200, "Successfully retrieved company questions", Collections.emptyList());
         }
 
-        //Lấy tất cả session có chứa các câu hỏi này
-        final List<InterviewSession> sessions =
-                interviewSessionRepository.findAllByCompanyAndQuestionsIn(company, questions);
-
-        //Chọn session cho mỗi question
+        // Nếu là HR thì mới tìm session
         final Map<Long, InterviewSession> latestSessionByQid = new HashMap<>();
-        for (InterviewSession s : sessions) {
-            if (s.getQuestions() == null) continue;
-            for (Question q : s.getQuestions()) {
-                final Long qid = q.getQuestionId();
-                if (qid == null) continue;
-                final InterviewSession cur = latestSessionByQid.get(qid);
-                if (cur == null || s.getInterviewSessionId() > cur.getInterviewSessionId()) {
-                    latestSessionByQid.put(qid, s);
+        if (company != null) {
+            final List<InterviewSession> sessions =
+                    interviewSessionRepository.findAllByCompanyAndQuestionsIn(company, questions);
+
+            for (InterviewSession s : sessions) {
+                if (s.getQuestions() == null) continue;
+                for (Question q : s.getQuestions()) {
+                    Long qid = q.getQuestionId();
+                    if (qid == null) continue;
+                    InterviewSession cur = latestSessionByQid.get(qid);
+                    if (cur == null || s.getInterviewSessionId() > cur.getInterviewSessionId()) {
+                        latestSessionByQid.put(qid, s);
+                    }
                 }
             }
         }
 
-        //Map sang CompanyQuestionDTO và gắn interviewSessionId và Name
+        // Map sang DTO
         final List<CompanyQuestionDTO> dtos = questions.stream()
                 .map(q -> {
-                    final InterviewSession ls = latestSessionByQid.get(q.getQuestionId());
+                    InterviewSession ls = latestSessionByQid.get(q.getQuestionId());
                     return CompanyQuestionDTO.builder()
                             .questionId(q.getQuestionId())
                             .title(q.getTitle())
