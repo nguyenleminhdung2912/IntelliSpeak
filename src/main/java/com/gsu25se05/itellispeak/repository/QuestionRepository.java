@@ -32,4 +32,11 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     List<Question> findDistinctByCompanyIsNullAndIsDeletedFalseAndTagsInOrderByQuestionIdDesc(Set<Tag> tags);
 
     List<Question> findDistinctByCompanyIsNullAndIsDeletedFalseAndTagsInAndQuestionIdNotInOrderByQuestionIdDesc(Set<Tag> tags, Set<Long> questionIds);
+
+    @Query("""
+    SELECT q FROM Question q
+    WHERE q.isDeleted = false AND q.company IS NULL
+    ORDER BY q.questionId DESC
+""")
+    List<Question> findGlobalQuestions();
 }
