@@ -271,8 +271,18 @@ public class InterviewSessionService {
 
     @Transactional(readOnly = true)
     public InterviewSession getInterviewSessionById(Long id) {
-        return interviewSessionRepository.findVisibleById(id, "RANDOM")
+        InterviewSession session = interviewSessionRepository.findVisibleById(id, "RANDOM")
                 .orElseThrow(() -> new NotFoundException("Interview session not found or unavailable"));
+
+        // Filter out deleted questions from the collection
+        if (session.getQuestions() != null) {
+            Set<Question> activeQuestions = session.getQuestions().stream()
+                    .filter(question -> !Boolean.TRUE.equals(question.getIsDeleted()))
+                    .collect(Collectors.toSet());
+            session.setQuestions(activeQuestions);
+        }
+
+        return session;
     }
 
     @Transactional

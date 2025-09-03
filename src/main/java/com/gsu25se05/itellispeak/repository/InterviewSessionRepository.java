@@ -34,12 +34,12 @@ public interface InterviewSessionRepository extends JpaRepository<InterviewSessi
 
     @EntityGraph(attributePaths = {"topic", "tags", "questions"})
     @Query("""
-  select i
-  from InterviewSession i
-  where i.interviewSessionId = :id
-    and i.isDeleted = false
-    and (i.source is null or i.source <> :excluded)
-""")
+              select i
+              from InterviewSession i
+              where i.interviewSessionId = :id
+                and i.isDeleted = false
+                and (i.source is null or i.source <> :excluded)
+            """)
     Optional<InterviewSession> findVisibleById(@Param("id") Long id, @Param("excluded") String excluded);
 
     @Query("""
@@ -60,4 +60,6 @@ public interface InterviewSessionRepository extends JpaRepository<InterviewSessi
     List<InterviewSession> findByCompanyIsNullAndSourceNotOrderByCreateAtDesc(String excludedSource);
 
     List<InterviewSession> findByCompanyIsNullAndIsDeletedFalseAndSourceNotOrderByCreateAtDesc(String excludedSource);
+
+    List<InterviewSession> findAllByQuestions(Question question);
 }

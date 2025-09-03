@@ -37,7 +37,7 @@ public class HRService {
         Optional<HR> existingOpt = hrRepository.findByUser(user);
 
         Company company;
-        if (request.getCompanyId() == null) {
+        if (request.getCompanyId() == null || request.getCompanyId() == 0) {
             if (request.getCompanyNameIfNotExist() == null || request.getCompanyNameIfNotExist().isBlank()) {
                 throw new AuthAppException(ErrorCode.INVALID_INPUT);
             }
