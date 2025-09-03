@@ -816,6 +816,11 @@ public class CVService {
             throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
         }
 
+        // Check if the CV is active
+        if (Boolean.TRUE.equals(cvToDelete.isActive())) {
+            throw new AuthAppException(ErrorCode.CV_IS_CURRENTLY_ACTIVE);
+        }
+
         // 3. Soft delete the CV
         cvToDelete.setDeleted(true);
         cvToDelete.setActive(false); // A deleted CV cannot be active
