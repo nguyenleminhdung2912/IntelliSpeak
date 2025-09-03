@@ -788,7 +788,7 @@ public class CVService {
 
         // 3.5. Check if CV is deleted
         if (Boolean.TRUE.equals(cvToActivate.isDeleted())) {
-            throw new AuthAppException(ErrorCode.INVALID_INPUT, "Cannot set a deleted CV as active.");
+            throw new AuthAppException(ErrorCode.INVALID_INPUT);
         }
 
         // 4. Deactivate all other CVs for the user
@@ -813,7 +813,7 @@ public class CVService {
                 .orElseThrow(() -> new AuthAppException(ErrorCode.CV_NOT_FOUND));
 
         if (!cvToDelete.getUser().getUserId().equals(currentUser.getUserId())) {
-            throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN, "You can only delete your own CVs.");
+            throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
         }
 
         // 3. Soft delete the CV
