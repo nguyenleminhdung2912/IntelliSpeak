@@ -74,6 +74,8 @@ public class CVController {
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
+    
+    
 
     @PostMapping("/submit-for-company")
     public ResponseEntity<Response<String>> submitCvToCompany(
@@ -129,5 +131,12 @@ public class CVController {
     public ResponseEntity<Response<Void>> setActiveCv(@PathVariable Long cvId) {
         cvService.setActiveCv(cvId);
         return ResponseEntity.ok(new Response<>(200, "CV has been set as active successfully.", null));
+    }
+
+    @DeleteMapping("/{cvId}")
+    @Operation(summary = "Người dùng xoá mềm CV của họ")
+    public ResponseEntity<Response<Void>> deleteCv(@PathVariable Long cvId) {
+        cvService.deleteCv(cvId);
+        return ResponseEntity.ok(new Response<>(200, "CV has been deleted successfully.", null));
     }
 }

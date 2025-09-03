@@ -786,6 +786,11 @@ public class CVService {
             throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
         }
 
+        // 3.5. Check if CV is deleted
+        if (Boolean.TRUE.equals(cvToActivate.isDeleted())) {
+            throw new AuthAppException(ErrorCode.INVALID_INPUT);
+        }
+
         // 4. Deactivate all other CVs for the user
         memberCVRepository.deactivateOldCVsByUser(currentUser);
 
@@ -793,5 +798,28 @@ public class CVService {
         cvToActivate.setActive(true);
         cvToActivate.setUpdateAt(LocalDateTime.now());
         memberCVRepository.save(cvToActivate);
+    }
+
+    @Transactional
+    public void deleteCv(Long cvId) {
+        // 1. Get current user
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            throw new AuthAppException(ErrorCode.NOT_LOGIN);
+        }
+
+        // 2. Find the target MemberCV and verify ownership
+        MemberCV cvToDelete = memberCVRepository.findById(cvId)
+                .orElseThrow(() -> new AuthAppException(ErrorCode.CV_NOT_FOUND));
+
+        if (!cvToDelete.getUser().getUserId().equals(currentUser.getUserId())) {
+            throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
+        }
+
+        // 3. Soft delete the CV
+        cvToDelete.setDeleted(true);
+        cvToDelete.setActive(false); // A deleted CV cannot be active
+        cvToDelete.setUpdateAt(LocalDateTime.now());
+        memberCVRepository.save(cvToDelete);
     }
 }
