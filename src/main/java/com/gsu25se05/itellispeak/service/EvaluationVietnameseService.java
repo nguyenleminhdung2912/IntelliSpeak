@@ -63,7 +63,7 @@ public class EvaluationVietnameseService {
         try {
             // Lấy thông tin buổi phỏng vấn
             InterviewSessionDto session = request.getInterviewSession();
-            int totalQuestions = session.getTotalQuestion();
+            int totalQuestions = request.getInterviewSession().getQuestions().size();
 
             // Tạo prompt với chatHistory
             String prompt = buildPrompt(session, request.getChatHistory());
