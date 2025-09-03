@@ -65,6 +65,7 @@ public class HRService {
             }
             company = new Company();
             company.setName(request.getCompanyNameIfNotExist());
+            company.setShortName("");
             company.setDescription("");
             company.setWebsite("");
             company.setLogoUrl("");
