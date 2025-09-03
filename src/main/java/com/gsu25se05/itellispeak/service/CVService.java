@@ -626,6 +626,17 @@ public class CVService {
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) throw new AuthAppException(ErrorCode.NOT_LOGIN);
 
+        // New check: Prevent HR from applying to their own company
+        if (currentUser.getRole() == User.Role.HR) {
+            HR hrProfile = currentUser.getHr();
+            // Check if the user is an active HR of a company
+            if (hrProfile != null && hrProfile.getCompany() != null && hrProfile.getStatus() == HRStatus.APPROVED) {
+                if (hrProfile.getCompany().getCompanyId().equals(companyId)) {
+                    throw new AuthAppException(ErrorCode.HR_CANNOT_APPLY_TO_OWN_COMPANY);
+                }
+            }
+        }
+
         // 1. Get active CV
         MemberCV memberCV = memberCVRepository.findByUserAndIsDeletedFalseAndIsActiveTrue(currentUser)
                 .orElseThrow(() -> new AuthAppException(ErrorCode.NO_CV_UPLOADED));
