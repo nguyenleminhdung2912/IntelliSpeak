@@ -103,6 +103,10 @@ public class CVService {
         String rawText = FileUtils.extractTextFromCV(file);
         String cleanText = sanitizeText(rawText);
 
+        if (looksLikeJD(cleanText) && !looksLikeCV(cleanText)) {
+            return new Response<>(415, "The uploaded document looks like a Job Description. Please upload a CV/resume.", null);
+        }
+
         //Save image to cloudinary
         String baseName = file.getOriginalFilename()
                 .replaceAll(".pdf", "")
@@ -534,6 +538,36 @@ public class CVService {
 
     private String cleanJson(String text) {
         return text.replaceAll("(?i)```json", "").replaceAll("(?i)```", "").trim();
+    }
+
+    /** Heuristic: nhận diện nhanh CV/JD trước khi gọi AI */
+    private boolean looksLikeCV(String text) {
+        String s = text.toLowerCase();
+        int hits =
+                (s.contains("curriculum vitae") ? 1 : 0) +
+                        (s.contains("resume") ? 1 : 0) +
+                        (s.contains("education") ? 1 : 0) +
+                        (s.contains("experience") ? 1 : 0) +
+                        (s.contains("projects") ? 1 : 0) +
+                        (s.contains("skills") ? 1 : 0) +
+                        (s.contains("certificate") || s.contains("certifications") ? 1 : 0) +
+                        (s.contains("summary") ? 1 : 0) +
+                        (s.matches("(?s).*\\b(github|linkedin)\\.com/.*") ? 1 : 0);
+        return hits >= 3;
+    }
+
+    private boolean looksLikeJD(String text) {
+        String s = text.toLowerCase();
+        int hits =
+                (s.contains("we are hiring") || s.contains("we're hiring") ? 1 : 0) +
+                        (s.contains("job description") ? 1 : 0) +
+                        (s.contains("responsibilities") || s.contains("responsibility") ? 1 : 0) +
+                        (s.contains("requirements") || s.contains("requirement") ? 1 : 0) +
+                        (s.contains("benefits") ? 1 : 0) +
+                        (s.contains("qualifications") ? 1 : 0) +
+                        (s.contains("salary") || s.contains("compensation") ? 1 : 0) +
+                        (s.contains("apply now") || s.contains("how to apply") ? 1 : 0);
+        return hits >= 2;
     }
 
     public Response<CVEvaluateResponseDTO> getCV(Long id) {
