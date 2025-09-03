@@ -116,7 +116,7 @@ public class EvaluationVietnameseService {
             // Tạo và lưu InterviewHistory trước
             InterviewHistory interviewHistory = new InterviewHistory();
             interviewHistory.setInterviewSession(interviewSessionEntity);
-            interviewHistory.setTotalQuestion(session.getTotalQuestion());
+            interviewHistory.setTotalQuestion(totalQuestions);
             interviewHistory.setStartedAt(LocalDateTime.now());
             interviewHistory.setUser(currentUser);
             interviewHistory = interviewHistoryRepository.save(interviewHistory); // Lưu trước để có ID
@@ -124,23 +124,26 @@ public class EvaluationVietnameseService {
             // Tạo danh sách InterviewHistoryDetail
             List<InterviewHistoryDetail> details = new ArrayList<>();
             double totalScore = 0.0;
-            int evaluatedQuestions = 0;
 
             // Chuyển đổi phản hồi thành DTO và lưu vào database
             if (resultsJson.isArray()) {
                 for (JsonNode jsonObj : resultsJson) {
+                    Long questionId = jsonObj.get("questionId").asLong();
                     String userAnswer = jsonObj.get("userAnswer").asText();
+                    Double score = jsonObj.get("score").asDouble();
+
                     // Bỏ qua nếu userAnswer là "Không có câu trả lời"
                     if ("Không có câu trả lời".equalsIgnoreCase(userAnswer)) {
                         continue;
                     }
 
+                    // Thêm score vào totalScore cho các câu trả lời hợp lệ
+                    totalScore += score;
+
                     EvaluationResponseDto dto = new EvaluationResponseDto();
-                    Long questionId = jsonObj.get("questionId").asLong();
                     dto.setQuestionId(questionId);
                     dto.setQuestion(jsonObj.get("question").asText());
                     dto.setUserAnswer(userAnswer);
-                    Double score = jsonObj.get("score").asDouble();
                     dto.setLevel(score.toString()); // Lưu score dưới dạng chuỗi cho DTO
 
                     // Parse feedback
@@ -205,8 +208,6 @@ public class EvaluationVietnameseService {
                         detail.setDifficulty(Difficulty.EASY); // Default to EASY for invalid values
                     }
 
-                    totalScore += score;
-                    evaluatedQuestions++;
                     details.add(detail);
                     results.add(dto);
                 }

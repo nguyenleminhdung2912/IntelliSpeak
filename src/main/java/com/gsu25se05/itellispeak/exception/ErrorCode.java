@@ -74,6 +74,10 @@ public enum ErrorCode {
     QUESTION_NOT_FOUND(4010, "Question not found", HttpStatus.NOT_FOUND),
     CV_IS_CURRENTLY_ACTIVE(4011, "This CV is currently active, please activate another CV before delete this one", HttpStatus.FORBIDDEN),
 
+    // HR | CODE: 5XXX
+    HR_ALREADY_APPROVED(5003, "Your HR application has already been approved. You cannot submit a new application.", HttpStatus.BAD_REQUEST),
+    HR_ALREADY_IN_COMPANY(5004, "You are already an approved HR for this company.", HttpStatus.BAD_REQUEST),
+
     // PACKAGE | CODE: 6XXX
     PACKAGE_NOT_FOUND(6001, "Package not found", HttpStatus.NOT_FOUND),
     PACKAGE_ALREADY_ASSIGNED(6002, "User is already subscribed to this package", HttpStatus.BAD_REQUEST),

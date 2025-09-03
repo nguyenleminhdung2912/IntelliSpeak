@@ -45,25 +45,25 @@ VALUES
     (3, 5); -- SQL
 
 -- Insert data into the interview_session table for User Interface
-INSERT INTO interview_session (interview_session_id, topic_id, title, description, total_question, difficulty, duration_estimate, create_at, update_at, is_deleted)
+INSERT INTO interview_session (interview_session_id, topic_id, title, description, total_question, difficulty, duration_estimate, create_at, update_at, is_deleted, source)
 VALUES
-    (1, 1, 'Basic User Interface Interview', 'Covers fundamental knowledge of HTML, CSS, and JavaScript.', 10, 'EASY', 60, NOW(), NULL, FALSE),
-    (2, 1, 'ReactJS Developer Interview', 'Focuses on ReactJS, state management, and interface development.', 10, 'MEDIUM', 75, NOW(), NULL, FALSE),
-    (3, 1, 'Advanced User Interface Interview', 'Explores advanced JavaScript, performance optimization, and accessibility.', 10, 'HARD', 90, NOW(), NULL, FALSE);
+    (1, 1, 'Basic User Interface Interview', 'Covers fundamental knowledge of HTML, CSS, and JavaScript.', 10, 'EASY', 60, NOW(), NULL, FALSE, "ADMIN"),
+    (2, 1, 'ReactJS Developer Interview', 'Focuses on ReactJS, state management, and interface development.', 10, 'MEDIUM', 75, NOW(), NULL, FALSE, "ADMIN"),
+    (3, 1, 'Advanced User Interface Interview', 'Explores advanced JavaScript, performance optimization, and accessibility.', 10, 'HARD', 90, NOW(), NULL, FALSE, "ADMIN");
 
 -- Insert data into the interview_session table for Backend System
-INSERT INTO interview_session (interview_session_id, topic_id, title, description, total_question, difficulty, duration_estimate, create_at, update_at, is_deleted)
+INSERT INTO interview_session (interview_session_id, topic_id, title, description, total_question, difficulty, duration_estimate, create_at, update_at, is_deleted, source)
 VALUES
-    (4, 2, 'Basic Backend Interview', 'Covers server-side concepts, REST APIs, and basic database operations.', 10, 'EASY', 60, NOW(), NULL, FALSE),
-    (5, 2, 'Spring Boot Developer Interview', 'Focuses on Java, Spring Boot, and RESTful services.', 10, 'MEDIUM', 75, NOW(), NULL, FALSE),
-    (6, 2, 'Advanced Backend Interview', 'Explores microservices, scalability, and database optimization.', 10, 'HARD', 90, NOW(), NULL, FALSE);
+    (4, 2, 'Basic Backend Interview', 'Covers server-side concepts, REST APIs, and basic database operations.', 10, 'EASY', 60, NOW(), NULL, FALSE, "ADMIN"),
+    (5, 2, 'Spring Boot Developer Interview', 'Focuses on Java, Spring Boot, and RESTful services.', 10, 'MEDIUM', 75, NOW(), NULL, FALSE, "ADMIN"),
+    (6, 2, 'Advanced Backend Interview', 'Explores microservices, scalability, and database optimization.', 10, 'HARD', 90, NOW(), NULL, FALSE, "ADMIN");
 
 -- Insert data into the interview_session table for Fullstack
-INSERT INTO interview_session (interview_session_id, topic_id, title, description, total_question, difficulty, duration_estimate, create_at, update_at, is_deleted)
+INSERT INTO interview_session (interview_session_id, topic_id, title, description, total_question, difficulty, duration_estimate, create_at, update_at, is_deleted, source)
 VALUES
-    (7, 3, 'Basic Fullstack Interview', 'Covers fundamental concepts of both user interface and backend.', 10, 'EASY', 60, NOW(), NULL, FALSE),
-    (8, 3, 'MERN Stack Interview', 'Focuses on MongoDB, Express.js, React, and Node.js.', 10, 'MEDIUM', 75, NOW(), NULL, FALSE),
-    (9, 3, 'Advanced Fullstack Interview', 'Explores Fullstack architecture, DevOps, and scalability.', 10, 'HARD', 90, NOW(), NULL, FALSE);
+    (7, 3, 'Basic Fullstack Interview', 'Covers fundamental concepts of both user interface and backend.', 10, 'EASY', 60, NOW(), NULL, FALSE, "ADMIN"),
+    (8, 3, 'MERN Stack Interview', 'Focuses on MongoDB, Express.js, React, and Node.js.', 10, 'MEDIUM', 75, NOW(), NULL, FALSE, "ADMIN"),
+    (9, 3, 'Advanced Fullstack Interview', 'Explores Fullstack architecture, DevOps, and scalability.', 10, 'HARD', 90, NOW(), NULL, FALSE, "ADMIN");
 
 -- Insert questions for Basic User Interface Interview (Session 1)
 INSERT INTO question (question_id, title, content, suitable_answer1, suitable_answer2, difficulty, question_status, is_deleted, source, source_type)

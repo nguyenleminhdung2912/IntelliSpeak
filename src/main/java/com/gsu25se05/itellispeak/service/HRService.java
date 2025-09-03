@@ -35,9 +35,31 @@ public class HRService {
         }
 
         Optional<HR> existingOpt = hrRepository.findByUser(user);
+        Long targetCompanyId = request.getCompanyId();
+
+        // If user has an existing application, check its status first.
+        if (existingOpt.isPresent()) {
+            HR existing = existingOpt.get();
+            HRStatus status = existing.getStatus();
+
+            if (status == HRStatus.PENDING) {
+                throw new AuthAppException(ErrorCode.HR_ALREADY_APPLIED);
+            }
+
+            if (status == HRStatus.APPROVED) {
+                // An approved HR cannot apply again.
+                // Provide a more specific message if they are applying to their own company.
+                Company currentHrCompany = existing.getCompany();
+                if (currentHrCompany != null && targetCompanyId != null && currentHrCompany.getCompanyId().equals(targetCompanyId)) {
+                    throw new AuthAppException(ErrorCode.HR_ALREADY_IN_COMPANY);
+                }
+                // For any other case (applying to another company, or creating a new one), they are still blocked.
+                throw new AuthAppException(ErrorCode.HR_ALREADY_APPROVED);
+            }
+        }
 
         Company company;
-        if (request.getCompanyId() == null) {
+        if (targetCompanyId == null || targetCompanyId == 0) {
             if (request.getCompanyNameIfNotExist() == null || request.getCompanyNameIfNotExist().isBlank()) {
                 throw new AuthAppException(ErrorCode.INVALID_INPUT);
             }
@@ -51,38 +73,20 @@ public class HRService {
             company.setIsDeleted(false);
             company = companyRepository.save(company);
         } else {
-            company = companyRepository.findById(request.getCompanyId())
+            company = companyRepository.findById(targetCompanyId)
                     .orElseThrow(() -> new AuthAppException(ErrorCode.COMPANY_NOT_FOUND));
         }
 
         HR saved;
 
         if (existingOpt.isPresent()) {
+            // This must be a REJECTED case. Update the existing record to re-apply.
             HR existing = existingOpt.get();
-            HRStatus status = existing.getStatus();
-
-            if (status == HRStatus.PENDING) {
-                // Đang chờ duyệt -> không cho nộp lại
-                throw new AuthAppException(ErrorCode.HR_ALREADY_APPLIED);
-            } else if (status == HRStatus.APPROVED) {
-                // Đã được duyệt -> không cần nộp
-                return new Response<>(400, "Your HR application has already been approved.", null);
-            } else if (status == HRStatus.REJECTED) {
-                // Bị từ chối -> cho phép nộp lại bằng cách cập nhật hồ sơ cũ
-                existing.setCompany(company);
-                existing.setPhone(request.getPhone());
-                existing.setCountry(request.getCountry());
-                existing.setExperienceYears(request.getExperienceYears());
-                existing.setLinkedinUrl(request.getLinkedinUrl());
-                existing.setCvUrl(request.getCvUrl());
-                existing.setStatus(HRStatus.PENDING);
-                existing.setSubmittedAt(LocalDateTime.now());
-                saved = hrRepository.save(existing);
-            } else {
-                return new Response<>(400, "Invalid HR application status.", null);
-            }
+            existing.setCompany(company);
+            existing.setStatus(HRStatus.PENDING);
+            saved = hrRepository.save(existing);
         } else {
-            // Chưa từng nộp -> tạo mới
+            // No previous application. Create a new one.
             HR hrRequest = new HR();
             hrRequest.setUser(user);
             hrRequest.setCompany(company);

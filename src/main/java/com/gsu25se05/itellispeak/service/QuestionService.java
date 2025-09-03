@@ -118,11 +118,30 @@ public class QuestionService {
         return questionMapper.toDTO(savedQuestion);
     }
 
+    @Transactional
     public void deleteQuestion(Long questionId) {
         Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new IllegalArgumentException("Question not found"));
+                .orElseThrow(() -> new AuthAppException(ErrorCode.QUESTION_NOT_FOUND));
+
+        // Nếu đã xóa rồi thì không làm gì cả
+        if (Boolean.TRUE.equals(question.getIsDeleted())) {
+            return;
+        }
+
+        // Tìm tất cả các interview session có chứa câu hỏi này
+        List<InterviewSession> sessionsToUpdate = interviewSessionRepository.findAllByQuestions(question);
+
+        // Thực hiện xóa mềm câu hỏi
         question.setIsDeleted(true);
         questionRepository.save(question);
+
+        // Cập nhật lại totalQuestion cho các session bị ảnh hưởng
+        if (!sessionsToUpdate.isEmpty()) {
+            for (InterviewSession session : sessionsToUpdate) {
+                session.setTotalQuestion(Math.max(0, session.getTotalQuestion() - 1));
+            }
+            interviewSessionRepository.saveAll(sessionsToUpdate);
+        }
     }
 
     public QuestionDTO updateQuestion(Long questionId, UpdateQuestionDTO dto) {
