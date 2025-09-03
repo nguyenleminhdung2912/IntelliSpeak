@@ -401,7 +401,7 @@ public class JDService {
                         (s.contains("certificate") || s.contains("certifications") ? 1 : 0) +
                         (s.contains("summary") ? 1 : 0) +
                         (s.matches("(?s).*\\b(github|linkedin)\\.com/.*") ? 1 : 0);
-        return hits >= 3; // ngưỡng mềm, bạn có thể điều chỉnh
+        return hits >= 3;
     }
 
     private boolean looksLikeJD(String text) {
