@@ -150,23 +150,35 @@ public class QuestionService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public Response<List<QuestionDTO>> getByCurrentUser() {
         User currentUser = accountUtils.getCurrentAccount();
         if (currentUser == null) {
             return new Response<>(401, "Please log in to continue", null);
         }
 
-        String roleName = currentUser.getRole().name();
-        if (!"HR".equalsIgnoreCase(roleName) && !"ADMIN".equalsIgnoreCase(roleName)) {
+        if (currentUser.getRole() == User.Role.HR) {
+            // HR chỉ xem câu hỏi do chính họ tạo
+            List<QuestionDTO> questions = questionRepository
+                    .findByCreatedByOrderByQuestionIdDesc(currentUser).stream()
+                    .filter(q -> Boolean.FALSE.equals(q.getIsDeleted()))
+                    .map(questionMapper::toDTO)
+                    .collect(Collectors.toList());
+
+            return new Response<>(200, "Successfully retrieved HR's questions", questions);
+
+        } else if (currentUser.getRole() == User.Role.ADMIN) {
+            // ADMIN chỉ xem câu hỏi global (company = null)
+            List<QuestionDTO> questions = questionRepository
+                    .findGlobalQuestions().stream()
+                    .map(questionMapper::toDTO)
+                    .collect(Collectors.toList());
+
+            return new Response<>(200, "Successfully retrieved global questions", questions);
+
+        } else {
             return new Response<>(403, "Only HR or ADMIN users can view the question list", null);
         }
-
-        List<QuestionDTO> questions = questionRepository.findByCreatedByOrderByQuestionIdDesc(currentUser).stream()
-                .filter(question -> question.getIsDeleted() == false)
-                .map(questionMapper::toDTO)
-                .collect(Collectors.toList());
-
-        return new Response<>(200, "Successfully retrieved question list", questions);
     }
 
     private CompanyQuestionDTO toCompanyQuestionDTO(Question q) {
