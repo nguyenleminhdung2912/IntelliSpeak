@@ -124,20 +124,23 @@ public class EvaluationService {
             // Tạo danh sách InterviewHistoryDetail
             List<InterviewHistoryDetail> details = new ArrayList<>();
             double totalScore = 0.0;
-            int evaluatedQuestions = 0;
 
             // Chuyển đổi phản hồi thành DTO và lưu vào database
             if (resultsJson.isArray()) {
                 for (JsonNode jsonObj : resultsJson) {
+                    Long questionId = jsonObj.get("questionId").asLong();
                     String userAnswer = jsonObj.get("userAnswer").asText();
                     Double score = jsonObj.get("score").asDouble();
+
                     // Bỏ qua nếu userAnswer là "No answer"
                     if ("No answer".equalsIgnoreCase(userAnswer)) {
                         continue;
                     }
 
+                    // Thêm score vào totalScore cho các câu trả lời hợp lệ
+                    totalScore += score;
+
                     EvaluationResponseDto dto = new EvaluationResponseDto();
-                    Long questionId = jsonObj.get("questionId").asLong();
                     dto.setQuestionId(questionId);
                     dto.setQuestion(jsonObj.get("question").asText());
                     dto.setUserAnswer(userAnswer);
@@ -169,7 +172,7 @@ public class EvaluationService {
                             });
 
                     // Tìm Question từ database
-                    Question question = questionRepository.findById((long) questionId).orElse(null);
+                    Question question = questionRepository.findById(questionId).orElse(null);
                     if (question == null) {
                         logger.warn("Question not found with ID: {}", questionId);
                         continue; // Bỏ qua nếu không tìm thấy câu hỏi
@@ -196,8 +199,6 @@ public class EvaluationService {
                         detail.setDifficulty(Difficulty.EASY); // Enforce default to EASY for invalid values
                     }
 
-                    totalScore += score;
-                    evaluatedQuestions++;
                     details.add(detail);
                     results.add(dto);
                 }
