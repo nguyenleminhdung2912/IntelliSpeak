@@ -475,6 +475,7 @@ public class QuestionService {
 
                 // Xác định source theo role
                 String sourceForQuestion;
+                QuestionSourceType questionSourceType;
                 if ("HR".equalsIgnoreCase(roleName)) {
                     if (uploaderCompany == null) {
                         return new Response<>(400, "HR user is not linked to any company", null);
@@ -482,9 +483,12 @@ public class QuestionService {
                     String companyName = uploaderCompany.getName();
                     if (companyName == null || companyName.isBlank()) companyName = uploaderCompany.getShortName();
                     if (companyName == null || companyName.isBlank()) companyName = "UnknownCompany";
+
                     sourceForQuestion = companyName;
+                    questionSourceType = QuestionSourceType.HR;
                 } else {
                     sourceForQuestion = "GeeksForGeeks";
+                    questionSourceType = QuestionSourceType.SYSTEM;
                 }
 
                 if (session.getQuestions() == null) {
@@ -515,6 +519,7 @@ public class QuestionService {
                         q.setDifficulty(diffEnum);
                         q.setQuestionStatus(QuestionStatus.APPROVED);
                         q.setSource(sourceForQuestion);
+                        q.setSourceType(questionSourceType);
                         q.setIsDeleted(Boolean.FALSE);
 
                         q.setCreatedBy(currentUser);
