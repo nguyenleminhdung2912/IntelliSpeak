@@ -63,7 +63,7 @@ public class EvaluationService {
         try {
             // Lấy thông tin buổi phỏng vấn
             InterviewSessionDto session = request.getInterviewSession();
-            int totalQuestions = session.getTotalQuestion();
+            int totalQuestions = request.getInterviewSession().getQuestions().size();
 
             // Tạo prompt với chatHistory
             String prompt = buildPrompt(session, request.getChatHistory());
@@ -206,7 +206,7 @@ public class EvaluationService {
                 // Cập nhật InterviewHistory với details và averageScore
                 interviewHistory.setDetails(details);
                 // Tính averageScore dựa trên tổng số câu hỏi, bao gồm cả câu không trả lời (score = 0)
-                interviewHistory.setAverageScore(totalQuestions > 0 ? totalScore / totalQuestions : 0.0);
+                interviewHistory.setAverageScore(totalScore / totalQuestions);
                 interviewHistory.setEndedAt(LocalDateTime.now());
                 interviewHistory.setAiOverallEvaluate(overallEvaluation);
 
