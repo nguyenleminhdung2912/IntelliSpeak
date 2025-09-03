@@ -94,6 +94,27 @@ public class JDController {
         }
     }
 
+    @Operation(summary = "Xoá JD cá nhân (soft delete)")
+    @DeleteMapping("/{jdId}")
+    public ResponseEntity<Response<Void>> deleteJD(@PathVariable Long jdId) {
+        try {
+            jdService.deleteJd(jdId);
+            return ResponseEntity.ok(new Response<>(200, "JD deleted successfully.", null));
+        } catch (NotLoginException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new Response<>(401, e.getMessage(), null));
+        } catch (NotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new Response<>(404, e.getMessage(), null));
+        } catch (AuthAppException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new Response<>(403, e.getMessage(), null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new Response<>(500, "Error: " + e.getMessage(), null));
+        }
+    }
+
     @PostMapping("/company/upload")
     public ResponseEntity<Response<CompanyJD>> uploadAndAnalyzeCompanyJD(@RequestParam("file") MultipartFile file) {
         try {

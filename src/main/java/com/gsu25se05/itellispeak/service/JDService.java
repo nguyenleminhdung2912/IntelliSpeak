@@ -479,4 +479,26 @@ public class JDService {
         return new Response<>(200, "JD list retrieved successfully", dtos);
     }
 
+    @Transactional
+    public void deleteJd(Long jdId) {
+        // 1. Get current user
+        User currentUser = accountUtils.getCurrentAccount();
+        if (currentUser == null) {
+            throw new NotLoginException("Please log in to continue");
+        }
+
+        // 2. Find the JD and verify ownership
+        JD jd = jdRepository.findById(jdId)
+                .orElseThrow(() -> new NotFoundException("JD not found with ID: " + jdId));
+
+        if (!jd.getUser().getUserId().equals(currentUser.getUserId())) {
+            throw new AuthAppException(ErrorCode.ACTION_FORBIDDEN);
+        }
+
+        // 3. Soft delete
+        jd.setDeleted(true);
+        jd.setUpdateAt(LocalDateTime.now());
+        jdRepository.save(jd);
+    }
+
 }
