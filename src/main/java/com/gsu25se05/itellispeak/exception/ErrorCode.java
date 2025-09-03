@@ -77,6 +77,7 @@ public enum ErrorCode {
     // HR | CODE: 5XXX
     HR_ALREADY_APPROVED(5003, "Your HR application has already been approved. You cannot submit a new application.", HttpStatus.BAD_REQUEST),
     HR_ALREADY_IN_COMPANY(5004, "You are already an approved HR for this company.", HttpStatus.BAD_REQUEST),
+    HR_CANNOT_APPLY_TO_OWN_COMPANY(5005, "As an HR of this company, you cannot submit a CV to it.", HttpStatus.FORBIDDEN),
 
     // PACKAGE | CODE: 6XXX
     PACKAGE_NOT_FOUND(6001, "Package not found", HttpStatus.NOT_FOUND),
