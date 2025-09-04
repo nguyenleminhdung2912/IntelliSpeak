@@ -101,7 +101,9 @@ public class CompanyService {
         dto.setHrList(hrDTOs);
 
         // Map InterviewSessions
-        List<InterviewSessionDto> sessionDTOs = company.getInterviewSessions().stream().map(session -> {
+        List<InterviewSessionDto> sessionDTOs = company.getInterviewSessions().stream()
+                .filter(session -> !Boolean.TRUE.equals(session.getIsDeleted()))
+                .map(session -> {
             InterviewSessionUserDto createdByDto = null;
             if (session.getCreatedBy() != null) {
                 createdByDto = new InterviewSessionUserDto(
