@@ -22,7 +22,7 @@ public class InterviewSessionMapper {
         dto.setInterviewSessionId(entity.getInterviewSessionId());
         dto.setTitle(entity.getTitle());
         dto.setDescription(entity.getDescription());
-        dto.setTotalQuestion(entity.getTotalQuestion());
+        dto.setTotalQuestion(3);
         dto.setInterviewSessionThumbnail(entity.getInterviewSessionThumbnail());
         dto.setDifficulty(entity.getDifficulty().name());
         dto.setQuestionIds(entity.getQuestions().stream().map(Question::getQuestionId).collect(Collectors.toSet()));
