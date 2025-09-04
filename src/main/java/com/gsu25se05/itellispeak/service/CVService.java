@@ -183,6 +183,9 @@ public class CVService {
             // Chỉ lấy session không gắn với company
             ands.add(cb.isNull(root.get("company")));
 
+            // Loại bỏ source = 'RANDOM'
+            ands.add(cb.notEqual(cb.lower(root.get("source")), "random"));
+
             // join topic luôn dùng
             Join<?, ?> tp = root.join("topic", JoinType.LEFT);
 
